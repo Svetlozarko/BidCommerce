@@ -86,14 +86,14 @@ namespace BidCommerce.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StartingPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    StartingPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsBiddable = table.Column<bool>(type: "bit", nullable: false),
                     BuyNowPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     CurrentBid = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     BidEndTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -102,8 +102,7 @@ namespace BidCommerce.Migrations
                         name: "FK_Products_Users_OwnerId",
                         column: x => x.OwnerId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

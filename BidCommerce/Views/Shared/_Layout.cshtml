@@ -1,113 +1,115 @@
-﻿@using BidCommerce.Data
-@using Microsoft.AspNetCore.Identity
-@inject UserManager<ApplicationUser> UserManager
+﻿@using Microsoft.AspNetCore.Identity
+@using BidCommerce.Data
 @inject SignInManager<ApplicationUser> SignInManager
-
-@{
-    var user = await UserManager.GetUserAsync(User);
-    var isSeller = user?.IsSeller ?? false;
-}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BidCommerce</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        .search-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 550px;
+            height: 48px; /* Increased height */
+            font-size: 1rem; /* Larger font */
+        }
+
+            .search-box input {
+                border: none;
+                outline: none;
+                flex: 1;
+                padding: 10px 14px;
+                font-size: 1rem;
+            }
+
+            .search-box button {
+                border: none;
+                background-color: #ff7300;
+                color: white;
+                padding: 0 16px;
+                height: 100%;
+                font-size: 1.2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+
+        .navbar-nav .nav-link i {
+            margin-right: 4px;
+        }
+
+        .navbar .btn-register {
+            background-color: #ff7300;
+            color: white;
+        }
+
+            .navbar .btn-register:hover {
+                background-color: #e46300;
+                color: white;
+            }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">BidCommerce</a>
-                <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                    </ul>
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm py-2">
+        <div class="container d-flex align-items-center justify-content-between">
 
-                    <div class="d-flex align-items-center">
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <form id="toggleForm" method="post" class="btn-group me-3" role="group">
-                                <button type="button" data-role="Buyer"
-                                        class="btn btn-sm @(isSeller ? "btn-outline-primary" : "btn-primary")">
-                                    Buyer
-                                </button>
-                                <button type="button" data-role="Seller"
-                                        class="btn btn-sm @(isSeller ? "btn-primary" : "btn-outline-primary")">
-                                    Seller
-                                </button>
-                            </form>
-                        }
+            <!-- Brand -->
+            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="/">
+                <i class="bi bi-box-fill fs-4 me-2"></i> BidCommerce
+            </a>
 
-                        <partial name="_LoginPartial" />
-                    </div>
-                </div>
+            <!-- Nav + Icons -->
+           
+
+            <!-- Search -->
+            <form class="search-box mx-3" role="search">
+                <input type="search" placeholder="Search for anything..." aria-label="Search">
+                <button type="submit"><i class="bi bi-search"></i></button>
+            </form>
+
+            <!-- Auth Buttons -->
+            <div class="d-flex align-items-center gap-2">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <a asp-page="/Account/Manage/Index" class="btn btn-outline-primary btn-sm">Dashboard</a>
+                    <form asp-page="/Account/Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-sm">Login</a>
+                    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-primary btn-sm">Register</a>
+                }
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <!-- Main Page Body -->
+    <main role="main">
+        @RenderBody()
+    </main>
 
-    <footer class="border-top footer text-muted mt-5">
+    <!-- Footer (optional) -->
+    <footer class="bg-light text-center py-4 mt-auto border-top">
         <div class="container">
-            &copy; 2025 - BidCommerce
+            <p class="mb-0">&copy; @DateTime.Now.Year BidCommerce. All rights reserved.</p>
         </div>
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            $('#toggleForm button').on('click', function () {
-                var button = $(this);
-                var selectedRole = button.data('role');
-
-                button.prop('disabled', true).removeClass('btn-primary btn-outline-primary')
-                    .addClass('btn-warning').text('Switching...');
-                button.siblings('button').prop('disabled', true);
-
-                $.ajax({
-                    url: '@Url.Action("ToggleRole", "User")',
-                    type: 'POST',
-                    data: { role: selectedRole },
-                    success: function (response) {
-                        if (response.success) {
-                            updateButtons(response.newRole);
-                            location.reload(); // Optional: reload if needed to reflect new view logic
-                        } else {
-                            alert('Error: ' + response.message);
-                            updateButtons('@(isSeller ? "Seller" : "Buyer")');
-                        }
-                    },
-                    error: function () {
-                        alert('An error occurred while switching roles.');
-                        updateButtons('@(isSeller ? "Seller" : "Buyer")');
-                    }
-                });
-
-                function updateButtons(activeRole) {
-                    $('#toggleForm button').each(function () {
-                        var btn = $(this);
-                        var role = btn.data('role');
-                        btn.prop('disabled', false)
-                            .removeClass('btn-warning btn-primary btn-outline-primary')
-                            .addClass(role === activeRole ? 'btn-primary' : 'btn-outline-primary')
-                            .text(role);
-                    });
-                }
-            });
-        });
-    </script>
-
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

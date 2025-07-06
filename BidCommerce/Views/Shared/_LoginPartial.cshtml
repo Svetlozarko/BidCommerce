@@ -19,7 +19,7 @@
         var photoFileName = user.PhotoFileName;
         var profilePicPath = !string.IsNullOrEmpty(photoFileName)
         ? Url.Content($"~/images/profiles/{photoFileName}")
-        : Url.Content("~/images/default-profile.png");
+        : Url.Content("~/images/default-profile.jpg");
 
         <li class="nav-item d-flex align-items-center">
             <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage Profile" class="nav-profile-link">

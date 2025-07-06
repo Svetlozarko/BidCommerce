@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    [Migration("20250706135536_InitialCreate")]
+    [Migration("20250706162157_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -146,11 +146,9 @@ namespace BidCommerce.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("OwnerId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<decimal?>("StartingPrice")
-                        .IsRequired()
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Title")
@@ -301,9 +299,7 @@ namespace BidCommerce.Migrations
                 {
                     b.HasOne("BidCommerce.Data.ApplicationUser", "Owner")
                         .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OwnerId");
 
                     b.Navigation("Owner");
                 });

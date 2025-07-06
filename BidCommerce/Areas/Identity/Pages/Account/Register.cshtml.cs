@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using BidCommerce.Data;
-using BidCommerce.Enums;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -129,7 +128,6 @@ namespace BidCommerce.Areas.Identity.Pages.Account
                     _logger.LogInformation("User created a new account with password.");
 
                     // Automatically add user to Buyer role
-                    await _userManager.AddToRoleAsync(user, Roles.Buyer.ToString());
 
                     // Profile photo upload logic
                     if (Input.PhotoFile != null)
