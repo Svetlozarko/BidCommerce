@@ -15,12 +15,12 @@ namespace BidCommerce.Controllers
             _userManager = userManager;
         }
 
-        [Authorize]
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> ToggleRole(string role)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Index", "Home");
+            if (user == null) return Json(new { success = false, message = "User not found" });
 
             if (role == "Seller")
             {
@@ -28,6 +28,7 @@ namespace BidCommerce.Controllers
                 {
                     await _userManager.RemoveFromRoleAsync(user, "Buyer");
                     await _userManager.AddToRoleAsync(user, "Seller");
+                    user.IsSeller = true;
                 }
             }
             else if (role == "Buyer")
@@ -36,11 +37,16 @@ namespace BidCommerce.Controllers
                 {
                     await _userManager.RemoveFromRoleAsync(user, "Seller");
                     await _userManager.AddToRoleAsync(user, "Buyer");
+                    user.IsSeller = false;
                 }
             }
 
-            return Redirect(Request.Headers["Referer"].ToString());
+            await _userManager.UpdateAsync(user);
+
+            return Json(new { success = true, newRole = role });
         }
+
+
 
 
     }

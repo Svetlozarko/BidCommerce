@@ -1,77 +1,52 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using BidCommerce.Data
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    // Declare once at the very top to have them available everywhere
+    var user = await UserManager.GetUserAsync(User);
+    var isSeller = false;
+    if (user != null)
+    {
+        isSeller = await UserManager.IsInRoleAsync(user, "Seller");
+    }
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BidCommerce</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/BidCommerce.styles.css" asp-append-version="true" />
-    <style>
-        /* Hover effect for role toggle button */
-        .role-toggle-btn {
-            position: relative;
-            overflow: hidden;
-        }
-
-            .role-toggle-btn .role-hover {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .role-toggle-btn:hover .role-current {
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .role-toggle-btn:hover .role-hover {
-                opacity: 1;
-            }
-    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">BidCommerce</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between align-items-center">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">BidCommerce</a>
+                <div class="collapse navbar-collapse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                     </ul>
 
                     <div class="d-flex align-items-center">
-                        @if (User.Identity.IsAuthenticated)
+                        @if (SignInManager.IsSignedIn(User))
                         {
-                            var isSeller = User.IsInRole("Seller");
-                            <form asp-controller="User" asp-action="ToggleRole" method="post" class="d-inline btn-group" role="group">
-                                <button type="submit" name="role" value="Buyer" class="btn btn-sm @(isSeller ? "btn-outline-primary" : "btn-primary")">
+                            <form id="toggleForm" method="post" class="btn-group me-3" role="group">
+                                <button type="button" data-role="Buyer"
+                                        class="btn btn-sm @(isSeller ? "btn-outline-primary" : "btn-primary")">
                                     Buyer
                                 </button>
-                                <button type="submit" name="role" value="Seller" class="btn btn-sm @(isSeller ? "btn-primary" : "btn-outline-primary")">
+                                <button type="button" data-role="Seller"
+                                        class="btn btn-sm @(isSeller ? "btn-primary" : "btn-outline-primary")">
                                     Seller
                                 </button>
                             </form>
                         }
-
-
 
                         <partial name="_LoginPartial" />
                     </div>
@@ -79,6 +54,7 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -87,13 +63,63 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - BidCommerce - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - BidCommerce
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#toggleForm button').on('click', function () {
+                var button = $(this);
+                var selectedRole = button.data('role');
+
+                // Disable buttons and show loading state on clicked button
+                button.prop('disabled', true).removeClass('btn-primary btn-outline-primary').addClass('btn-warning').text('Switching...');
+                button.siblings('button').prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("ToggleRole", "User")',
+                    type: 'POST',
+                    data: { role: selectedRole },
+                    success: function (response) {
+                        if (response.success) {
+                            // Update buttons styling after success
+                            $('#toggleForm button').each(function () {
+                                var btn = $(this);
+                                var role = btn.data('role');
+                                btn.prop('disabled', false);
+
+                                if (role === response.newRole) {
+                                    btn.removeClass('btn-outline-primary btn-warning').addClass('btn-primary').text(role);
+                                } else {
+                                    btn.removeClass('btn-primary btn-warning').addClass('btn-outline-primary').text(role);
+                                }
+                            });
+                        } else {
+                            alert('Error switching role: ' + response.message);
+                            resetButtons();
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred while switching roles.');
+                        resetButtons();
+                    }
+                });
+
+                function resetButtons() {
+                    $('#toggleForm button').prop('disabled', false).each(function () {
+                        var btn = $(this);
+                        var activeRole = '@(isSeller ? "Seller" : "Buyer")';
+                        btn.removeClass('btn-warning').addClass(btn.data('role') === activeRole ? 'btn-primary' : 'btn-outline-primary');
+                        btn.text(btn.data('role'));
+                    });
+                }
+            });
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

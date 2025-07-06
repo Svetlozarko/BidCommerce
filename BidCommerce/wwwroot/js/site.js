@@ -1,5 +1,6 @@
 ﻿$(document).ready(function () {
-    $("#toggleForm button").click(function () {
-        $(this).addClass("btn-warning").text("Switching...");
+    $("#toggleForm").on("submit", function () {
+        const button = $(this).find("button");
+        button.prop("disabled", true).removeClass("btn-outline-primary").addClass("btn-warning").text("Switching...");
     });
 });
