@@ -36,8 +36,7 @@ namespace BidCommerce
                 var services = scope.ServiceProvider;
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-                await ContextSeed.SeedRoleAsync(roleManager);
-                await ContextSeed.SeedAdminAsync(userManager);
+
             }
 
             if (app.Environment.IsDevelopment())

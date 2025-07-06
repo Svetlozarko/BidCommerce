@@ -1,46 +1,132 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using BidCommerce.Data
 @inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Home";
-
-    var user = await UserManager.GetUserAsync(User);
-    var isSeller = false;
-
-    if (user != null)
-    {
-        isSeller = await UserManager.IsInRoleAsync(user, "Seller");
-    }
 }
 
-<div class="container mt-5">
-    <h1 class="mb-4">Welcome to BidCommerce!</h1>
-
-    @if (SignInManager.IsSignedIn(User) && isSeller)
-    {
-        <a asp-controller="Products" asp-action="Create" class="btn btn-success mb-4">
-            + Add New Product
-        </a>
-    }
-    else if (!SignInManager.IsSignedIn(User))
-    {
-        <div class="alert alert-info">
-            Please <a asp-page="/Account/Login">log in</a> as a seller to list a product.
-        </div>
-    }
-    else if (!isSeller)
-    {
-        <div class="alert alert-warning">
-            You must switch to <strong>Seller</strong> role to create products.
-        </div>
+<style>
+    .hero-section {
+        background: linear-gradient(to right, #0052D4, #4364F7, #6FB1FC);
+        color: white;
+        padding: 80px 0;
+        width: full;
     }
 
-    <!-- You can show other homepage content here -->
-    <div class="card mt-4">
-        <div class="card-body">
-            <p>Browse listings, bid on auctions, or become a seller to list your own products!</p>
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+    }
+
+    .highlight {
+        color: #ff9f00;
+    }
+
+    .hero-btn {
+        background-color: #ff7300;
+        border: none;
+        padding: 12px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        border-radius: 8px;
+    }
+
+    .btn-outline-light {
+        font-size: 16px;
+        font-weight: 600;
+        border-width: 2px;
+    }
+
+    .stats-card {
+        background: linear-gradient(to right, #6FB1FC, #4364F7);
+        border-radius: 16px;
+        padding: 25px;
+        color: white;
+        margin-bottom: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stats-icon {
+        font-size: 30px;
+        color: #ff9f00;
+        margin-bottom: 10px;
+    }
+
+    .stats-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .stats-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    @@media (min-width: 992px) {
+        .hero-text-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <!-- Left Text Column -->
+            <div class="col-lg-6 col-md-12 hero-text-col text-center text-lg-start">
+                <h1 class="hero-title mb-3">
+                    Discover Amazing <span class="highlight">Auction Deals</span>
+                </h1>
+                <p class="lead mb-4">
+                    Join millions of users bidding on unique items, rare collectibles, and everyday essentials.
+                    Start your auction journey today!
+                </p>
+
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <a asp-controller="Products" asp-action="Create" class="hero-btn me-2">+ Add New Product</a>
+                }
+                else
+                {
+                    <p>Want to explore the world of BidCommerce?</p>
+                    <a asp-page="/Account/Register" class="btn btn-outline-light">Register</a>
+                }
+            </div>
+
+            <!-- Right Stats Column -->
+            <div class="col-lg-6 col-md-12 mt-5 mt-lg-0">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="stats-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                            <div class="stats-number">1M+</div>
+                            <div class="stats-label">Active Auctions</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="stats-card">
+                            <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
+                            <div class="stats-number">5M+</div>
+                            <div class="stats-label">Happy Bidders</div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="stats-card">
+                            <div class="stats-icon"><i class="bi bi-clock-history"></i></div>
+                            <div class="stats-number">24/7</div>
+                            <div class="stats-label">Live Auction Support</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
