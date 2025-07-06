@@ -6,6 +6,25 @@
 <link rel="stylesheet" href="~/css/profile-pic.css" />
 
 <ul class="navbar-nav">
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        var userManager = Context.RequestServices.GetService<UserManager<ApplicationUser>>();
+        var user = await userManager.GetUserAsync(User);
+
+        <form id="toggleForm" asp-controller="User" asp-action="ToggleRole" method="post" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-primary me-2 transition-button">
+                Switch to @(user.IsSeller ? "Buyer" : "Seller")
+            </button>
+        </form>
+
+        @if (user.IsSeller)
+        {
+            <a class="btn btn-sm btn-success" asp-controller="Product" asp-action="Create">+ Add Item to Sell</a>
+        }
+    }
+
+
     @if (SignInManager.IsSignedIn(User))
     {
         string photoFileName = UserManager.GetUserAsync(User).Result.PhotoFileName;

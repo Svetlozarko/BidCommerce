@@ -3,8 +3,7 @@
     public enum Roles
     {
         Admin,
-        Seller,
-        Buyer,
+        user,
         Guest
     }
 }

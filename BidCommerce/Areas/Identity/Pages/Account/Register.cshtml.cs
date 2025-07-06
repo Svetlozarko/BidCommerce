@@ -129,7 +129,7 @@ namespace BidCommerce.Areas.Identity.Pages.Account
                     _logger.LogInformation("User created a new account with password.");
 
                     // Automatically add user to Buyer role
-                    await _userManager.AddToRoleAsync(user, Roles.Buyer.ToString());
+                    await _userManager.AddToRoleAsync(user, Roles.user.ToString());
 
                     // Profile photo upload logic
                     if (Input.PhotoFile != null)

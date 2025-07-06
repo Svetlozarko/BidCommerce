@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -7,6 +8,35 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BidCommerce.styles.css" asp-append-version="true" />
+    <style>
+        /* Hover effect for role toggle button */
+        .role-toggle-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .role-toggle-btn .role-hover {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .role-toggle-btn:hover .role-current {
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .role-toggle-btn:hover .role-hover {
+                opacity: 1;
+            }
+    </style>
 </head>
 <body>
     <header>
@@ -17,7 +47,7 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between align-items-center">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
@@ -26,7 +56,25 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
-                    <partial name="_LoginPartial" />
+
+                    <div class="d-flex align-items-center">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var isSeller = User.IsInRole("Seller");
+                            <form asp-controller="User" asp-action="ToggleRole" method="post" class="d-inline btn-group" role="group">
+                                <button type="submit" name="role" value="Buyer" class="btn btn-sm @(isSeller ? "btn-outline-primary" : "btn-primary")">
+                                    Buyer
+                                </button>
+                                <button type="submit" name="role" value="Seller" class="btn btn-sm @(isSeller ? "btn-primary" : "btn-outline-primary")">
+                                    Seller
+                                </button>
+                            </form>
+                        }
+
+
+
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
             </div>
         </nav>
@@ -42,9 +90,11 @@
             &copy; 2025 - BidCommerce - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

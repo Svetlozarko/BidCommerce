@@ -20,3 +20,39 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.transition-button {
+    transition: all 0.3s ease-in-out;
+}
+
+    .transition-button:hover {
+        background-color: #007bff;
+        color: white;
+        transform: scale(1.05);
+    }
+.role-toggle-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+    .role-toggle-btn .role-hover {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .role-toggle-btn:hover .role-current {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .role-toggle-btn:hover .role-hover {
+        opacity: 1;
+    }

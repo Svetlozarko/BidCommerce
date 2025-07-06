@@ -25,6 +25,7 @@ namespace BidCommerce.Data
                 LastName = "Ivanov",
                 Country = "defaultCountry",
                 PhoneNumber = "0888888888",
+                IsSeller = true,
                 Age = 30,
                 EmailConfirmed = true
 
