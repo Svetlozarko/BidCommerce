@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BidCommerce.Data;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -42,9 +43,9 @@ namespace BidCommerce.Models
         // Link to the user who listed the product
         [ForeignKey("Owner")]
         public string OwnerId { get; set; }
-    //    public virtual ApplicationUser Owner { get; set; }
+        public virtual ApplicationUser Owner { get; set; }
 
         // Navigation: Bids placed on this product
-     //   public virtual ICollection<Bid> Bids { get; set; }
+        public virtual ICollection<Bid> Bids { get; set; }
     }
 }

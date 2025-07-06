@@ -10,6 +10,7 @@ namespace BidCommerce.Data
         public int Age { get; set; }
         public string Country { get; set; }
         public string? PhotoFileName { get; set; }
+
     }
 
 }
