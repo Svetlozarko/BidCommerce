@@ -2,118 +2,588 @@
 @model BidCommerce.Areas.Identity.Pages.Account.RegisterModel
 @{
     ViewData["Title"] = "Register";
+    Layout = null; // Use custom layout for this page
 }
 
-<h1>@ViewData["Title"]</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BidCommerce</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4f7cff 0%, #4364f7 50%, #6fb1fc 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
 
-<div class="row">
-    <div class="col-md-6">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
-            <h2>Create a new account.</h2>
-            <hr />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        .register-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+        }
 
-            <!-- First Name -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.FirstName" class="form-control" placeholder="First Name" />
-                <label asp-for="Input.FirstName">First Name</label>
-                <span asp-validation-for="Input.FirstName" class="text-danger"></span>
-            </div>
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-            <!-- Last Name -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.LastName" class="form-control" placeholder="Last Name" />
-                <label asp-for="Input.LastName">Last Name</label>
-                <span asp-validation-for="Input.LastName" class="text-danger"></span>
-            </div>
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
 
-            <!-- Nickname -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.NickName" class="form-control" placeholder="Nickname" />
-                <label asp-for="Input.NickName">Nickname</label>
-                <span asp-validation-for="Input.NickName" class="text-danger"></span>
-            </div>
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
 
-            <!-- Age -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Age" class="form-control" type="number" placeholder="Age" />
-                <label asp-for="Input.Age">Age</label>
-                <span asp-validation-for="Input.Age" class="text-danger"></span>
-            </div>
+        .brand-name {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
 
-            <!-- Country -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Country" class="form-control" placeholder="Country" />
-                <label asp-for="Input.Country">Country</label>
-                <span asp-validation-for="Input.Country" class="text-danger"></span>
-            </div>
+        .brand-tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            margin: 0;
+            font-weight: 400;
+        }
 
-            <!-- Email -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="Email" />
-                <label asp-for="Input.Email">Email</label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
+        .register-card {
+            background: white;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            min-height: 500px;
+        }
 
-            <!-- Password -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" placeholder="Password" />
-                <label asp-for="Input.Password">Password</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
+        .register-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 8px;
+        }
 
-            <!-- Confirm Password -->
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" placeholder="Confirm Password" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
+        .register-subtitle {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
 
-            <!-- Profile Picture -->
-            <div class="mb-3">
-                <label asp-for="Input.PhotoFile" class="form-label">Profile Picture</label>
-                <input asp-for="Input.PhotoFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif" onchange="document.getElementById('profilePhoto').src = window.URL.createObjectURL(this.files[0])" />
-                <span asp-validation-for="Input.PhotoFile" class="text-danger"></span>
-                <div class="mt-2">
-                    <img id="profilePhoto" src="~/images/default-profile.png"
-                         style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;" />
-                </div>
-            </div>
+        /* Progress Steps */
+        .progress-container {
+            margin-bottom: 30px;
+        }
 
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </form>
-    </div>
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
 
-    <div class="col-md-6">
-        <section>
-            <h3>Use another service to register</h3>
-            <hr />
-            @if ((Model.ExternalLogins?.Count ?? 0) == 0)
-            {
-                <div>
-                    <p>
-                        There are no external authentication services configured. See
-                        <a href="https://go.microsoft.com/fwlink/?LinkID=532715">this guide</a>.
-                    </p>
-                </div>
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.active {
+            background: #4364f7;
+            color: white;
+        }
+
+        .step-circle.completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-circle.inactive {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        .step-line {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: -1;
+        }
+
+        .step-line.completed {
+            background: #10b981;
+        }
+
+        .progress-step:last-child .step-line {
+            display: none;
+        }
+
+        /* Form Steps */
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4364f7;
+            box-shadow: 0 0 0 3px rgba(67, 100, 247, 0.1);
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Profile Picture Upload */
+        .profile-upload {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e5e7eb;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn {
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            color: #6b7280;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            border-color: #4364f7;
+            color: #4364f7;
+        }
+
+        /* Navigation Buttons */
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            gap: 12px;
+        }
+
+        .btn-prev {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-prev:hover {
+            background: #f9fafb;
+            color: #374151;
+        }
+
+        .btn-next, .btn-submit {
+            background: #4364f7;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-next:hover, .btn-submit:hover {
+            background: #3451e6;
+            transform: translateY(-1px);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .login-link a {
+            color: #4364f7;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            max-width: 400px;
+            line-height: 1.4;
+        }
+
+        .text-danger {
+            color: #dc2626;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .validation-summary {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        @@media (max-width: 480px) {
+            .register-container {
+                padding: 15px;
             }
-            else
-            {
-                <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                    <div>
-                        @foreach (var provider in Model.ExternalLogins!)
-                        {
-                            <button type="submit" class="btn btn-outline-primary mb-2" name="provider" value="@provider.Name" title="Register using @provider.DisplayName">
-                                @provider.DisplayName
-                            </button>
-                        }
+            
+            .register-card {
+                padding: 25px 20px;
+            }
+            
+            .brand-header {
+                margin-bottom: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <!-- Brand Header -->
+        <div class="brand-header">
+            <div class="brand-logo">
+                <div class="logo-icon">
+                    <i class="bi bi-bag" style="color: white; font-size: 16px;"></i>
+                </div>
+                <h1 class="brand-name">BidCommerce</h1>
+            </div>
+            <p class="brand-tagline">Join the world's largest auction marketplace</p>
+        </div>
+
+        <!-- Register Card -->
+        <div class="register-card">
+            <h2 class="register-title">Create Account</h2>
+            <p class="register-subtitle">Let's get you started with your new account</p>
+
+            <!-- Progress Steps -->
+            <div class="progress-container">
+                <div class="progress-steps">
+                    <div class="progress-step">
+                        <div class="step-circle active" id="step1-circle">1</div>
+                        <div class="step-label">Personal Info</div>
+                        <div class="step-line" id="step1-line"></div>
                     </div>
-                </form>
-            }
-        </section>
-    </div>
-</div>
+                    <div class="progress-step">
+                        <div class="step-circle inactive" id="step2-circle">2</div>
+                        <div class="step-label">Location</div>
+                        <div class="step-line" id="step2-line"></div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle inactive" id="step3-circle">3</div>
+                        <div class="step-label">Account</div>
+                        <div class="step-line" id="step3-line"></div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle inactive" id="step4-circle">4</div>
+                        <div class="step-label">Profile</div>
+                    </div>
+                </div>
+            </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
+                <!-- Validation Summary -->
+                <div asp-validation-summary="ModelOnly" class="text-danger validation-summary" role="alert"></div>
+
+                <!-- Step 1: Personal Information -->
+                <div class="form-step active" id="step1">
+                    <div class="form-group">
+                        <label asp-for="Input.FirstName" class="form-label">First Name</label>
+                        <input asp-for="Input.FirstName" class="form-control" placeholder="Enter your first name" />
+                        <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.LastName" class="form-label">Last Name</label>
+                        <input asp-for="Input.LastName" class="form-control" placeholder="Enter your last name" />
+                        <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.NickName" class="form-label">Nickname</label>
+                        <input asp-for="Input.NickName" class="form-control" placeholder="Choose a nickname" />
+                        <span asp-validation-for="Input.NickName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.Age" class="form-label">Age</label>
+                        <input asp-for="Input.Age" class="form-control" type="number" placeholder="Enter your age" />
+                        <span asp-validation-for="Input.Age" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Step 2: Location -->
+                <div class="form-step" id="step2">
+                    <div class="form-group">
+                        <label asp-for="Input.Country" class="form-label">Country</label>
+                        <input asp-for="Input.Country" class="form-control" placeholder="Enter your country" />
+                        <span asp-validation-for="Input.Country" class="text-danger"></span>
+                    </div>
+                    <div style="text-align: center; padding: 40px 0; color: #6b7280;">
+                        <i class="bi bi-geo-alt" style="font-size: 48px; margin-bottom: 15px; color: #4364f7;"></i>
+                        <p>We'll use this information to show you relevant auctions and shipping options in your area.</p>
+                    </div>
+                </div>
+
+                <!-- Step 3: Account Credentials -->
+                <div class="form-step" id="step3">
+                    <div class="form-group">
+                        <label asp-for="Input.Email" class="form-label">Email Address</label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="Enter your email" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.Password" class="form-label">Password</label>
+                        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" placeholder="Create a password" />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.ConfirmPassword" class="form-label">Confirm Password</label>
+                        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" placeholder="Confirm your password" />
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Step 4: Profile Picture -->
+                <div class="form-step" id="step4">
+                    <div class="profile-upload">
+                        <img id="profilePhoto" src="~/images/default-profile.png" class="profile-preview" alt="Profile Preview" />
+                        <div>
+                            <label for="photoUpload" class="upload-btn">
+                                <i class="bi bi-camera"></i> Choose Profile Picture
+                            </label>
+                            <input asp-for="Input.PhotoFile" id="photoUpload" type="file" accept=".jpg,.jpeg,.png,.gif" 
+                                   style="display: none;" onchange="previewImage(this)" />
+                            <span asp-validation-for="Input.PhotoFile" class="text-danger"></span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #6b7280; margin-top: 10px;">
+                            Optional: Add a profile picture to personalize your account
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                        <i class="bi bi-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn-next" id="nextBtn" onclick="changeStep(1)">
+                        Next <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <button type="submit" class="btn-submit" id="submitBtn" style="display: none;">
+                        Create Account <i class="bi bi-check-circle"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Login Link -->
+            <div class="login-link">
+                <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Model.ReturnUrl">
+                    Already have an account? Log in
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer Text -->
+        <p class="footer-text">
+            Join millions of users buying and selling unique items every day.
+        </p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function changeStep(direction) {
+            const newStep = currentStep + direction;
+            
+            if (newStep < 1 || newStep > totalSteps) return;
+            
+            // Validate current step before proceeding
+            if (direction > 0 && !validateCurrentStep()) {
+                return;
+            }
+            
+            // Hide current step
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            
+            // Update step indicators
+            updateStepIndicator(currentStep, newStep);
+            
+            // Show new step
+            currentStep = newStep;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+        }
+
+        function updateStepIndicator(oldStep, newStep) {
+            // Mark previous steps as completed
+            for (let i = 1; i < newStep; i++) {
+                document.getElementById(`step${i}-circle`).className = 'step-circle completed';
+                const line = document.getElementById(`step${i}-line`);
+                if (line) line.className = 'step-line completed';
+            }
+            
+            // Mark current step as active
+            document.getElementById(`step${newStep}-circle`).className = 'step-circle active';
+            
+            // Mark future steps as inactive
+            for (let i = newStep + 1; i <= totalSteps; i++) {
+                document.getElementById(`step${i}-circle`).className = 'step-circle inactive';
+            }
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show/hide previous button
+            prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+            
+            // Show/hide next/submit buttons
+            if (currentStep === totalSteps) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        function validateCurrentStep() {
+            const currentStepElement = document.getElementById(`step${currentStep}`);
+            const inputs = currentStepElement.querySelectorAll('input[required], input[data-val-required]');
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.style.borderColor = '#dc2626';
+                    isValid = false;
+                } else {
+                    input.style.borderColor = '#d1d5db';
+                }
+            });
+            
+            return isValid;
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profilePhoto').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Initialize navigation buttons
+        updateNavigationButtons();
+    </script>
+</body>
+</html>
