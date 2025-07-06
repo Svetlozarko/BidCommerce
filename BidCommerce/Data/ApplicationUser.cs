@@ -10,7 +10,7 @@
             public int Age { get; set; }
             public string Country { get; set; }
             public string? PhotoFileName { get; set; }
-            public bool IsSeller { get; set; } = false;
+            public bool IsSeller { get; set; } = false;  // By default the user is a buyer
 
         }
 

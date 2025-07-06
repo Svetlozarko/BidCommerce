@@ -6,15 +6,17 @@
 <link rel="stylesheet" href="~/css/profile-pic.css" />
 
 <ul class="navbar-nav">
-    @if (User.Identity.IsAuthenticated)
-    {
-        
-
+    @{
+        ApplicationUser user = null;
+        if (SignInManager.IsSignedIn(User))
+        {
+            user = await UserManager.GetUserAsync(User);
+        }
     }
 
-    @if (SignInManager.IsSignedIn(User))
+    @if (user != null)
     {
-        string photoFileName = UserManager.GetUserAsync(User).Result.PhotoFileName;
+        var photoFileName = user.PhotoFileName;
         var profilePicPath = !string.IsNullOrEmpty(photoFileName)
         ? Url.Content($"~/images/profiles/{photoFileName}")
         : Url.Content("~/images/default-profile.png");

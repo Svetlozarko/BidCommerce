@@ -4,13 +4,8 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
-    // Declare once at the very top to have them available everywhere
     var user = await UserManager.GetUserAsync(User);
-    var isSeller = false;
-    if (user != null)
-    {
-        isSeller = await UserManager.IsInRoleAsync(user, "Seller");
-    }
+    var isSeller = user?.IsSeller ?? false;
 }
 
 <!DOCTYPE html>
@@ -61,7 +56,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted mt-5">
         <div class="container">
             &copy; 2025 - BidCommerce
         </div>
@@ -76,8 +71,8 @@
                 var button = $(this);
                 var selectedRole = button.data('role');
 
-                // Disable buttons and show loading state on clicked button
-                button.prop('disabled', true).removeClass('btn-primary btn-outline-primary').addClass('btn-warning').text('Switching...');
+                button.prop('disabled', true).removeClass('btn-primary btn-outline-primary')
+                    .addClass('btn-warning').text('Switching...');
                 button.siblings('button').prop('disabled', true);
 
                 $.ajax({
@@ -86,35 +81,27 @@
                     data: { role: selectedRole },
                     success: function (response) {
                         if (response.success) {
-                            // Update buttons styling after success
-                            $('#toggleForm button').each(function () {
-                                var btn = $(this);
-                                var role = btn.data('role');
-                                btn.prop('disabled', false);
-
-                                if (role === response.newRole) {
-                                    btn.removeClass('btn-outline-primary btn-warning').addClass('btn-primary').text(role);
-                                } else {
-                                    btn.removeClass('btn-primary btn-warning').addClass('btn-outline-primary').text(role);
-                                }
-                            });
+                            updateButtons(response.newRole);
+                            location.reload(); // Optional: reload if needed to reflect new view logic
                         } else {
-                            alert('Error switching role: ' + response.message);
-                            resetButtons();
+                            alert('Error: ' + response.message);
+                            updateButtons('@(isSeller ? "Seller" : "Buyer")');
                         }
                     },
                     error: function () {
                         alert('An error occurred while switching roles.');
-                        resetButtons();
+                        updateButtons('@(isSeller ? "Seller" : "Buyer")');
                     }
                 });
 
-                function resetButtons() {
-                    $('#toggleForm button').prop('disabled', false).each(function () {
+                function updateButtons(activeRole) {
+                    $('#toggleForm button').each(function () {
                         var btn = $(this);
-                        var activeRole = '@(isSeller ? "Seller" : "Buyer")';
-                        btn.removeClass('btn-warning').addClass(btn.data('role') === activeRole ? 'btn-primary' : 'btn-outline-primary');
-                        btn.text(btn.data('role'));
+                        var role = btn.data('role');
+                        btn.prop('disabled', false)
+                            .removeClass('btn-warning btn-primary btn-outline-primary')
+                            .addClass(role === activeRole ? 'btn-primary' : 'btn-outline-primary')
+                            .text(role);
                     });
                 }
             });

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using BidCommerce.Models;
 
 namespace BidCommerce.Data
 {
@@ -10,7 +11,7 @@ namespace BidCommerce.Data
             : base(options)
         {
         }
-
+        public DbSet<Product> Products { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
