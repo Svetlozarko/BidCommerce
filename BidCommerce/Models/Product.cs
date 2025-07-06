@@ -1,4 +1,5 @@
 ﻿    using BidCommerce.Data;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -17,9 +18,8 @@ namespace BidCommerce.Models
         [Required]
         public string Description { get; set; }
 
-        [Required]
         [Range(0, double.MaxValue)]
-        public decimal? StartingPrice { get; set; }
+        public decimal? StartingPrice { get; set; } 
 
         public bool IsBiddable { get; set; } 
 
@@ -34,13 +34,15 @@ namespace BidCommerce.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public string OwnerId { get; set; }
+        [BindNever]
+        public string? OwnerId { get; set; }
 
+        [BindNever]
         [ForeignKey("OwnerId")]
-        public ApplicationUser Owner { get; set; }
+        public ApplicationUser? Owner { get; set; }
 
         [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+        public IFormFile ImageFile { get; set; }
     }
 
 }

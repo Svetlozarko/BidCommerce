@@ -8,7 +8,7 @@
 <hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create" enctype="multipart/form-data">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group mb-3">
@@ -23,15 +23,15 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="StartingPrice" class="form-label"></label>
-                <input asp-for="StartingPrice" class="form-control" />
-                <span asp-validation-for="StartingPrice" class="text-danger"></span>
-            </div>
-
             <div class="form-group form-check mb-3">
                 <input asp-for="IsBiddable" class="form-check-input" id="biddableCheck" />
                 <label class="form-check-label" for="biddableCheck">@Html.DisplayNameFor(m => m.IsBiddable)</label>
+            </div>
+
+            <div class="form-group mb-3" id="startingPriceGroup">
+                <label asp-for="StartingPrice" class="form-label"></label>
+                <input asp-for="StartingPrice" class="form-control" />
+                <span asp-validation-for="StartingPrice" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
@@ -42,7 +42,7 @@
 
             <div class="form-group mb-3" id="bidEndTimeGroup">
                 <label asp-for="BidEndTime" class="form-label"></label>
-                <input asp-for="BidEndTime" class="form-control" />
+                <input asp-for="BidEndTime" type="datetime-local" class="form-control" />
                 <span asp-validation-for="BidEndTime" class="text-danger"></span>
             </div>
 
@@ -67,11 +67,13 @@
 
     <script>
         $(function () {
-            function toggleBidEnd() {
-                $('#bidEndTimeGroup').toggle($('#biddableCheck').is(':checked'));
+            function toggleBidFields() {
+                var isBiddable = $('#biddableCheck').is(':checked');
+                $('#bidEndTimeGroup').toggle(isBiddable);
+                $('#startingPriceGroup').toggle(isBiddable);
             }
-            toggleBidEnd();
-            $('#biddableCheck').change(toggleBidEnd);
+            toggleBidFields();
+            $('#biddableCheck').change(toggleBidFields);
         });
     </script>
 }

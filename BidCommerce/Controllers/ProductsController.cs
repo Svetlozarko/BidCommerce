@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using BidCommerce.Data;
 using BidCommerce.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BidCommerce.Controllers
 {
@@ -52,40 +53,54 @@ namespace BidCommerce.Controllers
             ViewData["OwnerId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
-
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create(Product product)
         {
-            if (ModelState.IsValid)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
             {
-                // Assign logged-in user as Owner
-                product.OwnerId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-                product.CreatedAt = DateTime.UtcNow;
-
-                // Handle Image Upload
-                if (product.ImageFile != null)
-                {
-                    var fileName = Path.GetFileName(product.ImageFile.FileName);
-                    var filePath = Path.Combine("wwwroot/images/products", fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await product.ImageFile.CopyToAsync(stream);
-                    }
-
-                    product.ImageUrl = "/images/products/" + fileName;
-                }
-
-                _context.Products.Add(product); // Make sure DbSet is 'Products'
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction("Index", "Home");
+                return Unauthorized();
             }
 
-            // If we reach here, something is wrong with model validation
-            return View(product);
+            product.OwnerId = userId; // assign OwnerId early
+
+            if (!TryValidateModel(product))
+            {
+                return BadRequest(new { success = false, error = "Invalid model", details = ModelState });
+            }
+
+            product.CreatedAt = DateTime.UtcNow;
+
+            if (product.ImageFile != null)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(product.ImageFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await product.ImageFile.CopyToAsync(stream);
+
+                product.ImageUrl = "/images/products/" + fileName;
+            }
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                product.Id,
+                product.Title,
+                product.Description,
+                product.ImageUrl,
+                product.OwnerId
+            });
         }
+
 
 
         // GET: Products/Edit/5
