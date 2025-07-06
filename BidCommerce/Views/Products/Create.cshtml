@@ -1,79 +1,541 @@
 ﻿@model BidCommerce.Models.Product
-
 @{
-    ViewData["Title"] = "Create Product";
+    ViewData["Title"] = "Create New Listing";
 }
 
-<h2>Create a New Product</h2>
-<hr />
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
 
-            <div class="form-group mb-3">
-                <label asp-for="Title" class="form-label"></label>
-                <input asp-for="Title" class="form-control" />
+    .seller-header {
+        background-color: #f8f9fa;
+        padding: 20px 0;
+        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 30px;
+    }
+
+    .back-btn {
+        color: #6c757d;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+
+    .back-btn:hover {
+        color: #4364F7;
+        text-decoration: none;
+    }
+
+    .back-btn i {
+        margin-right: 8px;
+    }
+
+    .seller-brand {
+        display: flex;
+        align-items: center;
+    }
+
+    .seller-logo {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(45deg, #4364F7, #6FB1FC);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+
+    .seller-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .seller-subtitle {
+        color: #4364F7;
+        margin: 0;
+    }
+
+    .main-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .main-subtitle {
+        color: #6c757d;
+        font-size: 1.1rem;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 10px;
+        color: #4364F7;
+    }
+
+    .section-subtitle {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+
+    .listing-type-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .listing-card {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+
+    .listing-card:hover {
+        border-color: #4364F7;
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 100, 247, 0.1);
+    }
+
+    .listing-card.selected {
+        border-color: #4364F7;
+        background: white;
+        box-shadow: 0 4px 12px rgba(67, 100, 247, 0.15);
+    }
+
+    .listing-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+        color: #4364F7;
+    }
+
+    .listing-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .listing-description {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #4364F7;
+        box-shadow: 0 0 0 3px rgba(67, 100, 247, 0.1);
+    }
+
+    .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #d1d5db;
+        color: #6c757d;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 10px;
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .upload-area:hover {
+        border-color: #4364F7;
+        background-color: #f0f4ff;
+    }
+
+    .upload-icon {
+        font-size: 36px;
+        color: #9ca3af;
+        margin-bottom: 12px;
+    }
+
+    .upload-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 6px;
+    }
+
+    .upload-subtitle {
+        color: #6c757d;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+
+    .btn-choose-files {
+        background-color: white;
+        border: 1px solid #d1d5db;
+        color: #374151;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .btn-draft {
+        background-color: white;
+        border: 1px solid #d1d5db;
+        color: #374151;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.95rem;
+    }
+
+    .btn-draft:hover {
+        background-color: #f9fafb;
+        color: #374151;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background-color: #4364F7;
+        border: 1px solid #4364F7;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #3451e6;
+        border-color: #3451e6;
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Hide auction-specific fields initially */
+    .auction-only {
+        display: none;
+    }
+
+    @@media (max-width: 768px) {
+        .listing-type-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .main-title {
+            font-size: 1.8rem;
+        }
+        
+        .form-section {
+            padding: 20px;
+        }
+
+        .main-container {
+            padding: 0 15px;
+        }
+    }
+</style>
+
+
+<div class="main-container">
+    <h1 class="main-title">Create New Listing</h1>
+    <p class="main-subtitle">List your item for auction or fixed price sale</p>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <!-- Listing Type Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="bi bi-tag"></i> Listing Type
+            </h3>
+            <p class="section-subtitle">Choose how you want to sell your item</p>
+            
+            <div class="listing-type-cards">
+                <div class="listing-card" id="auctionCard">
+                    <div class="listing-icon">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div class="listing-title">Auction</div>
+                    <div class="listing-description">Let buyers bid on your item</div>
+                </div>
+                <div class="listing-card" id="fixedPriceCard">
+                    <div class="listing-icon">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="listing-title">Fixed Price</div>
+                    <div class="listing-description">Sell at a set price</div>
+                </div>
+            </div>
+            
+            <input asp-for="IsBiddable" type="hidden" id="isBiddableInput" />
+        </div>
+
+        <!-- Item Details Section -->
+        <div class="form-section">
+            <h3 class="section-title">Item Details</h3>
+            <p class="section-subtitle">Provide information about your item</p>
+            
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Title <span class="required">*</span></label>
+                <input asp-for="Title" class="form-control" placeholder="Enter item title" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control"></textarea>
+            
+            <div class="mb-4">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe your item in detail"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Category <span class="required">*</span></label>
+                    <select class="form-select" name="Category" required>
+                        <option value="">Select category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Home">Home & Garden</option>
+                        <option value="Collectibles">Collectibles</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Books">Books</option>
+                        <option value="Jewelry">Jewelry</option>
+                        <option value="Automotive">Automotive</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Condition <span class="required">*</span></label>
+                    <select class="form-select" name="Condition" required>
+                        <option value="">Select condition</option>
+                        <option value="New">New</option>
+                        <option value="Like New">Like New</option>
+                        <option value="Very Good">Very Good</option>
+                        <option value="Good">Good</option>
+                        <option value="Acceptable">Acceptable</option>
+                        <option value="For Parts">For Parts</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
-            <div class="form-group form-check mb-3">
-                <input asp-for="IsBiddable" class="form-check-input" id="biddableCheck" />
-                <label class="form-check-label" for="biddableCheck">@Html.DisplayNameFor(m => m.IsBiddable)</label>
+        <!-- Pricing Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="bi bi-currency-dollar"></i> Pricing
+            </h3>
+            <p class="section-subtitle" id="pricingSubtitle">Set your starting bid and optional Buy Now price</p>
+            
+            <div class="row">
+                <!-- Starting Bid - Only for Auctions -->
+                <div class="col-md-6 mb-3 auction-only" id="startingBidGroup">
+                    <label asp-for="StartingPrice" class="form-label">Starting Bid <span class="required">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input asp-for="StartingPrice" class="form-control" placeholder="0.99" />
+                    </div>
+                    <span asp-validation-for="StartingPrice" class="text-danger"></span>
+                </div>
+                
+                <!-- Fixed Price - Only for Fixed Price listings -->
+                <div class="col-md-6 mb-3" id="fixedPriceGroup" style="display: none;">
+                    <label class="form-label">Fixed Price <span class="required">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" name="FixedPrice" placeholder="199.99" step="0.01" />
+                    </div>
+                </div>
+                
+                <!-- Buy Now Price - Optional for both -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="BuyNowPrice" class="form-label">Buy It Now Price (Optional)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input asp-for="BuyNowPrice" class="form-control" placeholder="199.99" />
+                    </div>
+                    <span asp-validation-for="BuyNowPrice" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <!-- Auction Duration - Only for Auctions -->
+            <div class="mb-3 auction-only" id="auctionDurationGroup">
+                <label class="form-label">Auction Duration</label>
+                <select class="form-select" name="AuctionDuration">
+                    <option value="7">7 Days</option>
+                    <option value="5">5 Days</option>
+                    <option value="3">3 Days</option>
+                    <option value="1">1 Day</option>
+                </select>
             </div>
 
-            <div class="form-group mb-3" id="startingPriceGroup">
-                <label asp-for="StartingPrice" class="form-label"></label>
-                <input asp-for="StartingPrice" class="form-control" />
-                <span asp-validation-for="StartingPrice" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="BuyNowPrice" class="form-label"></label>
-                <input asp-for="BuyNowPrice" class="form-control" />
-                <span asp-validation-for="BuyNowPrice" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3" id="bidEndTimeGroup">
-                <label asp-for="BidEndTime" class="form-label"></label>
+            <!-- Bid End Time - Only for Auctions -->
+            <div class="mb-3 auction-only" id="bidEndTimeGroup">
+                <label asp-for="BidEndTime" class="form-label">Auction End Date & Time</label>
                 <input asp-for="BidEndTime" type="datetime-local" class="form-control" />
                 <span asp-validation-for="BidEndTime" class="text-danger"></span>
             </div>
+        </div>
 
-            <div class="form-group mb-4">
-                <label for="imageUpload" class="form-label">Upload Product Image</label>
-                <input type="file" name="ImageFile" class="form-control" />
+        <!-- Shipping & Location Section -->
+        <div class="form-section">
+            <h3 class="section-title">Shipping & Location</h3>
+            <p class="section-subtitle">Set shipping costs and item location</p>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Shipping Cost</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" name="ShippingCost" placeholder="0.00 (Free)" step="0.01" />
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Item Location <span class="required">*</span></label>
+                    <input type="text" class="form-control" name="Location" placeholder="City, State" required />
+                </div>
             </div>
+        </div>
 
-            <button type="submit" class="btn btn-primary">Create Product</button>
-        </form>
-    </div>
-</div>
+        <!-- Photos Section -->
+        <div class="form-section">
+            <h3 class="section-title">Photos</h3>
+            <p class="section-subtitle">Add photos of your item (up to 12 photos)</p>
+            
+            <div class="upload-area" onclick="document.getElementById('imageUpload').click()">
+                <div class="upload-icon">
+                    <i class="bi bi-cloud-upload"></i>
+                </div>
+                <div class="upload-title">Upload Photos</div>
+                <div class="upload-subtitle">Drag and drop your photos here, or click to browse</div>
+                <button type="button" class="btn btn-choose-files">Choose Files</button>
+            </div>
+            <input type="file" name="ImageFile" id="imageUpload" class="d-none" multiple accept="image/*" />
+        </div>
 
-<div class="mt-3">
-    <a asp-action="Index">Back to Product List</a>
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button type="button" class="btn-draft">Save as Draft</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">Start Auction</button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script>
-        $(function () {
-            function toggleBidFields() {
-                var isBiddable = $('#biddableCheck').is(':checked');
-                $('#bidEndTimeGroup').toggle(isBiddable);
-                $('#startingPriceGroup').toggle(isBiddable);
-            }
-            toggleBidFields();
-            $('#biddableCheck').change(toggleBidFields);
+        $(document).ready(function() {
+            // Listing type selection
+            $('.listing-card').click(function() {
+                $('.listing-card').removeClass('selected');
+                $(this).addClass('selected');
+                
+                if ($(this).attr('id') === 'auctionCard') {
+                    // Show auction fields
+                    $('#isBiddableInput').val('true');
+                    $('.auction-only').show();
+                    $('#fixedPriceGroup').hide();
+                    $('#submitBtn').text('Start Auction');
+                    $('#pricingSubtitle').text('Set your starting bid and optional Buy Now price');
+                } else {
+                    // Show fixed price fields
+                    $('#isBiddableInput').val('false');
+                    $('.auction-only').hide();
+                    $('#fixedPriceGroup').show();
+                    $('#submitBtn').text('List Item');
+                    $('#pricingSubtitle').text('Set your fixed price');
+                }
+            });
+            
+            // Default to auction
+            $('#auctionCard').click();
+            
+            // File upload preview
+            $('#imageUpload').change(function() {
+                var files = this.files;
+                if (files.length > 0) {
+                    $('.upload-subtitle').text(files.length + ' file(s) selected');
+                }
+            });
         });
     </script>
 }
