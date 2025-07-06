@@ -136,32 +136,72 @@
         opacity: 0.9;
     }
 
-    @@media (max-width: 991.98px) {
-        .hero-title {
-            font-size: 2.5rem;
-            text-align: center;
-        }
-        
-        .hero-description {
-            font-size: 1.1rem;
-            text-align: center;
-        }
-        
-        .stats-card {
-            margin-bottom: 15px;
-        }
+    /* Categories Section Styles */
+    .categories-section {
+        padding: 80px 0;
+        background-color: #f8f9fa;
     }
 
-    @@media (min-width: 992px) {
-        .hero-text-col {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding-right: 2rem;
-        }
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        text-align: center;
     }
+
+    .section-subtitle {
+        font-size: 1.2rem;
+        color: #6c757d;
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+        height: 100%;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .category-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border-color: #4364F7;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .category-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        color: #4364F7;
+    }
+
+    .category-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .category-count {
+        font-size: 1rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Footer Styles */
+    
 </style>
 
+<!-- Hero Section -->
 <div class="hero-section">
     <div class="container hero-content">
         <div class="row align-items-center min-vh-50">
@@ -236,14 +276,102 @@
     </div>
 </div>
 
-<!-- Optional: Add a section below the hero -->
-<section class="py-5 bg-light">
+<!-- Browse Categories Section -->
+<section class="categories-section">
     <div class="container">
-        <div class="row text-center">
-            <div class="col-12">
-                <h2 class="display-5 fw-bold text-dark mb-4">Browse Categories</h2>
-                <p class="lead text-muted">Find exactly what you're looking for</p>
+        <h2 class="section-title">Browse Categories</h2>
+        <p class="section-subtitle">Explore millions of items across all categories</p>
+        
+        <div class="row g-4">
+            <!-- Electronics -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Electronics" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <div class="category-name">Electronics</div>
+                    <div class="category-count">50,234 items</div>
+                </a>
+            </div>
+            
+            <!-- Fashion -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Fashion" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-bag"></i>
+                    </div>
+                    <div class="category-name">Fashion</div>
+                    <div class="category-count">32,567 items</div>
+                </a>
+            </div>
+            
+            <!-- Home & Garden -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Home" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-house"></i>
+                    </div>
+                    <div class="category-name">Home & Garden</div>
+                    <div class="category-count">28,901 items</div>
+                </a>
+            </div>
+            
+            <!-- Collectibles -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Collectibles" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="category-name">Collectibles</div>
+                    <div class="category-count">45,678 items</div>
+                </a>
+            </div>
+            
+            <!-- Sports -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Sports" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <div class="category-name">Sports</div>
+                    <div class="category-count">19,234 items</div>
+                </a>
+            </div>
+            
+            <!-- Books -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Books" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="category-name">Books</div>
+                    <div class="category-count">23,456 items</div>
+                </a>
+            </div>
+            
+            <!-- Jewelry -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Jewelry" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <div class="category-name">Jewelry</div>
+                    <div class="category-count">15,789 items</div>
+                </a>
+            </div>
+            
+            <!-- Automotive -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="Automotive" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi bi-car-front"></i>
+                    </div>
+                    <div class="category-name">Automotive</div>
+                    <div class="category-count">34,567 items</div>
+                </a>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Footer -->
