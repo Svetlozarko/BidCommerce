@@ -8,7 +8,7 @@
 
 <div class="row">
     <div class="col-md-6">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
             <h2>Create a new account.</h2>
             <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
@@ -67,6 +67,17 @@
                 <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" placeholder="Confirm Password" />
                 <label asp-for="Input.ConfirmPassword">Confirm Password</label>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <!-- Profile Picture -->
+            <div class="mb-3">
+                <label asp-for="Input.PhotoFile" class="form-label">Profile Picture</label>
+                <input asp-for="Input.PhotoFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif" onchange="document.getElementById('profilePhoto').src = window.URL.createObjectURL(this.files[0])" />
+                <span asp-validation-for="Input.PhotoFile" class="text-danger"></span>
+                <div class="mt-2">
+                    <img id="profilePhoto" src="~/images/default-profile.png"
+                         style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;" />
+                </div>
             </div>
 
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
