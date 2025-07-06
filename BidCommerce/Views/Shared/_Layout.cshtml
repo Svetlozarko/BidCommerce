@@ -101,11 +101,158 @@
     <main role="main">
         @RenderBody()
     </main>
+    <style>.footer {
+        background-color: #2c3e50;
+        color: white;
+        padding: 60px 0 30px 0;
+    }
 
+    .footer-brand {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .footer-logo {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(45deg, #4364F7, #6FB1FC);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+    }
+
+    .footer-brand-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .footer-description {
+        color: #bdc3c7;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+
+    .footer-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 12px;
+    }
+
+    .footer-links a {
+        color: #bdc3c7;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+        color: #4364F7;
+    }
+
+    .footer-bottom {
+        border-top: 1px solid #34495e;
+        padding-top: 30px;
+        margin-top: 40px;
+        text-align: center;
+        color: #bdc3c7;
+    }
+
+    @@media (max-width: 991.98px) {
+        .hero-title {
+            font-size: 2.5rem;
+            text-align: center;
+        }
+        
+        .hero-description {
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .stats-card {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+
+        .category-card {
+            margin-bottom: 20px;
+        }
+    }
+
+    @@media (min-width: 992px) {
+        .hero-text-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 2rem;
+        }
+    }</style>
     <!-- Footer (optional) -->
-    <footer class="bg-light text-center py-4 mt-auto border-top">
+    <footer class="footer">
         <div class="container">
-            <p class="mb-0">&copy; @DateTime.Now.Year BidCommerce. All rights reserved.</p>
+            <div class="row">
+                <!-- Brand Column -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <i class="bi bi-bag" style="color: white; font-size: 20px;"></i>
+                        </div>
+                        <span class="footer-brand-name">BidCommerce</span>
+                    </div>
+                    <p class="footer-description">
+                        The world's largest online auction marketplace with millions of unique items.
+                    </p>
+                </div>
+
+                <!-- For Buyers Column -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">For Buyers</h5>
+                    <ul class="footer-links">
+                        <li><a asp-controller="Help" asp-action="HowToBid">How to Bid</a></li>
+                        <li><a asp-controller="Help" asp-action="BuyerProtection">Buyer Protection</a></li>
+                        <li><a asp-controller="Help" asp-action="PaymentMethods">Payment Methods</a></li>
+                    </ul>
+                </div>
+
+                <!-- For Sellers Column -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">For Sellers</h5>
+                    <ul class="footer-links">
+                        <li><a asp-controller="Products" asp-action="Create">Start Selling</a></li>
+                        <li><a asp-controller="Seller" asp-action="Dashboard">Seller Center</a></li>
+                        <li><a asp-controller="Help" asp-action="FeesAndPricing">Fees & Pricing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support Column -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">Support</h5>
+                    <ul class="footer-links">
+                        <li><a asp-controller="Help" asp-action="Index">Help Center</a></li>
+                        <li><a asp-controller="Home" asp-action="Contact">Contact Us</a></li>
+                        <li><a asp-controller="Community" asp-action="Index">Community</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 BidCommerce. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
