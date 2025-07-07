@@ -1,4 +1,6 @@
-﻿@model BidCommerce.Models.Product
+﻿@model BidCommerce.ViewModels.ProductCreateViewModel
+
+
 @{
     ViewData["Title"] = "Create New Listing";
 }
@@ -347,112 +349,106 @@
                 </div>
             </div>
             
-            <input asp-for="IsBiddable" type="hidden" id="isBiddableInput" />
+          <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" />
+</div>
+
+<!-- Item Details Section -->
+<div class="form-section">
+    <h3 class="section-title">Item Details</h3>
+    <p class="section-subtitle">Provide information about your item</p>
+    
+    <div class="mb-3">
+        <label asp-for="Product.Title" class="form-label">Title <span class="required">*</span></label>
+        <input asp-for="Product.Title" class="form-control" placeholder="Enter item title" />
+        <span asp-validation-for="Product.Title" class="text-danger"></span>  <!-- fixed validation path -->
+    </div>
+    
+    <div class="mb-4">
+        <label asp-for="Product.Description" class="form-label">Description</label>  <!-- fixed binding -->
+        <textarea asp-for="Product.Description" class="form-control" rows="4" placeholder="Describe your item in detail"></textarea>
+        <span asp-validation-for="Product.Description" class="text-danger"></span>  <!-- fixed validation path -->
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <label asp-for="Product.CategoryId" class="form-label">Category <span class="required">*</span></label> <!-- unified to one dropdown -->
+            <select asp-for="Product.CategoryId" class="form-select" required>
+                <option value="">Select category</option>
+                        @foreach (var category in Model.Categories)
+                        {
+                            if (category.CategoryId == Model.Product.CategoryId)
+                            {
+                                <option value="@category.CategoryId" selected>@category.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@category.CategoryId">@category.Name</option>
+                            }
+                        }
+
+            </select>
+            <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
         </div>
+    </div>
+</div>
 
-        <!-- Item Details Section -->
-        <div class="form-section">
-            <h3 class="section-title">Item Details</h3>
-            <p class="section-subtitle">Provide information about your item</p>
-            
-            <div class="mb-3">
-                <label asp-for="Title" class="form-label">Title <span class="required">*</span></label>
-                <input asp-for="Title" class="form-control" placeholder="Enter item title" />
-                <span asp-validation-for="Title" class="text-danger"></span>
+<!-- Pricing Section -->
+<div class="form-section">
+    <h3 class="section-title">
+        <i class="bi bi-currency-dollar"></i> Pricing
+    </h3>
+    <p class="section-subtitle" id="pricingSubtitle">Set your starting bid and optional Buy Now price</p>
+    
+    <div class="row">
+        <!-- Starting Bid - Only for Auctions -->
+        <div class="col-md-6 mb-3 auction-only" id="startingBidGroup">
+            <label asp-for="Product.StartingPrice" class="form-label">Starting Bid <span class="required">*</span></label> <!-- fixed binding -->
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input asp-for="Product.StartingPrice" class="form-control" placeholder="0.99" />
             </div>
-            
-            <div class="mb-4">
-                <label asp-for="Description" class="form-label">Description</label>
-                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe your item in detail"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Category <span class="required">*</span></label>
-                    <select class="form-select" name="Category" required>
-                        <option value="">Select category</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Fashion">Fashion</option>
-                        <option value="Home">Home & Garden</option>
-                        <option value="Collectibles">Collectibles</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Books">Books</option>
-                        <option value="Jewelry">Jewelry</option>
-                        <option value="Automotive">Automotive</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Condition <span class="required">*</span></label>
-                    <select class="form-select" name="Condition" required>
-                        <option value="">Select condition</option>
-                        <option value="New">New</option>
-                        <option value="Like New">Like New</option>
-                        <option value="Very Good">Very Good</option>
-                        <option value="Good">Good</option>
-                        <option value="Acceptable">Acceptable</option>
-                        <option value="For Parts">For Parts</option>
-                    </select>
-                </div>
-            </div>
+            <span asp-validation-for="Product.StartingPrice" class="text-danger"></span> <!-- fixed validation -->
         </div>
-
-        <!-- Pricing Section -->
-        <div class="form-section">
-            <h3 class="section-title">
-                <i class="bi bi-currency-dollar"></i> Pricing
-            </h3>
-            <p class="section-subtitle" id="pricingSubtitle">Set your starting bid and optional Buy Now price</p>
-            
-            <div class="row">
-                <!-- Starting Bid - Only for Auctions -->
-                <div class="col-md-6 mb-3 auction-only" id="startingBidGroup">
-                    <label asp-for="StartingPrice" class="form-label">Starting Bid <span class="required">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input asp-for="StartingPrice" class="form-control" placeholder="0.99" />
-                    </div>
-                    <span asp-validation-for="StartingPrice" class="text-danger"></span>
-                </div>
-                
-                <!-- Fixed Price - Only for Fixed Price listings -->
-                <div class="col-md-6 mb-3" id="fixedPriceGroup" style="display: none;">
-                    <label class="form-label">Fixed Price <span class="required">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input type="number" class="form-control" name="FixedPrice" placeholder="199.99" step="0.01" />
-                    </div>
-                </div>
-                
-                <!-- Buy Now Price - Optional for both -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="BuyNowPrice" class="form-label">Buy It Now Price (Optional)</label>
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input asp-for="BuyNowPrice" class="form-control" placeholder="199.99" />
-                    </div>
-                    <span asp-validation-for="BuyNowPrice" class="text-danger"></span>
-                </div>
-            </div>
-            
-            <!-- Auction Duration - Only for Auctions -->
-            <div class="mb-3 auction-only" id="auctionDurationGroup">
-                <label class="form-label">Auction Duration</label>
-                <select class="form-select" name="AuctionDuration">
-                    <option value="7">7 Days</option>
-                    <option value="5">5 Days</option>
-                    <option value="3">3 Days</option>
-                    <option value="1">1 Day</option>
-                </select>
-            </div>
-
-            <!-- Bid End Time - Only for Auctions -->
-            <div class="mb-3 auction-only" id="bidEndTimeGroup">
-                <label asp-for="BidEndTime" class="form-label">Auction End Date & Time</label>
-                <input asp-for="BidEndTime" type="datetime-local" class="form-control" />
-                <span asp-validation-for="BidEndTime" class="text-danger"></span>
+        
+        <!-- Fixed Price - Only for Fixed Price listings -->
+        <div class="col-md-6 mb-3" id="fixedPriceGroup" style="display: none;">
+            <label class="form-label">Fixed Price <span class="required">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" name="FixedPrice" placeholder="199.99" step="0.01" />
             </div>
         </div>
+        
+        <!-- Buy Now Price - Optional for both -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="Product.BuyNowPrice" class="form-label">Buy It Now Price (Optional)</label> <!-- fixed binding -->
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" />
+            </div>
+            <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span> <!-- fixed validation -->
+        </div>
+    </div>
+    
+    <!-- Auction Duration - Only for Auctions -->
+    <div class="mb-3 auction-only" id="auctionDurationGroup">
+        <label class="form-label">Auction Duration</label>
+        <select class="form-select" name="AuctionDuration">
+            <option value="7">7 Days</option>
+            <option value="5">5 Days</option>
+            <option value="3">3 Days</option>
+            <option value="1">1 Day</option>
+        </select>
+    </div>
+
+    <!-- Bid End Time - Only for Auctions -->
+    <div class="mb-3 auction-only" id="bidEndTimeGroup">
+        <label asp-for="Product.BidEndTime" class="form-label">Auction End Date & Time</label> <!-- fixed binding -->
+        <input asp-for="Product.BidEndTime" type="datetime-local" class="form-control" />
+        <span asp-validation-for="Product.BidEndTime" class="text-danger"></span> <!-- fixed validation -->
+    </div>
+</div>
+
 
         <!-- Shipping & Location Section -->
         <div class="form-section">

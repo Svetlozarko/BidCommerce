@@ -1,89 +1,620 @@
-﻿@model IEnumerable<BidCommerce.Models.Product>
-
+﻿@model BidCommerce.ViewModels.ProductIndexViewModel;
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "All Products";
 }
 
-<h1>Index</h1>
+<style>
+    .products-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartingPrice)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsBiddable)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BuyNowPrice)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CurrentBid)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BidEndTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImageUrl)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Owner)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartingPrice)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsBiddable)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BuyNowPrice)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CurrentBid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BidEndTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ImageUrl)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Owner.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    .products-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .products-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .items-count {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    .products-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .filter-dropdown, .sort-dropdown {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .view-toggle {
+        display: flex;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .view-btn {
+        padding: 8px 12px;
+        background: white;
+        border: none;
+        cursor: pointer;
+        color: #6b7280;
+    }
+
+    .view-btn.active {
+        background: #4364f7;
+        color: white;
+    }
+
+    .main-content {
+        display: flex;
+        gap: 30px;
+    }
+
+    /* Sidebar Filters */
+    .filters-sidebar {
+        width: 250px;
+        flex-shrink: 0;
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .filters-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .clear-filters {
+        color: #4364f7;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .filter-section {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .filter-section:last-child {
+        border-bottom: none;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .price-range {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .price-input {
+        width: 80px;
+        padding: 6px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .price-slider {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .filter-checkbox input {
+        margin-right: 8px;
+        accent-color: #4364f7;
+    }
+
+    .filter-checkbox label {
+        font-size: 0.9rem;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    .apply-filters-btn {
+        width: 100%;
+        background: #1f2937;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .apply-filters-btn:hover {
+        background: #111827;
+    }
+
+    /* Products Grid */
+    .products-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-image {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .ending-soon-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #dc2626;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .wishlist-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #6b7280;
+    }
+
+    .wishlist-btn:hover {
+        color: #dc2626;
+    }
+
+    .product-info {
+        padding: 15px;
+    }
+
+    .product-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+
+    .product-description {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .product-category {
+        display: inline-block;
+        background: #f3f4f6;
+        color: #6b7280;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .product-pricing {
+        margin-bottom: 12px;
+    }
+
+    .current-bid {
+        font-weight: 600;
+        color: #059669;
+        font-size: 1.1rem;
+    }
+
+    .buy-now-price {
+        color: #6b7280;
+        font-size: 0.9rem;
+        text-decoration: line-through;
+    }
+
+    .product-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-bid {
+        flex: 1;
+        background: #4364f7;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-buy-now {
+        flex: 1;
+        background: transparent;
+        color: #4364f7;
+        border: 1px solid #4364f7;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-bid:hover {
+        background: #3451e6;
+    }
+
+    .btn-buy-now:hover {
+        background: #f0f4ff;
+    }
+
+    .no-products {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .no-products i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: #d1d5db;
+    }
+
+    @@media (max-width: 768px) {
+        .main-content {
+            flex-direction: column;
+        }
+        
+        .filters-sidebar {
+            width: 100%;
+        }
+        
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+    }
+</style>
+
+<div class="products-container">
+    <!-- Products Header -->
+    <div class="products-header">
+        <div>
+            <h1 class="products-title">All Products</h1>
+            <div class="items-count">@Model.Products.Count() items found</div>
+        </div>
+        <div class="products-controls">
+            <form method="get" id="filterForm">
+                <select name="categoryId" class="filter-dropdown" id="categoryFilter" onchange="submitFilters()">
+                    <option value="">All Categories</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                       <option value="@category.CategoryId" selected="@(Model.SelectedCategoryId == category.CategoryId)">
+    @category.Name
+</option>
+
+                    }
+                </select>
+                
+                <input type="hidden" name="minPrice" id="hiddenMinPrice" value="@Model.MinPrice" />
+                <input type="hidden" name="maxPrice" id="hiddenMaxPrice" value="@Model.MaxPrice" />
+                <input type="hidden" name="sortBy" id="hiddenSortBy" value="@Model.SortBy" />
+                <input type="hidden" name="listingType" id="hiddenListingType" value="@Model.ListingType" />
+            </form>
+            
+            <button class="filter-dropdown" onclick="toggleFilters()">
+                <i class="bi bi-funnel"></i> Filters
+            </button>
+            
+            <select class="sort-dropdown" id="sortBy" onchange="updateSort()">
+               <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Newest First</option>
+               <option value="price-low" selected="@(Model.SortBy == "price-low")">Price: Low to High</option>
+               <option value="price-high" selected="@(Model.SortBy == "price-high")">Price: High to Low</option>
+               <option value="ending-soon" selected="@(Model.SortBy == "ending-soon")">Ending Soon</option>
+
+            </select>
+            
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="setView('grid')">
+                    <i class="bi bi-grid"></i>
+                </button>
+                <button class="view-btn" onclick="setView('list')">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Filters Sidebar -->
+        <div class="filters-sidebar" id="filtersSidebar">
+            <div class="filters-header">
+                <span class="filters-title">Filters</span>
+                <a href="@Url.Action("Index")" class="clear-filters">Clear All</a>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filter-section">
+                <label class="filter-label">Price Range</label>
+                <div class="price-range">
+                    <input type="number" class="price-input" id="minPrice" placeholder="0" min="0" 
+                           value="@Model.MinPrice" onchange="updatePriceFilter()">
+                    <span>to</span>
+                    <input type="number" class="price-input" id="maxPrice" placeholder="1000" min="0" 
+                           value="@Model.MaxPrice" onchange="updatePriceFilter()">
+                </div>
+                <input type="range" class="price-slider" id="priceSlider" min="0" max="5000" 
+                       value="@(Model.MaxPrice ?? 5000)" onchange="updatePriceSlider()">
+            </div>
+
+            <!-- Listing Type -->
+            <div class="filter-section">
+                <label class="filter-label">Listing Type</label>
+                <div class="filter-checkbox">
+                    <input type="radio" id="all-types" name="listingType" value="" 
+                           @(string.IsNullOrEmpty(Model.ListingType) ? "checked" : "") onchange="updateListingType()">
+                    <label for="all-types">All Types</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" id="auction" name="listingType" value="auction" 
+                           @(Model.ListingType == "auction" ? "checked" : "") onchange="updateListingType()">
+                    <label for="auction">Auction</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" id="buy-it-now" name="listingType" value="buy-it-now" 
+                           @(Model.ListingType == "buy-it-now" ? "checked" : "") onchange="updateListingType()">
+                    <label for="buy-it-now">Buy It Now</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="radio" id="both-types" name="listingType" value="both" 
+                           @(Model.ListingType == "both" ? "checked" : "") onchange="updateListingType()">
+                    <label for="both-types">Both Available</label>
+                </div>
+            </div>
+
+            <button class="apply-filters-btn" onclick="submitFilters()">Apply Filters</button>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="productsGrid">
+            @if (Model.Products.Any())
+            {
+                @foreach (var item in Model.Products)
+                {
+                    <div class="product-card" data-category="@item.Category.CategoryId" data-price="@(item.CurrentBid ?? item.StartingPrice ?? 0)">
+                        <div class="product-image">
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/placeholder-product.jpg" : item.ImageUrl)" 
+                                 alt="@item.Title" />
+                            @if (item.BidEndTime.HasValue && item.BidEndTime.Value <= DateTime.Now.AddHours(24))
+                            {
+                                <div class="ending-soon-badge">Ending Soon</div>
+                            }
+                            <button class="wishlist-btn" onclick="toggleWishlist(@item.Id)">
+                                <i class="bi bi-heart"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="product-info">
+                            <div class="product-category">@item.Category.Name</div>
+                            <h3 class="product-title">@item.Title</h3>
+                            <p class="product-description">@(item.Description?.Length > 80 ? item.Description.Substring(0, 80) + "..." : item.Description)</p>
+                            
+                            <div class="product-pricing">
+                                @if (item.IsBiddable)
+                                {
+                                    <div class="current-bid">Current bid: $@((item.CurrentBid ?? item.StartingPrice ?? 0).ToString("F2"))</div>
+                                    @if (item.BuyNowPrice.HasValue)
+                                    {
+                                        <div class="buy-now-price">Buy now: $@item.BuyNowPrice.Value.ToString("F2")</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="current-bid">Price: $@((item.BuyNowPrice ?? item.StartingPrice ?? 0).ToString("F2"))</div>
+                                }
+                            </div>
+                            
+                            <div class="product-stats">
+                                <span><i class="bi bi-eye"></i> @(new Random().Next(5, 50)) watching</span>
+                                @if (item.IsBiddable)
+                                {
+                                    <span><i class="bi bi-hammer"></i> @(new Random().Next(1, 20)) bids</span>
+                                }
+                                @if (item.BidEndTime.HasValue)
+                                {
+                                    var timeLeft = item.BidEndTime.Value - DateTime.Now;
+                                    if (timeLeft.TotalDays >= 1)
+                                    {
+                                        <span><i class="bi bi-clock"></i> @((int)timeLeft.TotalDays)d left</span>
+                                    }
+                                    else if (timeLeft.TotalHours >= 1)
+                                    {
+                                        <span><i class="bi bi-clock"></i> @((int)timeLeft.TotalHours)h left</span>
+                                    }
+                                    else if (timeLeft.TotalMinutes > 0)
+                                    {
+                                        <span><i class="bi bi-clock"></i> @((int)timeLeft.TotalMinutes)m left</span>
+                                    }
+                                    else
+                                    {
+                                        <span><i class="bi bi-clock"></i> Ended</span>
+                                    }
+                                }
+                            </div>
+                            
+                            <div class="product-actions">
+                                @if (item.IsBiddable && item.BidEndTime.HasValue && item.BidEndTime.Value > DateTime.Now)
+                                {
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn-bid">
+                                        <i class="bi bi-hammer"></i> Bid
+                                    </a>
+                                }
+                                @if (item.BuyNowPrice.HasValue)
+                                {
+                                    <a href="@Url.Action("BuyNow", new { id = item.Id })" class="btn-buy-now">
+                                        <i class="bi bi-cart"></i> Buy Now
+                                    </a>
+                                }
+                                else if (!item.IsBiddable)
+                                {
+                                    <a href="@Url.Action("BuyNow", new { id = item.Id })" class="btn-buy-now">
+                                        <i class="bi bi-cart"></i> Buy Now
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="no-products">
+                    <i class="bi bi-search"></i>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your filters or browse all categories.</p>
+                    <a href="@Url.Action("Index")" class="btn btn-primary">View All Products</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    // Filter and view functionality
+    function toggleFilters() {
+        const sidebar = document.getElementById('filtersSidebar');
+        sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function setView(viewType) {
+        const buttons = document.querySelectorAll('.view-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        const grid = document.getElementById('productsGrid');
+        if (viewType === 'list') {
+            grid.style.gridTemplateColumns = '1fr';
+        } else {
+            grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+        }
+    }
+
+    function submitFilters() {
+        document.getElementById('filterForm').submit();
+    }
+
+    function updateSort() {
+        const sortValue = document.getElementById('sortBy').value;
+        document.getElementById('hiddenSortBy').value = sortValue;
+        submitFilters();
+    }
+
+    function updatePriceFilter() {
+        const minPrice = document.getElementById('minPrice').value;
+        const maxPrice = document.getElementById('maxPrice').value;
+        document.getElementById('hiddenMinPrice').value = minPrice;
+        document.getElementById('hiddenMaxPrice').value = maxPrice;
+    }
+
+    function updatePriceSlider() {
+        const sliderValue = document.getElementById('priceSlider').value;
+        document.getElementById('maxPrice').value = sliderValue;
+        document.getElementById('hiddenMaxPrice').value = sliderValue;
+    }
+
+    function updateListingType() {
+        const selectedType = document.querySelector('input[name="listingType"]:checked').value;
+        document.getElementById('hiddenListingType').value = selectedType;
+    }
+
+    // Product actions
+    function toggleWishlist(productId) {
+        const btn = event.target.closest('.wishlist-btn');
+        const icon = btn.querySelector('i');
+        
+        if (icon.classList.contains('bi-heart')) {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+            btn.style.color = '#dc2626';
+        } else {
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+            btn.style.color = '#6b7280';
+        }
+        
+        // Here you would typically make an AJAX call to save the wishlist state
+        // fetch(`/api/wishlist/${productId}`, { method: 'POST' });
+    }
+</script>
