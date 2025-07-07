@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    [Migration("20250706162157_InitialCreate")]
+    [Migration("20250707165243_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -115,6 +115,60 @@ namespace BidCommerce.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("BidCommerce.Models.Category", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("CategoryId");
+
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryId = 1,
+                            Description = "Electronic devices and gadgets",
+                            Name = "Electronics"
+                        },
+                        new
+                        {
+                            CategoryId = 2,
+                            Description = "Clothing and accessories",
+                            Name = "Fashion"
+                        },
+                        new
+                        {
+                            CategoryId = 3,
+                            Description = "Furniture and home decor",
+                            Name = "Home"
+                        },
+                        new
+                        {
+                            CategoryId = 4,
+                            Description = "Books and literature",
+                            Name = "Books"
+                        },
+                        new
+                        {
+                            CategoryId = 5,
+                            Description = "Toys and games for all ages",
+                            Name = "Toys"
+                        });
+                });
+
             modelBuilder.Entity("BidCommerce.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -128,6 +182,9 @@ namespace BidCommerce.Migrations
 
                     b.Property<decimal?>("BuyNowPrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -156,6 +213,8 @@ namespace BidCommerce.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("OwnerId");
 
@@ -297,9 +356,17 @@ namespace BidCommerce.Migrations
 
             modelBuilder.Entity("BidCommerce.Models.Product", b =>
                 {
+                    b.HasOne("BidCommerce.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BidCommerce.Data.ApplicationUser", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId");
+
+                    b.Navigation("Category");
 
                     b.Navigation("Owner");
                 });
@@ -353,6 +420,11 @@ namespace BidCommerce.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Category", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }
