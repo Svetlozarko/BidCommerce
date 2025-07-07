@@ -9,6 +9,7 @@ using BidCommerce.Data;
 using BidCommerce.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using BidCommerce.ViewModels;
 
 namespace BidCommerce.Controllers
 {
@@ -21,11 +22,46 @@ namespace BidCommerce.Controllers
             _context = context;
         }
 
-        // GET: Products
-        public async Task<IActionResult> Index()
+        [Authorize]
+        public async Task<IActionResult> Index(int? categoryId, decimal? minPrice, decimal? maxPrice, string? sortBy, string? listingType)
         {
-            var bidDb = _context.Products.Include(p => p.Owner);
-            return View(await bidDb.ToListAsync());
+            var query = _context.Products.Include(p => p.Category).AsQueryable();
+
+            // Filtering by category
+            if (categoryId.HasValue)
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+
+            // Filtering by price range
+            if (minPrice.HasValue)
+                query = query.Where(p => p.BuyNowPrice >= minPrice.Value || p.StartingPrice >= minPrice.Value);
+
+            if (maxPrice.HasValue)
+                query = query.Where(p => p.BuyNowPrice <= maxPrice.Value || p.StartingPrice <= maxPrice.Value);
+
+            // Sorting
+            query = sortBy switch
+            {
+                "price-low" => query.OrderBy(p => p.BuyNowPrice ?? p.StartingPrice),
+                "price-high" => query.OrderByDescending(p => p.BuyNowPrice ?? p.StartingPrice),
+                "ending-soon" => query.OrderBy(p => p.BidEndTime),
+                _ => query.OrderByDescending(p => p.CreatedAt), // newest by default
+            };
+
+            var products = await query.ToListAsync();
+            var categories = await _context.Categories.ToListAsync();
+
+            var viewModel = new ProductIndexViewModel
+            {
+                Products = products,
+                Categories = categories,
+                SelectedCategoryId = categoryId,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SortBy = sortBy ?? "newest",
+                ListingType = listingType
+            };
+
+            return View(viewModel);
         }
 
         // GET: Products/Details/5
@@ -50,9 +86,16 @@ namespace BidCommerce.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            ViewData["OwnerId"] = new SelectList(_context.Users, "Id", "Id");
-            return View();
+            var categories = _context.Categories.ToList();
+
+            var vm = new ProductCreateViewModel
+            {
+                Categories = categories
+            };
+
+            return View(vm);
         }
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Create(Product product)
