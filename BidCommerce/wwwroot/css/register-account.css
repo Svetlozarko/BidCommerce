@@ -1,0 +1,322 @@
+﻿body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #4f7cff 0%, #4364f7 50%, #6fb1fc 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.register-container {
+    width: 100%;
+    max-width: 480px;
+    padding: 20px;
+}
+
+.brand-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.brand-logo {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.brand-name {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.brand-tagline {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+.register-card {
+    background: white;
+    border-radius: 16px;
+    padding: 35px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    min-height: 500px;
+}
+
+.register-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.register-subtitle {
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+
+/* Progress Steps */
+.progress-container {
+    margin-bottom: 30px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+    .step-circle.active {
+        background: #4364f7;
+        color: white;
+    }
+
+    .step-circle.completed {
+        background: #10b981;
+        color: white;
+    }
+
+    .step-circle.inactive {
+        background: #e5e7eb;
+        color: #9ca3af;
+    }
+
+.step-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: center;
+}
+
+.step-line {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    right: -50%;
+    height: 2px;
+    background: #e5e7eb;
+    z-index: -1;
+}
+
+    .step-line.completed {
+        background: #10b981;
+    }
+
+.progress-step:last-child .step-line {
+    display: none;
+}
+
+/* Form Steps */
+.form-step {
+    display: none;
+}
+
+    .form-step.active {
+        display: block;
+    }
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+    .form-control:focus {
+        outline: none;
+        border-color: #4364f7;
+        box-shadow: 0 0 0 3px rgba(67, 100, 247, 0.1);
+        background: white;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+/* Profile Picture Upload */
+.profile-upload {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.profile-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #e5e7eb;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.upload-btn {
+    background: #f3f4f6;
+    border: 2px dashed #d1d5db;
+    color: #6b7280;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .upload-btn:hover {
+        border-color: #4364f7;
+        color: #4364f7;
+    }
+
+/* Navigation Buttons */
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    gap: 12px;
+}
+
+.btn-prev {
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .btn-prev:hover {
+        background: #f9fafb;
+        color: #374151;
+    }
+
+.btn-next, .btn-submit {
+    background: #4364f7;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+    .btn-next:hover, .btn-submit:hover {
+        background: #3451e6;
+        transform: translateY(-1px);
+    }
+
+.login-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+    .login-link a {
+        color: #4364f7;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+.footer-text {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    max-width: 400px;
+    line-height: 1.4;
+}
+
+.text-danger {
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+.validation-summary {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+    .register-container {
+        padding: 15px;
+    }
+
+    .register-card {
+        padding: 25px 20px;
+    }
+
+    .brand-header {
+        margin-bottom: 25px;
+    }
+}
