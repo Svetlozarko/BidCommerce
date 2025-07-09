@@ -84,6 +84,7 @@ namespace BidCommerce.Controllers
         }
 
         // GET: Products/Create
+        // GET: Product/Create
         public IActionResult Create()
         {
             var categories = _context.Categories.ToList();
@@ -98,7 +99,8 @@ namespace BidCommerce.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Create(Product product)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProductCreateViewModel vm)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -106,16 +108,20 @@ namespace BidCommerce.Controllers
                 return Unauthorized();
             }
 
-            product.OwnerId = userId; // assign OwnerId early
-
-            if (!TryValidateModel(product))
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new { success = false, error = "Invalid model", details = ModelState });
+                // Reload categories if validation fails
+                vm.Categories = _context.Categories.ToList();
+                return View(vm);
             }
 
+            // Manually map from ViewModel to Product entity
+            var product = vm.Product;
+            product.OwnerId = userId;
             product.CreatedAt = DateTime.UtcNow;
 
-            if (product.ImageFile != null)
+            // Handle image upload
+            if (product.ImageFile != null && product.ImageFile.Length > 0)
             {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
                 if (!Directory.Exists(uploadsFolder))
@@ -133,15 +139,7 @@ namespace BidCommerce.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                success = true,
-                product.Id,
-                product.Title,
-                product.Description,
-                product.ImageUrl,
-                product.OwnerId
-            });
+            return RedirectToAction("Index");
         }
 
 
