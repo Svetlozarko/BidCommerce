@@ -61,18 +61,21 @@
                     <label asp-for="Product.CategoryId" class="form-label">Category <span class="required">*</span></label>
                     <select asp-for="Product.CategoryId" class="form-select" required>
                         <option value="">Select category</option>
-                      @foreach (var category in Model.Categories)
-{
-    <option value="@category.CategoryId" 
-            @(category.CategoryId == Model.Product.CategoryId ? "selected" : "")>
-        @category.Name
-    </option>
-}
+                        @foreach (var category in Model.Categories)
+                        {
+                            @if (category.CategoryId == Model.Product.CategoryId)
+                            {
+                                <option value="@category.CategoryId" selected>@category.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@category.CategoryId">@category.Name</option>
+                            }
+                        }
                     </select>
                     <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
                 </div>
             </div>
-        </div>
 
         <!-- Pricing Section -->
         <div class="form-section">
