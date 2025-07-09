@@ -48,7 +48,7 @@ namespace BidCommerce.Models
         public ApplicationUser? Owner { get; set; }
 
         [NotMapped]
-        public IFormFile ImageFile { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 
 }
