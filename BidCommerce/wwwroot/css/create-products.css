@@ -1,0 +1,345 @@
+﻿body {
+    background-color: #f8f9fa;
+}
+
+.seller-header {
+    background-color: #f8f9fa;
+    padding: 20px 0;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 30px;
+}
+
+.back-btn {
+    color: #6c757d;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+    .back-btn:hover {
+        color: #4364F7;
+        text-decoration: none;
+    }
+
+    .back-btn i {
+        margin-right: 8px;
+    }
+
+.seller-brand {
+    display: flex;
+    align-items: center;
+}
+
+.seller-logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(45deg, #4364F7, #6FB1FC);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.seller-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.seller-subtitle {
+    color: #4364F7;
+    margin: 0;
+}
+
+.main-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.main-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.main-subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e9ecef;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+    .section-title i {
+        margin-right: 10px;
+        color: #4364F7;
+    }
+
+.section-subtitle {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.listing-type-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.listing-card {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    position: relative;
+}
+
+    .listing-card:hover {
+        border-color: #4364F7;
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 100, 247, 0.1);
+    }
+
+    .listing-card.selected {
+        border-color: #4364F7 !important;
+        background: white !important;
+        box-shadow: 0 4px 12px rgba(67, 100, 247, 0.15) !important;
+        transform: translateY(-2px) !important;
+    }
+
+        .listing-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #4364F7;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+.listing-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    color: #4364F7;
+}
+
+.listing-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.listing-description {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+    .form-control:focus {
+        border-color: #4364F7;
+        box-shadow: 0 0 0 3px rgba(67, 100, 247, 0.1);
+    }
+
+.form-select {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #d1d5db;
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .upload-area:hover {
+        border-color: #4364F7;
+        background-color: #f0f4ff;
+    }
+
+.upload-icon {
+    font-size: 36px;
+    color: #9ca3af;
+    margin-bottom: 12px;
+}
+
+.upload-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 6px;
+}
+
+.upload-subtitle {
+    color: #6c757d;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.btn-choose-files {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-draft {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+    .btn-draft:hover {
+        background-color: #f9fafb;
+        color: #374151;
+        text-decoration: none;
+    }
+
+.btn-primary {
+    background-color: #4364F7;
+    border: 1px solid #4364F7;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+    .btn-primary:hover {
+        background-color: #3451e6;
+        border-color: #3451e6;
+    }
+
+.required {
+    color: #dc3545;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+/* Field visibility classes */
+.auction-fields {
+    display: none;
+}
+
+.fixed-price-fields {
+    display: none;
+}
+
+.auction-fields.show {
+    display: block;
+}
+
+.fixed-price-fields.show {
+    display: block;
+}
+
+/* Smooth transitions */
+.auction-fields, .fixed-price-fields {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .listing-type-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .main-title {
+        font-size: 1.8rem;
+    }
+
+    .form-section {
+        padding: 20px;
+    }
+
+    .main-container {
+        padding: 0 15px;
+    }
+}
