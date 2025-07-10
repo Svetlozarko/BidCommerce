@@ -4,6 +4,7 @@ using BidCommerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    partial class BidDbModelSnapshot : ModelSnapshot
+    [Migration("20250710151307_1")]
+    partial class _1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,6 +184,7 @@ namespace BidCommerce.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("CategoryId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -355,7 +359,9 @@ namespace BidCommerce.Migrations
                 {
                     b.HasOne("BidCommerce.Models.Category", "Category")
                         .WithMany("Products")
-                        .HasForeignKey("CategoryId");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("BidCommerce.Data.ApplicationUser", "Owner")
                         .WithMany()
