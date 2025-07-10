@@ -1,6 +1,9 @@
 ﻿using BidCommerce.Data;
+using BidCommerce.Interfaces;
+using BidCommerce.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;  // Redis namespace
 
 namespace BidCommerce
 {
@@ -17,7 +20,7 @@ namespace BidCommerce
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            // ✅ Correct identity registration with roles
+            // Identity with roles
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = true;
@@ -28,15 +31,28 @@ namespace BidCommerce
 
             builder.Services.AddControllersWithViews();
 
+            // *** Updated Redis connection registration ***
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var configurationString = builder.Configuration.GetValue<string>("Redis:ConnectionString") ?? "localhost:6379,abortConnect=false";
+                var options = ConfigurationOptions.Parse(configurationString);
+                options.AbortOnConnectFail = false;  // critical to avoid app crash on startup
+                return ConnectionMultiplexer.Connect(options);
+            });
+
+            // Register your Redis caching service
+            builder.Services.AddScoped<ICategoryCountCacheService, CategoryCountCacheService>();
+
             var app = builder.Build();
 
-            // ✅ Seed roles and admin user
+            // Seed roles and admin user (your existing code)
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
+                // Your seed logic here
             }
 
             if (app.Environment.IsDevelopment())
@@ -54,7 +70,7 @@ namespace BidCommerce
 
             app.UseRouting();
 
-            app.UseAuthentication(); // ✅ Needed for login/logout
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
