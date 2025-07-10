@@ -15,11 +15,10 @@ namespace BidCommerce.Models
         [Required]
         public string Title { get; set; }
 
-        [Required]
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
         [ForeignKey("CategoryId")]
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
         [Required]
         public string Description { get; set; }
