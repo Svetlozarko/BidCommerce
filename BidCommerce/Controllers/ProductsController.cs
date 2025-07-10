@@ -112,15 +112,31 @@ namespace BidCommerce.Controllers
             {
                 // Reload categories if validation fails
                 vm.Categories = _context.Categories.ToList();
+
+                // Log model state errors
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                foreach (var error in errors)
+                {
+                    Console.WriteLine("Validation error: " + error);
+                }
+
                 return View(vm);
             }
 
-            // Manually map from ViewModel to Product entity
             var product = vm.Product;
+
+            // Debug logs for each important field
+            Console.WriteLine($"Product Title: {product.Title}");
+            Console.WriteLine($"Product Description: {product.Description}");
+            Console.WriteLine($"Product CategoryId: {product.CategoryId}");
+            Console.WriteLine($"Product StartingPrice: {product.StartingPrice}");
+            Console.WriteLine($"Product BuyNowPrice: {product.BuyNowPrice}");
+            Console.WriteLine($"Product IsBiddable: {product.IsBiddable}");
+
             product.OwnerId = userId;
             product.CreatedAt = DateTime.UtcNow;
 
-            // Handle image upload
+            // Image upload check
             if (product.ImageFile != null && product.ImageFile.Length > 0)
             {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
@@ -134,10 +150,29 @@ namespace BidCommerce.Controllers
                 await product.ImageFile.CopyToAsync(stream);
 
                 product.ImageUrl = "/images/products/" + fileName;
+                Console.WriteLine("Image uploaded: " + product.ImageUrl);
+            }
+            else
+            {
+                Console.WriteLine("No image uploaded.");
             }
 
+            // Optional: To avoid EF confusion, nullify navigation props
+            product.Category = null;
+
             _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+                Console.WriteLine("Product saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error saving product: " + ex.Message);
+                ModelState.AddModelError("", "Error saving product: " + ex.Message);
+                vm.Categories = _context.Categories.ToList();
+                return View(vm);
+            }
 
             return RedirectToAction("Index");
         }
