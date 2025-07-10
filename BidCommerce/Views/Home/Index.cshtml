@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using BidCommerce.Data
+@model List<BidCommerce.Models.Category>
 @inject SignInManager<ApplicationUser> SignInManager
 @{
     ViewData["Title"] = "Home";
@@ -83,6 +84,7 @@
     </div>
 </div>
 
+
 <!-- Browse Categories Section -->
 <section class="categories-section">
     <div class="container">
@@ -90,93 +92,34 @@
         <p class="section-subtitle">Explore millions of items across all categories</p>
         
         <div class="row g-4">
-            <!-- Electronics -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Electronics" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-phone"></i>
-                    </div>
-                    <div class="category-name">Electronics</div>
-                    <div class="category-count">50,234 items</div>
-                </a>
-            </div>
-            
-            <!-- Fashion -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Fashion" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-bag"></i>
-                    </div>
-                    <div class="category-name">Fashion</div>
-                    <div class="category-count">32,567 items</div>
-                </a>
-            </div>
-            
-            <!-- Home & Garden -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Home" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-house"></i>
-                    </div>
-                    <div class="category-name">Home & Garden</div>
-                    <div class="category-count">28,901 items</div>
-                </a>
-            </div>
-            
-            <!-- Collectibles -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Collectibles" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-gem"></i>
-                    </div>
-                    <div class="category-name">Collectibles</div>
-                    <div class="category-count">45,678 items</div>
-                </a>
-            </div>
-            
-            <!-- Sports -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Sports" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-trophy"></i>
-                    </div>
-                    <div class="category-name">Sports</div>
-                    <div class="category-count">19,234 items</div>
-                </a>
-            </div>
-            
-            <!-- Books -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Books" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-book"></i>
-                    </div>
-                    <div class="category-name">Books</div>
-                    <div class="category-count">23,456 items</div>
-                </a>
-            </div>
-            
-            <!-- Jewelry -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Jewelry" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-gem"></i>
-                    </div>
-                    <div class="category-name">Jewelry</div>
-                    <div class="category-count">15,789 items</div>
-                </a>
-            </div>
-            
-            <!-- Automotive -->
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <a asp-controller="Products" asp-action="Index" asp-route-category="Automotive" class="category-card">
-                    <div class="category-icon">
-                        <i class="bi bi-car-front"></i>
-                    </div>
-                    <div class="category-name">Automotive</div>
-                    <div class="category-count">34,567 items</div>
-                </a>
-            </div>
+            @foreach (var category in Model)
+            {
+                <div class="col-lg-3 col-md-6 col-sm-6">
+                    <a asp-controller="Products" asp-action="Index" asp-route-category="@category.Name" class="category-card">
+                        <div class="category-icon">
+                            <!-- Example: Use a switch or dictionary for icons if you want, or a default -->
+                            @{
+                                string iconClass = category.Name switch
+                                {
+                                    "Electronics" => "bi bi-phone",
+                                    "Fashion" => "bi bi-bag",
+                                    "Home" => "bi bi-house",
+                                    "Books" => "bi bi-book",
+                                    "Toys" => "bi bi-controller", // example icon for Toys
+                                    "Collectibles" => "bi bi-gem",
+                                    "Sports" => "bi bi-trophy",
+                                    "Jewelry" => "bi bi-gem",
+                                    "Automotive" => "bi bi-car-front",
+                                    _ => "bi bi-tags" // default icon
+                                };
+                            }
+                            <i class="@iconClass"></i>
+                        </div>
+                        <div class="category-name">@category.Name</div>
+                        <div class="category-count">@String.Format("{0:N0}", category.ItemCount) items</div>
+                    </a>
+                </div>
+            }
         </div>
     </div>
 </section>
