@@ -1,30 +1,31 @@
 using BidCommerce.Data;
 using BidCommerce.Interfaces;
 using BidCommerce.Models;
+using BidCommerce.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
+
 
 namespace BidCommerce.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ICategoryCountCacheService _cache;
         private readonly BidDb _context;
-
-        public HomeController(ILogger<HomeController> logger, ICategoryCountCacheService cache, BidDb context)
+        private readonly ICategoryCountCacheService _cache;
+        public HomeController(ILogger<HomeController> logger, BidDb context, ICategoryCountCacheService cache)
         {
             _logger = logger;
-            _cache = cache;
             _context = context;
+            _cache = cache;
         }
 
         public async Task<IActionResult> Index()
         {
+            var viewModel = new HomeViewModel();
+
+            // Get categories with caching
             var categories = await _context.Categories
                 .OrderBy(c => c.Name)
                 .ToListAsync();
@@ -33,23 +34,29 @@ namespace BidCommerce.Controllers
             {
                 // Try to get from Redis
                 var count = await _cache.GetCategoryCountAsync(category.Name);
-
                 if (!count.HasValue)
                 {
                     // Fallback: count from DB
                     count = await _context.Products.CountAsync(p => p.CategoryId == category.CategoryId);
                     await _cache.SetCategoryCountAsync(category.Name, count.Value, TimeSpan.FromMinutes(1));
                 }
-
                 category.ItemCount = count.Value;
             }
 
-            return View(categories);
+            viewModel.Categories = categories;
+
+            // Get recent products (last 8 products added)
+            viewModel.RecentProducts = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Owner)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(8)
+                .ToListAsync();
+
+            return View(viewModel);
         }
-    
 
-
-    public IActionResult Privacy()
+        public IActionResult Privacy()
         {
             return View();
         }
