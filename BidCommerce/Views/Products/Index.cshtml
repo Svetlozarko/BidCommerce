@@ -127,21 +127,28 @@
                             <div class="product-category">@item.Category.Name</div>
                             <h3 class="product-title">@item.Title</h3>
                             <p class="product-description">@(item.Description?.Length > 80 ? item.Description.Substring(0, 80) + "..." : item.Description)</p>
-                            
+
                             <div class="product-pricing">
                                 @if (item.IsBiddable)
                                 {
-                                    <div class="current-bid">Current bid: $@((item.CurrentBid ?? item.StartingPrice ?? 0).ToString("F2"))</div>
+                                    <div class="current-bid">
+                                        Current bid: $@((item.StartingPrice ?? 0).ToString("F2"))
+                                    </div>
                                     @if (item.BuyNowPrice.HasValue)
                                     {
-                                        <div class="buy-now-price">Buy now: $@item.BuyNowPrice.Value.ToString("F2")</div>
+                                        <div class="buy-now-price">
+                                            Buy now: $@item.BuyNowPrice.Value.ToString("F2")
+                                        </div>
                                     }
                                 }
                                 else
                                 {
-                                    <div class="current-bid">Price: $@((item.BuyNowPrice ?? item.StartingPrice ?? 0).ToString("F2"))</div>
+                                    <div class="current-bid">
+                                        Price: $@((item.BuyNowPrice ?? item.StartingPrice ?? 0).ToString("F2"))
+                                    </div>
                                 }
                             </div>
+
                             
                             <div class="product-stats">
                                 <span><i class="bi bi-eye"></i> @(new Random().Next(5, 50)) watching</span>
