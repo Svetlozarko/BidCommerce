@@ -133,7 +133,7 @@
                 <div class="upload-subtitle">Drag and drop your photos here, or click to browse</div>
                 <button type="button" class="btn btn-choose-files">Choose Files</button>
             </div>
-            <input type="file" name="ImageFile" id="imageUpload" class="d-none" multiple accept="image/*" />
+            <input type="file" asp-for="ImageFile" id="imageUpload" class="file-input" accept="image/*" />
 
             <div id="imagePreviewContainer" class="mt-3 row"></div>
         </div>
@@ -172,6 +172,21 @@
 
         // Optional: initialize to auction or fixed if needed
         setListingType(true);
+
+
+        document.getElementById('imageUpload').addEventListener('change', function (e) {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            previewContainer.innerHTML = ''; // Clear previous previews
+
+            const file = e.target.files[0];
+            if (file) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.style.maxWidth = '150px';
+                img.style.marginRight = '10px';
+                previewContainer.appendChild(img);
+            }
+        });
     </script>
     <script src="~/js/create-product.js"></script>
 }

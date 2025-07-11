@@ -9,7 +9,16 @@
     <!-- Products Header -->
     <div class="products-header">
         <div>
-            <h1 class="products-title">All Products</h1>
+            <h2 class="section-title">
+                @if (!string.IsNullOrEmpty(Model.SelectedCategoryName))
+                {
+                    @: @Model.SelectedCategoryName
+                }
+                else
+                {
+                    @:All Products
+                }
+            </h2>
             <div class="items-count">@Model.Products.Count() items found</div>
         </div>
         <div class="products-controls">
