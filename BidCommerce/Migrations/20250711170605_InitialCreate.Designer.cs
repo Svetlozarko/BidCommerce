@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    [Migration("20250710143617_2")]
-    partial class _2
+    [Migration("20250711170605_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -166,6 +166,96 @@ namespace BidCommerce.Migrations
                             CategoryId = 5,
                             Description = "Toys and games for all ages",
                             Name = "Toys"
+                        },
+                        new
+                        {
+                            CategoryId = 6,
+                            Description = "Sporting goods and fitness equipment",
+                            Name = "Sports"
+                        },
+                        new
+                        {
+                            CategoryId = 7,
+                            Description = "Beauty products and skincare",
+                            Name = "Beauty"
+                        },
+                        new
+                        {
+                            CategoryId = 8,
+                            Description = "Car parts and accessories",
+                            Name = "Automotive"
+                        },
+                        new
+                        {
+                            CategoryId = 9,
+                            Description = "Gardening tools and outdoor decor",
+                            Name = "Garden"
+                        },
+                        new
+                        {
+                            CategoryId = 10,
+                            Description = "Food and beverages",
+                            Name = "Groceries"
+                        },
+                        new
+                        {
+                            CategoryId = 11,
+                            Description = "Products for pets and animals",
+                            Name = "Pet Supplies"
+                        },
+                        new
+                        {
+                            CategoryId = 12,
+                            Description = "Health and wellness products",
+                            Name = "Health"
+                        },
+                        new
+                        {
+                            CategoryId = 13,
+                            Description = "Musical instruments and accessories",
+                            Name = "Music"
+                        },
+                        new
+                        {
+                            CategoryId = 14,
+                            Description = "Products for school and office",
+                            Name = "Office Supplies"
+                        },
+                        new
+                        {
+                            CategoryId = 15,
+                            Description = "Rings, necklaces, and other jewelry",
+                            Name = "Jewelry"
+                        },
+                        new
+                        {
+                            CategoryId = 16,
+                            Description = "Art supplies and creative materials",
+                            Name = "Art"
+                        },
+                        new
+                        {
+                            CategoryId = 17,
+                            Description = "Travel accessories and luggage",
+                            Name = "Travel"
+                        },
+                        new
+                        {
+                            CategoryId = 18,
+                            Description = "Products for babies and infants",
+                            Name = "Baby Products"
+                        },
+                        new
+                        {
+                            CategoryId = 19,
+                            Description = "Games and gaming consoles",
+                            Name = "Video Games"
+                        },
+                        new
+                        {
+                            CategoryId = 20,
+                            Description = "Hand tools and power tools",
+                            Name = "Tools"
                         });
                 });
 

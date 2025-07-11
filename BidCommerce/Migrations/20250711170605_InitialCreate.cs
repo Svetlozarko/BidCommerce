@@ -101,7 +101,7 @@ namespace BidCommerce.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StartingPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsBiddable = table.Column<bool>(type: "bit", nullable: false),
@@ -119,8 +119,7 @@ namespace BidCommerce.Migrations
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "CategoryId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "CategoryId");
                     table.ForeignKey(
                         name: "FK_Products_Users_OwnerId",
                         column: x => x.OwnerId,
@@ -222,7 +221,22 @@ namespace BidCommerce.Migrations
                     { 2, "Clothing and accessories", "Fashion" },
                     { 3, "Furniture and home decor", "Home" },
                     { 4, "Books and literature", "Books" },
-                    { 5, "Toys and games for all ages", "Toys" }
+                    { 5, "Toys and games for all ages", "Toys" },
+                    { 6, "Sporting goods and fitness equipment", "Sports" },
+                    { 7, "Beauty products and skincare", "Beauty" },
+                    { 8, "Car parts and accessories", "Automotive" },
+                    { 9, "Gardening tools and outdoor decor", "Garden" },
+                    { 10, "Food and beverages", "Groceries" },
+                    { 11, "Products for pets and animals", "Pet Supplies" },
+                    { 12, "Health and wellness products", "Health" },
+                    { 13, "Musical instruments and accessories", "Music" },
+                    { 14, "Products for school and office", "Office Supplies" },
+                    { 15, "Rings, necklaces, and other jewelry", "Jewelry" },
+                    { 16, "Art supplies and creative materials", "Art" },
+                    { 17, "Travel accessories and luggage", "Travel" },
+                    { 18, "Products for babies and infants", "Baby Products" },
+                    { 19, "Games and gaming consoles", "Video Games" },
+                    { 20, "Hand tools and power tools", "Tools" }
                 });
 
             migrationBuilder.CreateIndex(
