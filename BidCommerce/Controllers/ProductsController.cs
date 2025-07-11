@@ -261,5 +261,11 @@ namespace BidCommerce.Controllers
         {
             return _context.Products.Any(e => e.Id == id);
         }
+
+        public IActionResult Watchlist()
+        {
+            return View();
+        }
+
     }
 }

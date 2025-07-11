@@ -1,0 +1,382 @@
+﻿/* Watchlist Container */
+.watchlist-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Watchlist Header */
+.watchlist-header {
+    text-align: center;
+    margin-bottom: 40px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.heart-icon {
+    color: #ef4444;
+    font-size: 1.5rem;
+}
+
+.watchlist-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.item-count {
+    background: #e5e7eb;
+    color: #6b7280;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.header-subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Watchlist Grid */
+.watchlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Watchlist Card */
+.watchlist-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+}
+
+    .watchlist-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+/* Category Tag */
+.category-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #3b82f6;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 2;
+    text-transform: capitalize;
+}
+
+/* Remove Button */
+.remove-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+    color: #6b7280;
+}
+
+    .remove-btn:hover {
+        background: white;
+        color: #dc2626;
+        transform: scale(1.1);
+    }
+
+/* Product Image */
+.product-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+.watchlist-card:hover .product-image img {
+    transform: scale(1.05);
+}
+
+/* Time Badge */
+.time-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: #ef4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Product Info */
+.product-info {
+    padding: 20px;
+}
+
+.product-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 15px 0;
+    line-height: 1.3;
+}
+
+/* Pricing Info */
+.pricing-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.current-bid {
+    display: flex;
+    flex-direction: column;
+}
+
+.bid-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.bid-amount {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.bid-count {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.bids-text {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.bids-number {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Item Details */
+.item-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.condition {
+    font-size: 0.9rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+.watching-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.place-bid-btn {
+    flex: 1;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+    .place-bid-btn:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+.action-icons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-icon {
+    background: #f3f4f6;
+    border: none;
+    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6b7280;
+}
+
+    .action-icon:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+/* Empty Watchlist */
+.empty-watchlist {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 20px;
+}
+
+.empty-watchlist h3 {
+    font-size: 1.5rem;
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+.empty-watchlist p {
+    color: #6b7280;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.browse-btn {
+    background: #3b82f6;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+    .browse-btn:hover {
+        background: #2563eb;
+        text-decoration: none;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .watchlist-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .watchlist-header {
+        padding: 20px;
+    }
+
+    .header-title {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .watchlist-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-icons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .watchlist-container {
+        padding: 15px;
+    }
+
+    .product-info {
+        padding: 15px;
+    }
+
+    .pricing-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .bid-count {
+        align-items: flex-start;
+    }
+}

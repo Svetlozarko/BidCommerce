@@ -1,0 +1,175 @@
+﻿@model List<BidCommerce.Models.Product>
+
+@{
+    ViewData["Title"] = "My Watchlist";
+    var products = Model ?? new List<BidCommerce.Models.Product>();
+}
+
+<link rel="stylesheet" href="~/css/watchlist-products.css" />
+
+<div class="watchlist-container">
+    <!-- Watchlist Header -->
+    <div class="watchlist-header">
+        <div class="header-content">
+            <div class="header-title">
+                <i class="bi bi-heart-fill heart-icon"></i>
+                <h1>My Watchlist</h1>
+                <span class="item-count">@products.Count items</span>
+            </div>
+            <p class="header-subtitle">Keep track of items you're interested in</p>
+        </div>
+    </div>
+
+    <!-- Watchlist Grid -->
+    <div class="watchlist-grid">
+        @if (products.Any())
+        {
+            @foreach (var item in products)
+            {
+                <div class="watchlist-card" onclick="window.location.href='@Url.Action("Details", new { id = item.Id })'">
+                    <!-- Category Tag -->
+                    <div class="category-tag">@(item.Category?.Name ?? "General")</div>
+
+                    <!-- Remove Button -->
+                    <button class="remove-btn" onclick="event.stopPropagation(); removeFromWatchlist(@item.Id)" title="Remove from watchlist">
+                        <i class="bi bi-x"></i>
+                    </button>
+
+                    <!-- Product Image -->
+                    <div class="product-image">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/placeholder-product.jpg" : item.ImageUrl.Split(',')[0])"
+                             alt="@item.Title" onerror="this.src='/images/placeholder-product.jpg'" />
+
+                        <!-- Time Remaining Badge -->
+                        @if (item.BidEndTime.HasValue && item.BidEndTime.Value > DateTime.Now)
+                        {
+                            var timeLeft = item.BidEndTime.Value - DateTime.Now;
+                            <div class="time-badge">
+                                @if (timeLeft.TotalDays >= 1)
+                                {
+                                    <span>@((int)timeLeft.TotalDays)d @((int)timeLeft.Hours)h</span>
+                                }
+                                else if (timeLeft.TotalHours >= 1)
+                                {
+                                    <span>@((int)timeLeft.TotalHours)h @((int)timeLeft.Minutes)m</span>
+                                }
+                                else if (timeLeft.TotalMinutes > 0)
+                                {
+                                    <span>@((int)timeLeft.TotalMinutes)m</span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="product-info">
+                        <h3 class="product-title">@item.Title</h3>
+
+                        <div class="pricing-info">
+                            <div class="current-bid">
+                                <span class="bid-label">Current Bid</span>
+                                <span class="bid-amount">$@((item.CurrentBid ?? item.StartingPrice ?? item.BuyNowPrice ?? 0).ToString("N0"))</span>
+                            </div>
+                            <div class="bid-count">
+                                @{
+                                    var random = new Random(item.Id);
+                                    var bidCount = item.IsBiddable ? random.Next(1, 200) : 0;
+                                }
+                                <span class="bids-text">Bids</span>
+                                <span class="bids-number">@bidCount</span>
+                            </div>
+                        </div>
+
+                        <div class="item-details">
+                            <span class="condition">
+                                @{
+                                    var conditions = new[] { "Used", "New", "Restored", "Mint", "Excellent" };
+                                    var condition = conditions[random.Next(conditions.Length)];
+                                }
+                                @condition
+                            </span>
+                            <span class="watching-status">
+                                <i class="bi bi-eye"></i> Watching
+                            </span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            @if (item.IsBiddable && item.BidEndTime.HasValue && item.BidEndTime.Value > DateTime.Now)
+                            {
+                                <button class="place-bid-btn" onclick="event.stopPropagation(); window.location.href='@Url.Action("Details", new { id = item.Id })'">
+                                    <i class="bi bi-currency-dollar"></i> Place Bid
+                                </button>
+                            }
+                            else if (item.BuyNowPrice.HasValue)
+                            {
+                                <button class="place-bid-btn" onclick="event.stopPropagation(); window.location.href='@Url.Action("BuyNow", new { id = item.Id })'">
+                                    <i class="bi bi-cart"></i> Buy Now
+                                </button>
+                            }
+
+                            <div class="action-icons">
+                                <button class="action-icon" onclick="event.stopPropagation(); shareItem(@item.Id)" title="Share">
+                                    <i class="bi bi-share"></i>
+                                </button>
+                                <button class="action-icon" onclick="event.stopPropagation(); viewDetails(@item.Id)" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-watchlist">
+                <div class="empty-icon">
+                    <i class="bi bi-heart"></i>
+                </div>
+                <h3>Your watchlist is empty</h3>
+                <p>Start adding items you're interested in to keep track of them here.</p>
+                <a href="@Url.Action("Index")" class="browse-btn">Browse Products</a>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    function removeFromWatchlist(productId) {
+        if (confirm('Remove this item from your watchlist?')) {
+            fetch(`/Products/RemoveFromWatchlist/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error removing item from watchlist');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Error removing item from watchlist');
+            });
+        }
+    }
+
+    function shareItem(productId) {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Check out this item',
+                url: window.location.origin + '/Products/Details/' + productId
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.origin + '/Products/Details/' + productId);
+            alert('Link copied to clipboard!');
+        }
+    }
+
+    function viewDetails(productId) {
+        window.location.href = '/Products/Details/' + productId;
+    }
+</script>
