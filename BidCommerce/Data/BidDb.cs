@@ -14,6 +14,8 @@ namespace BidCommerce.Data
         }
         public DbSet<Product> Products { get; set; }    
         public DbSet<Category> Categories { get; set; }
+        public DbSet<WatchlistItem> WatchlistItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
