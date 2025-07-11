@@ -136,6 +136,7 @@ namespace BidCommerce.Controllers
             product.OwnerId = userId;
             product.CreatedAt = DateTime.UtcNow;
 
+
             // Image upload check
             if (product.ImageFile != null && product.ImageFile.Length > 0)
             {

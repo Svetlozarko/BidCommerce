@@ -18,7 +18,7 @@
                 <i class="bi bi-tag"></i> Listing Type
             </h3>
             <p class="section-subtitle">Choose how you want to sell your item</p>
-            
+
             <div class="listing-type-cards">
                 <div class="listing-card" id="auctionCard">
                     <div class="listing-icon">
@@ -35,7 +35,7 @@
                     <div class="listing-description">Sell at a set price</div>
                 </div>
             </div>
-            
+
             <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" />
         </div>
 
@@ -43,13 +43,13 @@
         <div class="form-section">
             <h3 class="section-title">Item Details</h3>
             <p class="section-subtitle">Provide information about your item</p>
-            
+
             <div class="mb-3">
                 <label asp-for="Product.Title" class="form-label">Title <span class="required">*</span></label>
                 <input asp-for="Product.Title" class="form-control" placeholder="Enter item title" />
                 <span asp-validation-for="Product.Title" class="text-danger"></span>
             </div>
-            
+
             <div class="mb-4">
                 <label asp-for="Product.Description" class="form-label">Description</label>
                 <textarea asp-for="Product.Description" class="form-control" rows="4" placeholder="Describe your item in detail"></textarea>
@@ -65,6 +65,7 @@
                     <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
                 </div>
             </div>
+        </div>
 
         <!-- Pricing Section -->
         <div class="form-section">
@@ -72,7 +73,19 @@
                 <i class="bi bi-currency-dollar"></i> Pricing
             </h3>
             <p class="section-subtitle" id="pricingSubtitle">Please select a listing type above to see pricing options</p>
-            
+
+            <!-- Shared BuyNowPrice Field -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Product.BuyNowPrice" class="form-label" id="buyNowLabel">Price <span class="required">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" id="buyNowPriceInput" />
+                    </div>
+                    <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
+                </div>
+            </div>
+
             <!-- Auction Fields -->
             <div class="auction-fields" id="auctionFields">
                 <div class="row">
@@ -84,18 +97,8 @@
                         </div>
                         <span asp-validation-for="Product.StartingPrice" class="text-danger"></span>
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Product.BuyNowPrice" class="form-label">Buy It Now Price (Optional)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" />
-                        </div>
-                        <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
-                        <small class="text-muted">Allow buyers to purchase immediately</small>
-                    </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Auction Duration</label>
@@ -106,7 +109,7 @@
                             <option value="1">1 Day</option>
                         </select>
                     </div>
-                    
+
                     <div class="col-md-6 mb-3">
                         <label asp-for="Product.BidEndTime" class="form-label">Auction End Date & Time</label>
                         <input asp-for="Product.BidEndTime" type="datetime-local" class="form-control" id="bidEndTimeInput" readonly />
@@ -115,23 +118,7 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Fixed Price Fields -->
-            <div class="fixed-price-fields" id="fixedPriceFields">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Product.BuyNowPrice" class="form-label">Fixed Price <span class="required">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" id="fixedPriceInput" />
-                        </div>
-                        <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-      
+        </div>  
 
         <!-- Photos Section -->
         <div class="form-section">
@@ -147,8 +134,7 @@
                 <button type="button" class="btn btn-choose-files">Choose Files</button>
             </div>
             <input type="file" name="ImageFile" id="imageUpload" class="d-none" multiple accept="image/*" />
-            
-            <!-- Image preview container -->
+
             <div id="imagePreviewContainer" class="mt-3 row"></div>
         </div>
 
@@ -162,5 +148,30 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        const auctionCard = document.getElementById('auctionCard');
+        const fixedPriceCard = document.getElementById('fixedPriceCard');
+        const auctionFields = document.getElementById('auctionFields');
+        const fixedPriceFields = document.getElementById('fixedPriceFields');
+        const isBiddableInput = document.getElementById('isBiddableInput');
+
+        function setListingType(isAuction) {
+            if (isAuction) {
+                auctionFields.style.display = 'block';
+                fixedPriceFields.style.display = 'none';
+                isBiddableInput.value = true;
+            } else {
+                auctionFields.style.display = 'none';
+                fixedPriceFields.style.display = 'block';
+                isBiddableInput.value = false;
+            }
+        }
+
+        auctionCard.addEventListener('click', () => setListingType(true));
+        fixedPriceCard.addEventListener('click', () => setListingType(false));
+
+        // Optional: initialize to auction or fixed if needed
+        setListingType(true);
+    </script>
     <script src="~/js/create-product.js"></script>
 }

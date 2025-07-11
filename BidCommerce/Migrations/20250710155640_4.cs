@@ -16,7 +16,7 @@ namespace BidCommerce.Migrations
 
             migrationBuilder.AlterColumn<int>(
                 name: "CategoryId",
-                table: "Products",з
+                table: "Products",
                 type: "int",
                 nullable: true,
                 oldClrType: typeof(int),
