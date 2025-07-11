@@ -11,5 +11,7 @@ namespace BidCommerce.ViewModels
         public decimal? MaxPrice { get; set; }
         public string? SortBy { get; set; } = "newest";
         public string? ListingType { get; set; }
+        public string? SelectedCategoryName { get; set; }
+
     }
 }
