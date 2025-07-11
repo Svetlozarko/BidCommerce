@@ -23,20 +23,32 @@ namespace BidCommerce.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> Index(int? categoryId, decimal? minPrice, decimal? maxPrice, string? sortBy, string? listingType)
+        public async Task<IActionResult> Index(
+         int? categoryId,
+         string? category, // added category name
+         decimal? minPrice,
+         decimal? maxPrice,
+         string? sortBy,
+         string? listingType)
         {
-            var query = _context.Products.Include(p => p.Category).AsQueryable();
+            var query = _context.Products
+                .Include(p => p.Category)
+                .AsQueryable();
 
-            // Filtering by category
+            // Filtering by category ID
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
 
+            // Filtering by category name
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(p => p.Category.Name == category);
+
             // Filtering by price range
             if (minPrice.HasValue)
-                query = query.Where(p => p.BuyNowPrice >= minPrice.Value || p.StartingPrice >= minPrice.Value);
+                query = query.Where(p => (p.BuyNowPrice ?? p.StartingPrice) >= minPrice.Value);
 
             if (maxPrice.HasValue)
-                query = query.Where(p => p.BuyNowPrice <= maxPrice.Value || p.StartingPrice <= maxPrice.Value);
+                query = query.Where(p => (p.BuyNowPrice ?? p.StartingPrice) <= maxPrice.Value);
 
             // Sorting
             query = sortBy switch
@@ -44,7 +56,7 @@ namespace BidCommerce.Controllers
                 "price-low" => query.OrderBy(p => p.BuyNowPrice ?? p.StartingPrice),
                 "price-high" => query.OrderByDescending(p => p.BuyNowPrice ?? p.StartingPrice),
                 "ending-soon" => query.OrderBy(p => p.BidEndTime),
-                _ => query.OrderByDescending(p => p.CreatedAt), // newest by default
+                _ => query.OrderByDescending(p => p.CreatedAt),
             };
 
             var products = await query.ToListAsync();
@@ -55,6 +67,7 @@ namespace BidCommerce.Controllers
                 Products = products,
                 Categories = categories,
                 SelectedCategoryId = categoryId,
+                SelectedCategoryName = category, // Add this to the view model if not already there
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
                 SortBy = sortBy ?? "newest",
@@ -63,6 +76,7 @@ namespace BidCommerce.Controllers
 
             return View(viewModel);
         }
+
 
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -104,72 +118,47 @@ namespace BidCommerce.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
-            {
                 return Unauthorized();
-            }
 
             if (!ModelState.IsValid)
             {
-                // Reload categories if validation fails
                 vm.Categories = _context.Categories.ToList();
-
-                // Log model state errors
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                foreach (var error in errors)
-                {
-                    Console.WriteLine("Validation error: " + error);
-                }
-
                 return View(vm);
             }
 
             var product = vm.Product;
-
-            // Debug logs for each important field
-            Console.WriteLine($"Product Title: {product.Title}");
-            Console.WriteLine($"Product Description: {product.Description}");
-            Console.WriteLine($"Product CategoryId: {product.CategoryId}");
-            Console.WriteLine($"Product StartingPrice: {product.StartingPrice}");
-            Console.WriteLine($"Product BuyNowPrice: {product.BuyNowPrice}");
-            Console.WriteLine($"Product IsBiddable: {product.IsBiddable}");
-
             product.OwnerId = userId;
             product.CreatedAt = DateTime.UtcNow;
 
-
-            // Image upload check
-            if (product.ImageFile != null && product.ImageFile.Length > 0)
+            if (vm.ImageFile != null && vm.ImageFile.Length > 0)
             {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(product.ImageFile.FileName);
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(vm.ImageFile.FileName);
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
                 using var stream = new FileStream(filePath, FileMode.Create);
-                await product.ImageFile.CopyToAsync(stream);
+                await vm.ImageFile.CopyToAsync(stream);
 
                 product.ImageUrl = "/images/products/" + fileName;
-                Console.WriteLine("Image uploaded: " + product.ImageUrl);
             }
             else
             {
-                Console.WriteLine("No image uploaded.");
+                product.ImageUrl = null; // Or set a default image URL if you want
             }
 
-            // Optional: To avoid EF confusion, nullify navigation props
-            product.Category = null;
+            product.Category = null; // Avoid EF navigation issues
 
             _context.Products.Add(product);
+
             try
             {
                 await _context.SaveChangesAsync();
-                Console.WriteLine("Product saved successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error saving product: " + ex.Message);
                 ModelState.AddModelError("", "Error saving product: " + ex.Message);
                 vm.Categories = _context.Categories.ToList();
                 return View(vm);
@@ -177,6 +166,7 @@ namespace BidCommerce.Controllers
 
             return RedirectToAction("Index");
         }
+
 
 
 
