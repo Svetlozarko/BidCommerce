@@ -1,13 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using BidCommerce.Data
-@model List<BidCommerce.Models.Category>
+@model BidCommerce.ViewModels.HomeViewModel
 @inject SignInManager<ApplicationUser> SignInManager
 @{
     ViewData["Title"] = "Home";
 }
 
 <link rel="stylesheet" href="~/css/landing.css" />
-
 
 <!-- Hero Section -->
 <div class="hero-section">
@@ -22,7 +21,7 @@
                     Join millions of users bidding on unique items, rare collectibles, and everyday essentials.
                     Start your auction journey today and discover incredible deals!
                 </p>
-                
+
                 <div class="cta-section">
                     @if (SignInManager.IsSignedIn(User))
                     {
@@ -47,7 +46,7 @@
                     }
                 </div>
             </div>
-            
+
             <!-- Right Stats Column -->
             <div class="col-lg-6 col-md-12 mt-5 mt-lg-0">
                 <div class="row g-4">
@@ -84,17 +83,122 @@
     </div>
 </div>
 
+<!-- Recent Products Section -->
+<section class="recent-products-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-header-left">
+                <h2 class="section-title">Recent Products</h2>
+                <p class="section-subtitle">Discover the latest items added to our marketplace</p>
+            </div>
+            <div class="section-header-right">
+                <button class="carousel-btn" id="prevBtn" onclick="slideProducts('prev')">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="carousel-btn" id="nextBtn" onclick="slideProducts('next')">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="products-carousel-container">
+            <div class="products-carousel" id="productsCarousel">
+                @if (Model.RecentProducts.Any())
+                {
+                    @foreach (var product in Model.RecentProducts)
+                    {
+                        <div class="product-slide" onclick="window.location.href='@Url.Action("Details", "Products", new { id = product.Id })'">
+                            <div class="product-card-recent">
+                                <div class="product-image-recent">
+                                    <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/placeholder-product.jpg" : product.ImageUrl.Split(',')[0])"
+                                         alt="@product.Title" onerror="this.src='/images/placeholder-product.jpg'" />
+
+                                    @if (product.BidEndTime.HasValue && product.BidEndTime.Value <= DateTime.Now.AddHours(24))
+                                    {
+                                        <div class="ending-soon-badge">Ending Soon</div>
+                                    }
+
+                                    <div class="category-badge">@(product.Category?.Name ?? "General")</div>
+                                </div>
+
+                                <div class="product-info-recent">
+                                    <h4 class="product-title-recent">@product.Title</h4>
+
+                                    <div class="product-pricing-recent">
+                                        @if (product.IsBiddable)
+                                        {
+                                            <div class="current-bid-recent">
+                                                <span class="price-label">Current Bid</span>
+                                                <span class="price-value">$@((product.CurrentBid ?? product.StartingPrice ?? 0).ToString("N0"))</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="current-bid-recent">
+                                                <span class="price-label">Price</span>
+                                                <span class="price-value">$@((product.BuyNowPrice ?? product.StartingPrice ?? 0).ToString("N0"))</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="product-stats-recent">
+                                        @if (product.BidEndTime.HasValue && product.BidEndTime.Value > DateTime.Now)
+                                        {
+                                            var timeLeft = product.BidEndTime.Value - DateTime.Now;
+                                            <span class="time-left">
+                                                <i class="bi bi-clock"></i>
+                                                @if (timeLeft.TotalDays >= 1)
+                                                {
+                                                    <span>@((int)timeLeft.TotalDays)d left</span>
+                                                }
+                                                else if (timeLeft.TotalHours >= 1)
+                                                {
+                                                    <span>@((int)timeLeft.TotalHours)h left</span>
+                                                }
+                                                else if (timeLeft.TotalMinutes > 0)
+                                                {
+                                                    <span>@((int)timeLeft.TotalMinutes)m left</span>
+                                                }
+                                            </span>
+                                        }
+
+                                        <span class="watching-count">
+                                            <i class="bi bi-eye"></i>
+                                            @(new Random(product.Id).Next(5, 50)) watching
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="no-products-message">
+                        <i class="bi bi-box"></i>
+                        <p>No recent products available</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a asp-controller="Products" asp-action="Index" class="btn btn-primary">
+                View All Products <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
 
 <!-- Browse Categories Section -->
 <section class="categories-section">
     <div class="container">
         <h2 class="section-title">Browse Categories</h2>
         <p class="section-subtitle">Explore millions of items across all categories</p>
-
         <div class="row g-4" id="categoryContainer">
-            @for (int i = 0; i < Model.Count; i++)
+            @for (int i = 0; i < Model.Categories.Count; i++)
             {
-                var category = Model[i];
+                var category = Model.Categories[i];
                 var hiddenClass = i >= 8 ? "d-none extra-category" : "";
                 <div class="col-lg-3 col-md-6 col-sm-6 @hiddenClass">
                     <a asp-controller="Products" asp-action="Index" asp-route-category="@category.Name" class="category-card">
@@ -122,7 +226,6 @@
                 </div>
             }
         </div>
-
         <div class="text-center mt-4">
             <button id="toggleCategoriesBtn" class="btn btn-outline-primary">Browse More Categories</button>
         </div>
@@ -130,6 +233,7 @@
 </section>
 
 <script>
+    // Categories toggle functionality
     document.addEventListener("DOMContentLoaded", function () {
         const toggleBtn = document.getElementById("toggleCategoriesBtn");
         const hiddenItems = document.querySelectorAll(".extra-category");
@@ -140,5 +244,59 @@
             hiddenItems.forEach(el => el.classList.toggle("d-none"));
             toggleBtn.textContent = expanded ? "Show Less" : "Browse More Categories";
         });
+    });
+
+    // Products carousel functionality
+    let currentSlide = 0;
+    const slidesToShow = 4;
+    let totalSlides = 0;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const carousel = document.getElementById("productsCarousel");
+        const slides = carousel.querySelectorAll(".product-slide");
+        totalSlides = slides.length;
+
+        // Update button states
+        updateCarouselButtons();
+    });
+
+    function slideProducts(direction) {
+        const carousel = document.getElementById("productsCarousel");
+        const slideWidth = carousel.querySelector(".product-slide").offsetWidth + 20; // 20px for gap
+
+        if (direction === 'next' && currentSlide < totalSlides - slidesToShow) {
+            currentSlide++;
+        } else if (direction === 'prev' && currentSlide > 0) {
+            currentSlide--;
+        }
+
+        const translateX = -currentSlide * slideWidth;
+        carousel.style.transform = `translateX(${translateX}px)`;
+
+        updateCarouselButtons();
+    }
+
+    function updateCarouselButtons() {
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+
+        if (prevBtn && nextBtn) {
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide >= totalSlides - slidesToShow;
+
+            prevBtn.style.opacity = currentSlide === 0 ? "0.5" : "1";
+            nextBtn.style.opacity = currentSlide >= totalSlides - slidesToShow ? "0.5" : "1";
+        }
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function () {
+        // Reset carousel position on resize
+        currentSlide = 0;
+        const carousel = document.getElementById("productsCarousel");
+        if (carousel) {
+            carousel.style.transform = 'translateX(0px)';
+            updateCarouselButtons();
+        }
     });
 </script>
