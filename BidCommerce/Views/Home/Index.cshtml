@@ -90,14 +90,15 @@
     <div class="container">
         <h2 class="section-title">Browse Categories</h2>
         <p class="section-subtitle">Explore millions of items across all categories</p>
-        
-        <div class="row g-4">
-            @foreach (var category in Model)
+
+        <div class="row g-4" id="categoryContainer">
+            @for (int i = 0; i < Model.Count; i++)
             {
-                <div class="col-lg-3 col-md-6 col-sm-6">
+                var category = Model[i];
+                var hiddenClass = i >= 8 ? "d-none extra-category" : "";
+                <div class="col-lg-3 col-md-6 col-sm-6 @hiddenClass">
                     <a asp-controller="Products" asp-action="Index" asp-route-category="@category.Name" class="category-card">
                         <div class="category-icon">
-                            <!-- Example: Use a switch or dictionary for icons if you want, or a default -->
                             @{
                                 string iconClass = category.Name switch
                                 {
@@ -105,12 +106,12 @@
                                     "Fashion" => "bi bi-bag",
                                     "Home" => "bi bi-house",
                                     "Books" => "bi bi-book",
-                                    "Toys" => "bi bi-controller", // example icon for Toys
+                                    "Toys" => "bi bi-controller",
                                     "Collectibles" => "bi bi-gem",
                                     "Sports" => "bi bi-trophy",
                                     "Jewelry" => "bi bi-gem",
                                     "Automotive" => "bi bi-car-front",
-                                    _ => "bi bi-tags" // default icon
+                                    _ => "bi bi-tags"
                                 };
                             }
                             <i class="@iconClass"></i>
@@ -121,7 +122,23 @@
                 </div>
             }
         </div>
+
+        <div class="text-center mt-4">
+            <button id="toggleCategoriesBtn" class="btn btn-outline-primary">Browse More Categories</button>
+        </div>
     </div>
 </section>
 
-<!-- Footer -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleBtn = document.getElementById("toggleCategoriesBtn");
+        const hiddenItems = document.querySelectorAll(".extra-category");
+        let expanded = false;
+
+        toggleBtn.addEventListener("click", () => {
+            expanded = !expanded;
+            hiddenItems.forEach(el => el.classList.toggle("d-none"));
+            toggleBtn.textContent = expanded ? "Show Less" : "Browse More Categories";
+        });
+    });
+</script>

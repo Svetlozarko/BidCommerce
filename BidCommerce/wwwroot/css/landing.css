@@ -188,3 +188,7 @@
     color: #6c757d;
     font-weight: 500;
 }
+
+.extra-category {
+    transition: all 0.3s ease-in-out;
+}
