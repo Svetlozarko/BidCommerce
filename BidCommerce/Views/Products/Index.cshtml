@@ -1,6 +1,10 @@
-﻿@model BidCommerce.ViewModels.ProductIndexViewModel
+﻿@using Microsoft.AspNetCore.Antiforgery
+@model BidCommerce.ViewModels.ProductIndexViewModel
+@inject IAntiforgery Antiforgery
+
 @{
     ViewData["Title"] = "All Products";
+    var userWatchlistProductIds = Model.UserWatchlistProductIds ?? new List<int>();
 }
 
 <link rel="stylesheet" href="~/css/index-products.css" />
@@ -12,7 +16,7 @@
             <h2 class="section-title">
                 @if (!string.IsNullOrEmpty(Model.SelectedCategoryName))
                 {
-                    @: @Model.SelectedCategoryName
+                    @Model.SelectedCategoryName
                 }
                 else
                 {
@@ -23,16 +27,20 @@
         </div>
         <div class="products-controls">
             <form method="get" id="filterForm">
+                @Html.AntiForgeryToken()
+
                 <select name="categoryId" class="filter-dropdown" id="categoryFilter" onchange="submitFilters()">
-                    <option value="">All Categories</option>
+                    <option value="" selected="@(Model.SelectedCategoryId == null ? "selected" : null)">All Categories</option>
                     @foreach (var category in Model.Categories)
                     {
-                        <option value="@category.CategoryId" selected="@(Model.SelectedCategoryId == category.CategoryId)">    @category.Name</option>
+                        <option value="@category.CategoryId" selected="@(Model.SelectedCategoryId == category.CategoryId ? "selected" : null)">
+                            @category.Name
+                        </option>
                     }
                 </select>
 
-                <input type="hidden" name="minPrice" id="hiddenMinPrice" value="@Model.MinPrice" />
-                <input type="hidden" name="maxPrice" id="hiddenMaxPrice" value="@Model.MaxPrice" />
+                <input type="hidden" name="minPrice" id="hiddenMinPrice" value="@(Model.MinPrice?.ToString() ?? "")" />
+                <input type="hidden" name="maxPrice" id="hiddenMaxPrice" value="@(Model.MaxPrice?.ToString() ?? "")" />
                 <input type="hidden" name="sortBy" id="hiddenSortBy" value="@Model.SortBy" />
                 <input type="hidden" name="listingType" id="hiddenListingType" value="@Model.ListingType" />
             </form>
@@ -43,9 +51,9 @@
 
             <select class="sort-dropdown" id="sortBy" onchange="updateSort()">
                 <option value="newest" selected="@(Model.SortBy == "newest" ? "selected" : null)">Newest First</option>
-                <option value="price-low" selected="@(Model.SortBy == "price-low")">Price: Low to High</option>
-                <option value="price-high" selected="@(Model.SortBy == "price-high")">Price: High to Low</option>
-                <option value="ending-soon" selected="@(Model.SortBy == "ending-soon")">Ending Soon</option>
+                <option value="price-low" selected="@(Model.SortBy == "price-low" ? "selected" : null)">Price: Low to High</option>
+                <option value="price-high" selected="@(Model.SortBy == "price-high" ? "selected" : null)">Price: High to Low</option>
+                <option value="ending-soon" selected="@(Model.SortBy == "ending-soon" ? "selected" : null)">Ending Soon</option>
             </select>
 
             <div class="view-toggle">
@@ -72,13 +80,13 @@
                 <label class="filter-label">Price Range</label>
                 <div class="price-range">
                     <input type="number" class="price-input" id="minPrice" placeholder="0" min="0"
-                           value="@Model.MinPrice" onchange="updatePriceFilter()">
+                           value="@(Model.MinPrice?.ToString() ?? "")" onchange="updatePriceFilter()" />
                     <span>to</span>
                     <input type="number" class="price-input" id="maxPrice" placeholder="1000" min="0"
-                           value="@Model.MaxPrice" onchange="updatePriceFilter()">
+                           value="@(Model.MaxPrice?.ToString() ?? "")" onchange="updatePriceFilter()" />
                 </div>
                 <input type="range" class="price-slider" id="priceSlider" min="0" max="5000"
-                       value="@(Model.MaxPrice ?? 5000)" onchange="updatePriceSlider()">
+                       value="@(Model.MaxPrice ?? 5000)" onchange="updatePriceSlider()" />
             </div>
 
             <!-- Listing Type -->
@@ -86,22 +94,22 @@
                 <label class="filter-label">Listing Type</label>
                 <div class="filter-checkbox">
                     <input type="radio" id="all-types" name="listingType" value=""
-                    @(string.IsNullOrEmpty(Model.ListingType) ? "checked" : "") onchange="updateListingType()">
+                           checked="@(string.IsNullOrEmpty(Model.ListingType) ? "checked" : null)" onchange="updateListingType()" />
                     <label for="all-types">All Types</label>
                 </div>
                 <div class="filter-checkbox">
                     <input type="radio" id="auction" name="listingType" value="auction"
-                    @(Model.ListingType == "auction" ? "checked" : "") onchange="updateListingType()">
+                           checked="@(Model.ListingType == "auction" ? "checked" : null)" onchange="updateListingType()" />
                     <label for="auction">Auction</label>
                 </div>
                 <div class="filter-checkbox">
                     <input type="radio" id="buy-it-now" name="listingType" value="buy-it-now"
-                    @(Model.ListingType == "buy-it-now" ? "checked" : "") onchange="updateListingType()">
+                           checked="@(Model.ListingType == "buy-it-now" ? "checked" : null)" onchange="updateListingType()" />
                     <label for="buy-it-now">Buy It Now</label>
                 </div>
                 <div class="filter-checkbox">
                     <input type="radio" id="both-types" name="listingType" value="both"
-                    @(Model.ListingType == "both" ? "checked" : "") onchange="updateListingType()">
+                           checked="@(Model.ListingType == "both" ? "checked" : null)" onchange="updateListingType()" />
                     <label for="both-types">Both Available</label>
                 </div>
             </div>
@@ -113,18 +121,19 @@
         <div class="products-grid" id="productsGrid">
             @if (Model.Products.Any())
             {
-                @foreach (var item in Model.Products)
+                foreach (var item in Model.Products)
                 {
                     <div class="product-card" data-category="@item.Category.CategoryId" data-price="@(item.CurrentBid ?? item.StartingPrice ?? 0)" onclick="window.location.href='@Url.Action("Details", new { id = item.Id })'">
                         <div class="product-image">
                             <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/placeholder-product.jpg" : item.ImageUrl)"
                                  alt="@item.Title" />
-                            @if (item.BidEndTime.HasValue && item.BidEndTime.Value <= DateTime.Now.AddHours(24))
+                            @if (item.BidEndTime.HasValue && item.BidEndTime.Value <= DateTime.UtcNow.AddHours(24) && item.BidEndTime.Value > DateTime.UtcNow)
                             {
                                 <div class="ending-soon-badge">Ending Soon</div>
                             }
-                            <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist(@item.Id)">
-                                <i class="bi bi-heart"></i>
+                            <button class="wishlist-btn"
+                                    onclick="event.stopPropagation(); toggleWishlist(@item.Id, this); return false;">
+                                <i class="bi @(userWatchlistProductIds.Contains(item.Id) ? "bi-heart-fill" : "bi-heart")"></i>
                             </button>
                         </div>
 
@@ -161,7 +170,7 @@
                                 }
                                 @if (item.BidEndTime.HasValue)
                                 {
-                                    var timeLeft = item.BidEndTime.Value - DateTime.Now;
+                                    var timeLeft = item.BidEndTime.Value - DateTime.UtcNow;
                                     if (timeLeft.TotalDays >= 1)
                                     {
                                         <span><i class="bi bi-clock"></i> @((int)timeLeft.TotalDays)d left</span>
@@ -182,19 +191,13 @@
                             </div>
 
                             <div class="product-actions">
-                                @if (item.IsBiddable && item.BidEndTime.HasValue && item.BidEndTime.Value > DateTime.Now)
+                                @if (item.IsBiddable && item.BidEndTime.HasValue && item.BidEndTime.Value > DateTime.UtcNow)
                                 {
                                     <a href="@Url.Action("Details", new { id = item.Id })" class="btn-bid" onclick="event.stopPropagation()">
                                         <i class="bi bi-hammer"></i> Bid
                                     </a>
                                 }
-                                @if (item.BuyNowPrice.HasValue)
-                                {
-                                    <a href="@Url.Action("BuyNow", new { id = item.Id })" class="btn-buy-now" onclick="event.stopPropagation()">
-                                        <i class="bi bi-cart"></i> Buy Now
-                                    </a>
-                                }
-                                else if (!item.IsBiddable)
+                                @if (item.BuyNowPrice.HasValue || !item.IsBiddable)
                                 {
                                     <a href="@Url.Action("BuyNow", new { id = item.Id })" class="btn-buy-now" onclick="event.stopPropagation()">
                                         <i class="bi bi-cart"></i> Buy Now
@@ -207,13 +210,73 @@
             }
             else
             {
-                <div class="no-products">
-                    <i class="bi bi-search"></i>
-                    <h3>No products found</h3>
-                    <p>Try adjusting your filters or browse all categories.</p>
-                    <a href="@Url.Action("Index")" class="btn btn-primary">View All Products</a>
+                <div class="no-products-message">
+                    <p>No products found matching your filters.</p>
                 </div>
             }
         </div>
     </div>
 </div>
+
+<script>
+    function submitFilters() {
+        const form = document.getElementById('filterForm');
+        form.submit();
+    }
+
+    function updateSort() {
+        const sortBy = document.getElementById('sortBy').value;
+        document.getElementById('hiddenSortBy').value = sortBy;
+        submitFilters();
+    }
+
+    function updateListingType() {
+        const listingTypeInputs = document.querySelectorAll('input[name="listingType"]');
+        let selectedValue = "";
+        listingTypeInputs.forEach(input => {
+            if (input.checked) {
+                selectedValue = input.value;
+            }
+        });
+        document.getElementById('hiddenListingType').value = selectedValue;
+        submitFilters();
+    }
+
+    function updatePriceFilter() {
+        const minPrice = document.getElementById('minPrice').value;
+        const maxPrice = document.getElementById('maxPrice').value;
+        document.getElementById('hiddenMinPrice').value = minPrice;
+        document.getElementById('hiddenMaxPrice').value = maxPrice;
+        submitFilters();
+    }
+
+    function updatePriceSlider() {
+        const priceSlider = document.getElementById('priceSlider');
+        const maxPrice = priceSlider.value;
+        document.getElementById('maxPrice').value = maxPrice;
+        document.getElementById('hiddenMaxPrice').value = maxPrice;
+        submitFilters();
+    }
+
+    function toggleFilters() {
+        const sidebar = document.getElementById('filtersSidebar');
+        sidebar.classList.toggle('visible');
+    }
+
+    function setView(view) {
+        // Implement view toggle logic here if needed
+    }
+
+    function toggleWishlist(productId, button) {
+        // Example placeholder for toggling wishlist heart icon
+        const icon = button.querySelector('i');
+        if (icon.classList.contains('bi-heart')) {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+        } else {
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+        }
+        // TODO: Add AJAX call to update wishlist server-side
+    }
+</script>
