@@ -25,31 +25,31 @@ namespace BidCommerce.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var categories = await _context.Categories.ToListAsync();
+            var categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
             foreach (var category in categories)
             {
-                var cachedCount = await _cache.GetCategoryCountAsync(category.Name);
-                if (cachedCount.HasValue)
-                {
-                    category.ItemCount = cachedCount.Value;
-                }
-                else
-                {
-                    // Query the count from your Products table or wherever you store items
-                    var count = await _context.Products.CountAsync(p => p.CategoryId == category.CategoryId);
+                // Try to get from Redis
+                var count = await _cache.GetCategoryCountAsync(category.Name);
 
-                    // Cache it
-                    await _cache.SetCategoryCountAsync(category.Name, count, TimeSpan.FromMinutes(10));
-
-                    category.ItemCount = count;
+                if (!count.HasValue)
+                {
+                    // Fallback: count from DB
+                    count = await _context.Products.CountAsync(p => p.CategoryId == category.CategoryId);
+                    await _cache.SetCategoryCountAsync(category.Name, count.Value, TimeSpan.FromMinutes(1));
                 }
+
+                category.ItemCount = count.Value;
             }
 
             return View(categories);
         }
+    
 
-        public IActionResult Privacy()
+
+    public IActionResult Privacy()
         {
             return View();
         }
