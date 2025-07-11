@@ -12,6 +12,8 @@ namespace BidCommerce.ViewModels
         public string? SortBy { get; set; } = "newest";
         public string? ListingType { get; set; }
         public string? SelectedCategoryName { get; set; }
+        public List<int> UserWatchlistProductIds { get; set; }
+
 
     }
 }
