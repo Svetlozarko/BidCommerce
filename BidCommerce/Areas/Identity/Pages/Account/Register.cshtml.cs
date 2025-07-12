@@ -117,7 +117,7 @@ namespace BidCommerce.Areas.Identity.Pages.Account
                 user.LastName = Input.LastName;
                 user.NickName = Input.NickName;
                 user.Country = Input.Country;
-                user.Age = Input.Age;
+                user.Age = Input.Age;   
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
