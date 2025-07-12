@@ -593,3 +593,12 @@
         font-size: 1.8rem;
     }
 }
+
+.seller-photo {
+    width: 80px; /* Set desired width */
+    height: 80px; /* Set desired height */
+    object-fit: cover; /* Ensures the image fills the box without distortion */
+    border-radius: 50%; /* Makes it a circle */
+    border: 2px solid #ccc; /* Optional: subtle border */
+    display: inline-block;
+}
