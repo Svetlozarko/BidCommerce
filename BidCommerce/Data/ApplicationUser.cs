@@ -10,8 +10,12 @@
             public int Age { get; set; }
             public string Country { get; set; }
             public string? PhotoFileName { get; set; }
-            public bool IsSeller { get; set; } = false;  // By default the user is a buyer
-
-        }
+            public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+            public int TotalProductsPosted { get; set; } = 0;
+            public int TotalProductsSold { get; set; } = 0;
+            public double AverageRating { get; set; } = 0.0;
+            public int TotalRatingsCount { get; set; } = 0;
 
     }
+
+}
