@@ -126,3 +126,42 @@
 
             console.log('Script loaded successfully');
         });
+
+const auctionCard = document.getElementById('auctionCard');
+const fixedPriceCard = document.getElementById('fixedPriceCard');
+const auctionFields = document.getElementById('auctionFields');
+const fixedPriceFields = document.getElementById('fixedPriceFields');
+const isBiddableInput = document.getElementById('isBiddableInput');
+
+function setListingType(isAuction) {
+    if (isAuction) {
+        auctionFields.style.display = 'block';
+        fixedPriceFields.style.display = 'none';
+        isBiddableInput.value = true;
+    } else {
+        auctionFields.style.display = 'none';
+        fixedPriceFields.style.display = 'block';
+        isBiddableInput.value = false;
+    }
+}
+
+auctionCard.addEventListener('click', () => setListingType(true));
+fixedPriceCard.addEventListener('click', () => setListingType(false));
+
+// Optional: initialize to auction or fixed if needed
+setListingType(true);
+
+
+document.getElementById('imageUpload').addEventListener('change', function (e) {
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    previewContainer.innerHTML = ''; // Clear previous previews
+
+    const file = e.target.files[0];
+    if (file) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.style.maxWidth = '150px';
+        img.style.marginRight = '10px';
+        previewContainer.appendChild(img);
+    }
+});
