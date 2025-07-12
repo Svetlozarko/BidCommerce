@@ -1,0 +1,211 @@
+﻿@model BidCommerce.ViewModels.SellerProfileViewModel
+@{
+    ViewData["Title"] = $"{Model.Seller.UserName}'s Profile";
+}
+
+<link rel="stylesheet" href="~/css/profile-seller.css" />
+
+<div class="seller-profile-container">
+    <div class="top-bar">
+        <a href="@Url.Action("Index", "Products")" class="back-link">
+            <i class="bi bi-arrow-left"></i> Back to Listings
+        </a>
+        <div class="logo">BidCommerce</div>
+    </div>
+
+    <div class="profile-content">
+        <!-- Left Sidebar: Seller Info Card -->
+        <div class="seller-info-card">
+            <div class="seller-avatar">
+                @if (!string.IsNullOrEmpty(Model.Seller.PhotoFileName))
+                {
+                    <img src="@Model.Seller.PhotoFileName" alt="@Model.Seller.UserName" onerror="this.src='/images/placeholder-avatar.png'" />
+                }
+                else
+                {
+                    <img src="/images/placeholder-avatar.png" alt="@Model.Seller.UserName" />
+                }
+            </div>
+            <h2 class="seller-name">@Model.Seller.UserName</h2>
+            <p class="seller-username">@@@Model.Seller.UserName.ToLower().Replace(" ", "_")</p>
+
+            <div class="seller-rating">
+                <div class="stars">
+                    @for (int i = 0; i < (int)Model.Rating; i++)
+                    {
+                        <i class="bi bi-star-fill"></i>
+                    }
+                    @if (Model.Rating % 1 != 0)
+                    {
+                        <i class="bi bi-star-half"></i>
+                    }
+                    @for (int i = 0; i < (5 - Math.Ceiling(Model.Rating)); i++)
+                    {
+                        <i class="bi bi-star"></i>
+                    }
+                </div>
+                <span class="rating-number">@Model.Rating.ToString("F1") (@Model.TotalReviews.ToString("N0"))</span>
+            </div>
+
+            <div class="seller-badges">
+                @if (Model.StatusBadge == "Top Seller")
+                {
+                    <span class="badge top-seller-badge">Top Seller</span>
+                }
+                else if (Model.StatusBadge == "Fast Shipper")
+                {
+                    <span class="badge fast-shipper-badge">Fast Shipper</span>
+                }
+                else if (Model.StatusBadge == "Verified")
+                {
+                    <span class="badge verified-badge">Verified</span>
+                }
+                else
+                {
+                    <span class="badge default-badge">Seller</span>
+                }
+            </div>
+
+            <p class="seller-description">@Model.Description</p>
+
+            <div class="seller-summary-stats">
+                <div class="stat-item">
+                    <span class="stat-value">@Model.TotalSalesCount.ToString("N0")</span>
+                    <span class="stat-label">Total Sales</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">@Model.FollowersCount.ToString("N0")</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+            </div>
+
+            <div class="seller-detailed-stats">
+                <div class="stat-row">
+                    <span class="label">Positive Feedback:</span>
+                    <span class="value">@Model.PositiveFeedbackPercentage.ToString("F1")%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Response Rate:</span>
+                    <span class="value">@Model.ResponseRatePercentage.ToString("F0")%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Response Time:</span>
+                    <span class="value">@Model.ResponseTime</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Member Since:</span>
+                    <span class="value">@Model.MemberSinceYear</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Location:</span>
+                    <span class="value">@Model.Location</span>
+                </div>
+            </div>
+
+            <div class="seller-actions">
+                <button class="btn-follow"><i class="bi bi-heart"></i> Follow</button>
+                <button class="btn-contact"><i class="bi bi-chat-dots"></i> Contact</button>
+            </div>
+
+            <div class="seller-status-indicators">
+                @if (Model.IsVerifiedSeller)
+                {
+                    <span class="indicator"><i class="bi bi-check-circle-fill"></i> Verified Seller</span>
+                }
+                @if (Model.IsActiveDaily)
+                {
+                    <span class="indicator"><i class="bi bi-calendar-check-fill"></i> Active Daily</span>
+                }
+            </div>
+        </div>
+
+        <!-- Right Main Content: Current Listings -->
+        <div class="current-listings-section">
+            <div class="listings-header">
+                <h3 class="listings-title">Current Listings (@Model.CurrentListings.Count)</h3>
+                <span class="items-sold">
+                    <i class="bi bi-box-seam"></i> @Model.TotalSalesCount.ToString("N0") items sold
+                </span>
+            </div>
+
+            <div class="listings-grid">
+                @if (Model.CurrentListings.Any())
+                {
+                    @foreach (var item in Model.CurrentListings)
+                    {
+                        <div class="product-card-seller" onclick="window.location.href='@Url.Action("Details", "Products", new { id = item.Id })'">
+                            <div class="product-image-seller">
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/placeholder-product.jpg" : item.ImageUrl.Split(',')[0])"
+                                     alt="@item.Title" onerror="this.src='/images/placeholder-product.jpg'" />
+                                @if (item.BidEndTime.HasValue && item.BidEndTime.Value <= DateTime.Now.AddHours(24))
+                                {
+                                    <div class="ending-soon-badge">Ending Soon</div>
+                                }
+                                <div class="product-condition">
+                                    @{
+                                        var conditions = new[] { "Excellent", "Very Good", "Good", "Fair" };
+                                        var condition = conditions[new Random(item.Id).Next(conditions.Length)];
+                                    }
+                                    @condition
+                                </div>
+                            </div>
+                            <div class="product-info-seller">
+                                <h4 class="product-title-seller">@item.Title</h4>
+                                <div class="product-pricing-seller">
+                                    @if (item.IsBiddable)
+                                    {
+                                        <div class="price-row">
+                                            <span class="price-label">Current Bid</span>
+                                            <span class="price-value">$@((item.CurrentBid ?? item.StartingPrice ?? 0).ToString("N0"))</span>
+                                        </div>
+                                        @if (item.BuyNowPrice.HasValue)
+                                        {
+                                            <div class="price-row">
+                                                <span class="price-label">Buy Now</span>
+                                                <span class="price-value buy-now">$@item.BuyNowPrice.Value.ToString("N0")</span>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="price-row">
+                                            <span class="price-label">Price</span>
+                                            <span class="price-value">$@((item.BuyNowPrice ?? item.StartingPrice ?? 0).ToString("N0"))</span>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="product-stats-seller">
+                                    @if (item.IsBiddable)
+                                    {
+                                        <span class="stat-item"><i class="bi bi-hammer"></i> @(new Random(item.Id).Next(1, 200)) bids</span>
+                                    }
+                                    <span class="stat-item"><i class="bi bi-eye"></i> @(new Random(item.Id).Next(50, 500))</span>
+                                    @if (item.BidEndTime.HasValue)
+                                    {
+                                        var timeLeft = item.BidEndTime.Value - DateTime.Now;
+                                        if (timeLeft.TotalMinutes > 0)
+                                        {
+                                            <span class="stat-item time-left-seller"><i class="bi bi-clock"></i> @((int)timeLeft.TotalDays)d @((int)timeLeft.Hours)h @((int)timeLeft.Minutes)m</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="stat-item time-left-seller ended"><i class="bi bi-clock"></i> Ended</span>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="no-listings">
+                        <i class="bi bi-box"></i>
+                        <h3>No active listings</h3>
+                        <p>This seller currently has no items for sale.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
