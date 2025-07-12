@@ -1,4 +1,5 @@
-﻿    using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+using BidCommerce.Models;
 
     namespace BidCommerce.Data
     {
@@ -15,6 +16,8 @@
             public int TotalProductsSold { get; set; } = 0;
             public double AverageRating { get; set; } = 0.0;
             public int TotalRatingsCount { get; set; } = 0;
+        public ICollection<Product> Products { get; set; }
+        public string Description { get; set; } = string.Empty;
 
     }
 
