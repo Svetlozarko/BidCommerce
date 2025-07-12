@@ -153,26 +153,46 @@
     <div class="seller-section">
         <div class="seller-info">
             <h3>Seller Information</h3>
+
             <div class="seller-details">
-                <div class="seller-name">@(Model.Owner?.UserName ?? "Anonymous Seller")</div>
+                @if (!string.IsNullOrEmpty(Model.Owner?.PhotoFileName))
+                {
+                    <img class="seller-photo" src="/images/profiles/@Model.Owner.PhotoFileName" alt="Seller Photo" />
+                }
+                else
+                {
+                    <img class="seller-photo" src="/images/default-profile.jpg" alt="Seller Photo" />
+                }
+
+                <div class="seller-name">
+                    @(Model.Owner != null ? $"{Model.Owner.FirstName} {Model.Owner.LastName}" : "Anonymous Seller")
+                </div>
+                <div class="seller-country">
+                    From: @(Model.Owner?.Country ?? "Unknown")
+                </div>
+                <div class="seller-joined">
+                    Member since: @(Model.Owner?.RegisteredAt.ToString("MMMM yyyy") ?? "N/A")
+                </div>
                 <div class="seller-rating">
                     <div class="rating-stars">
                         @for (int i = 0; i < 5; i++)
                         {
-                            <i class="bi bi-star-fill"></i>
+                            if (i < Math.Floor(Model.Owner?.AverageRating ?? 0))
+                            {
+                                <i class="bi bi-star-fill"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-star"></i>
+                            }
                         }
-                        <span class="rating-number">4.9</span>
+                        <span class="rating-number">@((Model.Owner?.AverageRating ?? 0).ToString("0.0"))</span>
                     </div>
                     <div class="seller-stats">
-                        <span>2,341 feedback</span>
-                        <span>99.2% positive</span>
+                        <span>@(Model.Owner?.TotalProductsSold ?? 0) items sold</span>
+                        <span>@(Model.Owner?.TotalRatingsCount ?? 0) ratings</span>
                     </div>
                 </div>
-                <div class="seller-actions">
-                    <button class="btn-contact">Contact</button>
-                    <button class="btn-view-store">View Store</button>
-                </div>
-            </div>
         </div>
 
         <!-- Recent Bids (for auctions) -->
