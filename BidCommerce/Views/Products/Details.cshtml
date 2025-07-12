@@ -164,9 +164,19 @@
                     <img class="seller-photo" src="/images/default-profile.jpg" alt="Seller Photo" />
                 }
 
-                <div class="seller-name">
-                    @(Model.Owner != null ? $"{Model.Owner.FirstName} {Model.Owner.LastName}" : "Anonymous Seller")
-                </div>
+                @if (Model.Owner != null)
+                {
+                    <div class="seller-name">
+                        <a href="@Url.Action("Seller", "Profile", new { id = Model.Owner.Id })">
+                            @Model.Owner.FirstName @Model.Owner.LastName
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="seller-name">Anonymous Seller</div>
+                }
+
                 <div class="seller-country">
                     From: @(Model.Owner?.Country ?? "Unknown")
                 </div>
