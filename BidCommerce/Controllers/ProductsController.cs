@@ -124,6 +124,10 @@ namespace BidCommerce.Controllers
             product.OwnerId = userId;
             product.CreatedAt = DateTime.UtcNow;
 
+            if (vm.Product.IsBiddable && vm.Product.StartingPrice.HasValue)
+            {
+                product.CurrentBid = vm.Product.StartingPrice.Value;
+            }
             // Assign CategoryId explicitly if present in vm.Product
             // (Assuming CategoryId is part of your Product model)
             // product.CategoryId = vm.Product.CategoryId;
