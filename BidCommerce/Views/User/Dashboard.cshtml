@@ -1,0 +1,193 @@
+﻿@model BidCommerce.ViewModels.MyDashboardViewModel
+@{
+    ViewData["Title"] = $"Welcome back, {Model.CurrentUser.UserName}!";
+}
+
+<link rel="stylesheet" href="~/css/dashboard-user.css" />
+
+<div class="dashboard-container">
+    <h1 class="dashboard-welcome">Welcome back, @Model.CurrentUser.NickName!</h1>
+    <p class="dashboard-subtitle">Manage your listings and track your seller performance</p>
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="card-icon revenue">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="card-label">Total Revenue</div>
+            <div class="card-value">$@Model.TotalRevenue.ToString("N0")</div>
+        </div>
+        <div class="summary-card">
+            <div class="card-icon month">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="card-label">This Month</div>
+            <div class="card-value">$@Model.ThisMonthRevenue.ToString("N0")</div>
+        </div>
+        <div class="summary-card">
+            <div class="card-icon listings">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="card-label">Active Listings</div>
+            <div class="card-value">@Model.ActiveListingsCount</div>
+        </div>
+        <div class="summary-card">
+            <div class="card-icon rating">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <div class="card-label">Rating</div>
+            <div class="card-value">@(Model.Rating == 0.0 ? "N/A" : Model.Rating.ToString("F1"))</div>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="profile-card">
+            <div class="card-header">
+                <h3 class="card-title">My Profile</h3>
+                <p class="card-subtitle">Manage your seller information</p>
+                <a href="#" class="edit-icon" title="Edit Profile">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+            </div>
+            <div class="profile-details">
+                <div class="profile-avatar">
+                    @if (!string.IsNullOrEmpty(Model.CurrentUser.PhotoFileName))
+                    {
+                        <img src="@Model.CurrentUser.PhotoFileName" alt="@Model.CurrentUser.UserName" onerror="this.src='/images/placeholder-avatar.png'" />
+                    }
+                    else
+                    {
+                        <img src="/images/placeholder-avatar.png" alt="@Model.CurrentUser.UserName" />
+                    }
+                </div>
+                <h4 class="profile-name">@Model.CurrentUser.NickName</h4>
+                <p class="profile-username">@(@Model.CurrentUser.UserName.ToLower().Replace(" ", "_"))</p>
+
+                <div class="contact-info">
+                    <div class="info-row">
+                        <span class="label">Email:</span>
+                        <span class="value">@Model.CurrentUser.Email</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Phone:</span>
+                        <span class="value">@(Model.CurrentUser.PhoneNumber ?? "N/A")</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Location:</span>
+                        <span class="value">N/A</span>
+                    </div>
+                </div>
+
+                <div class="profile-description">
+                    <p>@(Model.CurrentUser.Description ?? "You have not provided a description yet.")</p>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">@Model.TotalRevenue.ToString("N0")</span>
+                        <span class="stat-label">Total Sales</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">@Model.FollowersCount.ToString("N0")</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="listings-card">
+            <div class="card-header">
+                <h3 class="card-title">My Listings</h3>
+                <p class="card-subtitle">Manage your active and past listings</p>
+                <span class="total-listings">@(Model.ActiveListings.Count + Model.PastListings.Count) total</span>
+            </div>
+            <div class="listings-table">
+                <div class="table-header">
+                    <div class="col product-col">Product</div>
+                    <div class="col status-col">Status</div>
+                    <div class="col bid-col">Current Bid</div>
+                    <div class="col watchers-col">Watchers</div>
+                    <div class="col time-col">Time Left</div>
+                    <div class="col actions-col">Actions</div>
+                </div>
+                <div class="table-body">
+                    @if (Model.ActiveListings.Any() || Model.PastListings.Any())
+                    {
+                        @foreach (var item in Model.ActiveListings.Concat(Model.PastListings).OrderByDescending(p => p.CreatedAt))
+                        {
+                            var isEnded = item.BidEndTime.HasValue && item.BidEndTime.Value <= DateTime.Now;
+                            var statusText = isEnded ? "Ended" : "Active";
+                            var statusClass = isEnded ? "status-ended" : "status-active";
+                            var timeLeft = item.BidEndTime.HasValue ? item.BidEndTime.Value - DateTime.Now : TimeSpan.Zero;
+                            var timeLeftDisplay = "";
+
+                            if (isEnded)
+                            {
+                                timeLeftDisplay = "Ended";
+                            }
+                            else if (timeLeft.TotalDays >= 1)
+                            {
+                                timeLeftDisplay = $"{(int)timeLeft.TotalDays}d {(int)timeLeft.Hours}h";
+                            }
+                            else if (timeLeft.TotalHours >= 1)
+                            {
+                                timeLeftDisplay = $"{(int)timeLeft.TotalHours}h {(int)timeLeft.Minutes}m";
+                            }
+                            else if (timeLeft.TotalMinutes > 0)
+                            {
+                                timeLeftDisplay = $"{(int)timeLeft.TotalMinutes}m";
+                            }
+                            else
+                            {
+                                timeLeftDisplay = "Ended";
+                            }
+
+                            <div class="table-row">
+                                <div class="col product-col">
+                                    <div class="product-thumb">
+                                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/placeholder-product.jpg" : item.ImageUrl.Split(',')[0])"
+                                             alt="@item.Title" onerror="this.src='/images/placeholder-product.jpg'" />
+                                    </div>
+                                    <div class="product-details">
+                                        <a href="@Url.Action("Details", "Products", new { id = item.Id })" class="product-title-link">@item.Title</a>
+                                        <div class="product-views">
+                                            <i class="bi bi-eye"></i> 0 views
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col status-col">
+                                    <span class="status-badge @statusClass">@statusText</span>
+                                </div>
+                                <div class="col bid-col">
+                                    $@((item.CurrentBid ?? item.StartingPrice ?? item.BuyNowPrice ?? 0).ToString("N0"))
+                                </div>
+                                <div class="col watchers-col">
+                                    <i class="bi bi-heart"></i> 0
+                                </div>
+                                <div class="col time-col">
+                                    <i class="bi bi-clock"></i> @timeLeftDisplay
+                                </div>
+                                <div class="col actions-col">
+                                    <a href="@Url.Action("Edit", "Products", new { id = item.Id })" class="action-btn" title="Edit Listing">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button class="action-btn" title="View Stats">
+                                        <i class="bi bi-bar-chart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="no-listings-message">
+                            <i class="bi bi-box"></i>
+                            <p>You have no active or past listings.</p>
+                            <a href="@Url.Action("Create", "Products")" class="btn btn-primary">Create New Listing</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
