@@ -15,6 +15,8 @@ namespace BidCommerce.Data
         public DbSet<Product> Products { get; set; }    
         public DbSet<Category> Categories { get; set; }
         public DbSet<WatchlistItem> WatchlistItems { get; set; }
+        public DbSet<Condition> ProductsCondition { get; set; }
+        public DbSet<Status> ProductsStatus { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -81,7 +83,19 @@ namespace BidCommerce.Data
     new Category { CategoryId = 20, Name = "Tools", Description = "Hand tools and power tools" }
 );
 
+            builder.Entity<Condition>().HasData(
+                new Condition { ConditionId = 1, Name = "New" },
+                new Condition { ConditionId = 2, Name = "Used" },
+                new Condition { ConditionId = 3, Name = "Refurbished" }
+            );
 
+            builder.Entity<Status>().HasData(
+        new Status { StatusId = 1, Name = "Draft" },
+        new Status { StatusId = 2, Name = "Active" },
+        new Status { StatusId = 3, Name = "Sold" },
+        new Status { StatusId = 4, Name = "Cancelled" },
+        new Status { StatusId = 5, Name = "Expired"}
+    );
         }
     }
 }
