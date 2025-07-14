@@ -1,79 +1,228 @@
-﻿@model BidCommerce.Models.Product
-
+﻿@model BidCommerce.ViewModels.ProductCreateViewModel
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Product";
 }
 
-<h1>Edit</h1>
+<link rel="stylesheet" href="~/css/edit-product.css" />
 
-<h4>Product</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StartingPrice" class="control-label"></label>
-                <input asp-for="StartingPrice" class="form-control" />
-                <span asp-validation-for="StartingPrice" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsBiddable" /> @Html.DisplayNameFor(model => model.IsBiddable)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="BuyNowPrice" class="control-label"></label>
-                <input asp-for="BuyNowPrice" class="form-control" />
-                <span asp-validation-for="BuyNowPrice" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CurrentBid" class="control-label"></label>
-                <input asp-for="CurrentBid" class="form-control" />
-                <span asp-validation-for="CurrentBid" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BidEndTime" class="control-label"></label>
-                <input asp-for="BidEndTime" class="form-control" />
-                <span asp-validation-for="BidEndTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ImageUrl" class="control-label"></label>
-                <input asp-for="ImageUrl" class="form-control" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OwnerId" class="control-label"></label>
-                <select asp-for="OwnerId" class="form-control" asp-items="ViewBag.OwnerId"></select>
-                <span asp-validation-for="OwnerId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="edit-product-container">
+    <div class="edit-product-header">
+        <h1>Edit Product</h1>
+        <p>Update your product details and manage listing settings</p>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data" id="productForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Product.Id" />
+        <input type="hidden" asp-for="Product.OwnerId" />
+        <input type="hidden" asp-for="Product.CreatedAt" />
+        <input type="hidden" asp-for="Product.ImageUrl" id="existingImageUrl" />
+
+        <div class="edit-product-content">
+            <div>
+                <div class="card-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-info-circle"></i> Basic Information
+                    </h3>
+                    <p class="section-subtitle">Enter the core details about your product</p>
+
+                    <div class="form-group">
+                        <label asp-for="Product.Title" class="form-label">Product Title</label>
+                        <input asp-for="Product.Title" class="form-control" placeholder="Make it descriptive and searchable" required />
+                        <span asp-validation-for="Product.Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Product.Description" class="form-label">Description</label>
+                        <textarea asp-for="Product.Description" class="form-control" rows="4" placeholder="Include condition, features, and any relevant details" required></textarea>
+                        <span asp-validation-for="Product.Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Product.CategoryId" class="form-label">Category <span class="required">*</span></label>
+                            <select asp-for="Product.CategoryId" asp-items="@(new SelectList(Model.Categories, "CategoryId", "Name", Model.Product.CategoryId))" class="form-select" required>
+                                <option value="">Select category</option>
+                            </select>
+                            <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">Condition</label>
+                            <select class="form-select">
+                                <option value="">Select condition</option>
+                                <option value="new">New</option>
+                                <option value="used">Used</option>
+                                <option value="refurbished">Refurbished</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-currency-dollar"></i> Pricing & Bidding
+                    </h3>
+                    <p class="section-subtitle" id="pricingSubtitle">Set your pricing strategy and bidding options</p>
+
+                    <div class="listing-type-cards">
+                        <div class="listing-card" id="auctionCard" onclick="selectListingType('auction')">
+                            <div class="listing-icon">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                            <div class="listing-title">Auction</div>
+                            <div class="listing-description">Let buyers bid on your item</div>
+                        </div>
+                        <div class="listing-card" id="fixedPriceCard" onclick="selectListingType('fixed')">
+                            <div class="listing-icon">
+                                <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <div class="listing-title">Fixed Price</div>
+                            <div class="listing-description">Sell at a set price</div>
+                        </div>
+                    </div>
+                    <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" />
+                    <span asp-validation-for="Product.IsBiddable" class="text-danger"></span>
+
+                    <div class="pricing-fields auction-fields" id="auctionFields">
+                        <h4 style="color: #4364f7; margin-bottom: 15px;">Auction Settings</h4>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label asp-for="Product.StartingPrice" class="form-label">Starting Price ($) <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="Product.StartingPrice" class="form-control" placeholder="0.99" step="0.01" min="0.01" />
+                                </div>
+                                <span asp-validation-for="Product.StartingPrice" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label asp-for="Product.BuyNowPrice" class="form-label">Buy Now Price (Optional)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" min="0.01" id="auctionBuyNowPrice" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Bid ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Product.CurrentBid" class="form-control" readonly />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="form-label">Auction Duration</label>
+                                <select asp-for="AuctionDuration" class="form-select" id="auctionDurationSelect" onchange="updateAuctionEndTime()">
+                                    <option value="7">7 Days</option>
+                                    <option value="5">5 Days</option>
+                                    <option value="3">3 Days</option>
+                                    <option value="1">1 Day</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label asp-for="Product.BidEndTime" class="form-label">Bid End Time</label>
+                                <input asp-for="Product.BidEndTime" type="datetime-local" class="form-control" id="bidEndTimeInput" />
+                                <span asp-validation-for="Product.BidEndTime" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pricing-fields fixed-price-fields" id="fixedPriceFields">
+                        <h4 style="color: #4364f7; margin-bottom: 15px;">Fixed Price Settings</h4>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="form-label">Fixed Price <span class="required">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" min="0.01" id="fixedPriceInput" />
+                                </div>
+                                <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-image"></i> Product Image
+                    </h3>
+                    <p class="section-subtitle">Upload or update your product image</p>
+
+                    <div class="upload-area" onclick="document.getElementById('imageUpload').click()">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <div class="upload-title">Drop your image here or click to browse</div>
+                        <div class="upload-subtitle">PNG, JPG up to 10MB</div>
+                        <button type="button" class="btn btn-choose-files">Choose File</button>
+                    </div>
+                    <input asp-for="Product.ImageFile" type="file" id="imageUpload" class="d-none" multiple accept="image/*" />
+
+                    <div class="form-group">
+                        <label asp-for="Product.ImageUrl" class="form-label">Image URL</label>
+                        <input asp-for="Product.ImageUrl" class="form-control" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Preview</label>
+                        <div id="imagePreviewContainer" class="mt-3 row">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <h3 class="section-title">Actions</h3>
+                    <p class="section-subtitle">Save your changes or manage listing</p>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-save"></i> Save Changes
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.Product.Id" class="btn-cancel">Cancel</a>
+                    </div>
+                </div>
+
+                <div class="card-section listing-stats">
+                    <h3 class="section-title">Listing Stats</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Views</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Watchers</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Bids</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="~/js/product-form.js"></script>
 }

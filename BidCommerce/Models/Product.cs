@@ -48,6 +48,11 @@ namespace BidCommerce.Models
 
         [NotMapped]
         public IFormFile? ImageFile { get; set; }
+
+        public int? ConditionId { get; set; }
+
+        [ForeignKey("ConditionId")]
+        public Condition? Condition { get; set; }
     }
 
 }
