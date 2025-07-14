@@ -178,41 +178,44 @@ namespace BidCommerce.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product == null) return NotFound();
 
-            ViewData["OwnerId"] = new SelectList(_context.Users, "Id", "UserName", product.OwnerId); // better to show UserName
-            ViewData["Categories"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+            var viewModel = new ProductCreateViewModel
+            {
+                Product = product,
+                Categories = await _context.Categories.ToListAsync()
+            };
 
-            return View(product);
+            return View(viewModel);
         }
-
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,StartingPrice,IsBiddable,BuyNowPrice,CurrentBid,BidEndTime,ImageUrl,CreatedAt,OwnerId,CategoryId")] Product product)
+        public async Task<IActionResult> Edit(int id, ProductCreateViewModel viewModel)
         {
-            if (id != product.Id) return NotFound();
+            if (id != viewModel.Product.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(product);
+                    _context.Update(viewModel.Product);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.Id))
+                    if (!ProductExists(viewModel.Product.Id))
                         return NotFound();
                     else
                         throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
 
-            ViewData["OwnerId"] = new SelectList(_context.Users, "Id", "UserName", product.OwnerId);
-            ViewData["Categories"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+            // If model state is invalid, re-populate category list
+            viewModel.Categories = await _context.Categories.ToListAsync();
 
-            return View(product);
+            return View(viewModel);
         }
+
 
         [Authorize]
         public async Task<IActionResult> Delete(int? id)
