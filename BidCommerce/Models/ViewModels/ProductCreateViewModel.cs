@@ -8,6 +8,7 @@ namespace BidCommerce.ViewModels
         public IEnumerable<Category> Categories { get; set; } = new List<Category>();
         public IFormFile ImageFile { get; set; }
         public string? AuctionDuration { get; set; } // e.g., "1 hour", "1 day", "3 days", etc.
+        public IEnumerable<Condition> Condition { get; set; } = new List<Condition>();
 
     }
 }
