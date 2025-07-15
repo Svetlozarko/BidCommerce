@@ -65,7 +65,20 @@
                     <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
                 </div>
             </div>
+
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Product.ConditionId" class="form-label">Condition <span class="required">*</span></label>
+                    <select asp-for="Product.ConditionId" class="form-select" asp-items="@(new SelectList(Model.Condition, "ConditionId", "Name"))" required>
+                        <option value="">Select condtition</option>
+                    </select>
+                    <span asp-validation-for="Product.ConditionId" class="text-danger"></span>
+                </div>
+            </div>
         </div>
+
+      
 
         <!-- Pricing Section -->
         <div class="form-section">
