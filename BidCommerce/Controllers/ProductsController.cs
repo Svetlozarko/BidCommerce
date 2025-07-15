@@ -100,7 +100,8 @@ namespace BidCommerce.Controllers
 
             var vm = new ProductCreateViewModel
             {
-                Categories = categories
+                Categories = categories,
+                        Condition = _context.ProductsCondition.ToList()
             };
 
             return View(vm);
@@ -123,6 +124,8 @@ namespace BidCommerce.Controllers
             var product = vm.Product;
             product.OwnerId = userId;
             product.CreatedAt = DateTime.UtcNow;
+            product.Status = await _context.ProductsStatus
+                .FirstOrDefaultAsync(s => s.Name == "Active");
 
             if (vm.Product.IsBiddable && vm.Product.StartingPrice.HasValue)
             {
@@ -169,7 +172,6 @@ namespace BidCommerce.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
         [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -181,11 +183,13 @@ namespace BidCommerce.Controllers
             var viewModel = new ProductCreateViewModel
             {
                 Product = product,
-                Categories = await _context.Categories.ToListAsync()
+                Categories = await _context.Categories.ToListAsync(),
+                Condition = await _context.ProductsCondition.ToListAsync()
             };
 
             return View(viewModel);
         }
+
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -210,11 +214,13 @@ namespace BidCommerce.Controllers
                 }
             }
 
-            // If model state is invalid, re-populate category list
+            // Repopulate dropdown lists before returning view
             viewModel.Categories = await _context.Categories.ToListAsync();
+            viewModel.Condition = await _context.ProductsCondition.ToListAsync();
 
             return View(viewModel);
         }
+
 
 
         [Authorize]
