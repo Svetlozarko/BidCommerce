@@ -53,6 +53,10 @@ namespace BidCommerce.Models
 
         [ForeignKey("ConditionId")]
         public Condition? Condition { get; set; }
+
+        public int? StatusId { get; set; }
+        [ForeignKey("StatusId")]
+        public Status? Status { get; set; }
     }
 
 }
