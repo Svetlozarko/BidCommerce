@@ -17,6 +17,7 @@ namespace BidCommerce.Data
         public DbSet<WatchlistItem> WatchlistItems { get; set; }
         public DbSet<Condition> ProductsCondition { get; set; }
         public DbSet<Status> ProductsStatus { get; set; }
+        public DbSet<Bid> Bids { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
