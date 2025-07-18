@@ -23,5 +23,7 @@ namespace BidCommerce.Models
         [ForeignKey("Bidder")]
         public string BidderId { get; set; }
         public virtual ApplicationUser Bidder { get; set; }
+        public ApplicationUser User { get; set; }
+
     }
 }
