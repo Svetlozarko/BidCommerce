@@ -19,6 +19,8 @@ namespace BidCommerce
             builder.Services.AddDbContext<BidDb>(options =>
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+            builder.Services.AddSignalR();
+
 
             // Identity with roles
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -72,6 +74,7 @@ namespace BidCommerce
 
             app.UseAuthentication();
             app.UseAuthorization();
+            app.MapHub<BidHub>("/bidHub");
 
             app.MapControllerRoute(
                 name: "default",
