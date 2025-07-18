@@ -6,46 +6,58 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BidCommerce.Migrations
 {
     /// <inheritdoc />
-    public partial class Watchlist : Migration
+    public partial class Bids : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "WatchlistItems",
+                name: "Bids",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    BidId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PlacedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
-                    AddedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    BidderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WatchlistItems", x => x.Id);
+                    table.PrimaryKey("PK_Bids", x => x.BidId);
                     table.ForeignKey(
-                        name: "FK_WatchlistItems_Products_ProductId",
+                        name: "FK_Bids_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WatchlistItems_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Bids_Users_BidderId",
+                        column: x => x.BidderId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Bids_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_WatchlistItems_ProductId",
-                table: "WatchlistItems",
+                name: "IX_Bids_BidderId",
+                table: "Bids",
+                column: "BidderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Bids_ProductId",
+                table: "Bids",
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WatchlistItems_UserId",
-                table: "WatchlistItems",
+                name: "IX_Bids_UserId",
+                table: "Bids",
                 column: "UserId");
         }
 
@@ -53,7 +65,7 @@ namespace BidCommerce.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "WatchlistItems");
+                name: "Bids");
         }
     }
 }

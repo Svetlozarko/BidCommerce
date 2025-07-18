@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    [Migration("20250711170605_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250715145009_Inital")]
+    partial class Inital
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,11 +36,18 @@ namespace BidCommerce.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
+                    b.Property<double>("AverageRating")
+                        .HasColumnType("float");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -54,9 +61,6 @@ namespace BidCommerce.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsSeller")
-                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -92,8 +96,20 @@ namespace BidCommerce.Migrations
                     b.Property<string>("PhotoFileName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("RegisteredAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalProductsPosted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalProductsSold")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalRatingsCount")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -259,6 +275,40 @@ namespace BidCommerce.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BidCommerce.Models.Condition", b =>
+                {
+                    b.Property<int>("ConditionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ConditionId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ConditionId");
+
+                    b.ToTable("ProductsCondition");
+
+                    b.HasData(
+                        new
+                        {
+                            ConditionId = 1,
+                            Name = "New"
+                        },
+                        new
+                        {
+                            ConditionId = 2,
+                            Name = "Used"
+                        },
+                        new
+                        {
+                            ConditionId = 3,
+                            Name = "Refurbished"
+                        });
+                });
+
             modelBuilder.Entity("BidCommerce.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -274,6 +324,9 @@ namespace BidCommerce.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ConditionId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -298,6 +351,9 @@ namespace BidCommerce.Migrations
                     b.Property<decimal?>("StartingPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("StatusId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -306,9 +362,84 @@ namespace BidCommerce.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("ConditionId");
+
                     b.HasIndex("OwnerId");
 
+                    b.HasIndex("StatusId");
+
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Status", b =>
+                {
+                    b.Property<int>("StatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StatusId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("StatusId");
+
+                    b.ToTable("ProductsStatus");
+
+                    b.HasData(
+                        new
+                        {
+                            StatusId = 1,
+                            Name = "Draft"
+                        },
+                        new
+                        {
+                            StatusId = 2,
+                            Name = "Active"
+                        },
+                        new
+                        {
+                            StatusId = 3,
+                            Name = "Sold"
+                        },
+                        new
+                        {
+                            StatusId = 4,
+                            Name = "Cancelled"
+                        },
+                        new
+                        {
+                            StatusId = 5,
+                            Name = "Expired"
+                        });
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.WatchlistItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WatchlistItems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -450,13 +581,44 @@ namespace BidCommerce.Migrations
                         .WithMany("Products")
                         .HasForeignKey("CategoryId");
 
-                    b.HasOne("BidCommerce.Data.ApplicationUser", "Owner")
+                    b.HasOne("BidCommerce.Models.Condition", "Condition")
                         .WithMany()
+                        .HasForeignKey("ConditionId");
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "Owner")
+                        .WithMany("Products")
                         .HasForeignKey("OwnerId");
+
+                    b.HasOne("BidCommerce.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId");
 
                     b.Navigation("Category");
 
+                    b.Navigation("Condition");
+
                     b.Navigation("Owner");
+
+                    b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.WatchlistItem", b =>
+                {
+                    b.HasOne("BidCommerce.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -508,6 +670,11 @@ namespace BidCommerce.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BidCommerce.Data.ApplicationUser", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("BidCommerce.Models.Category", b =>

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BidCommerce.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Inital : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -25,6 +25,32 @@ namespace BidCommerce.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.CategoryId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductsCondition",
+                columns: table => new
+                {
+                    ConditionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductsCondition", x => x.ConditionId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductsStatus",
+                columns: table => new
+                {
+                    StatusId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductsStatus", x => x.StatusId);
                 });
 
             migrationBuilder.CreateTable(
@@ -52,7 +78,12 @@ namespace BidCommerce.Migrations
                     Age = table.Column<int>(type: "int", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhotoFileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsSeller = table.Column<bool>(type: "bit", nullable: false),
+                    RegisteredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TotalProductsPosted = table.Column<int>(type: "int", nullable: false),
+                    TotalProductsSold = table.Column<int>(type: "int", nullable: false),
+                    AverageRating = table.Column<double>(type: "float", nullable: false),
+                    TotalRatingsCount = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -110,7 +141,9 @@ namespace BidCommerce.Migrations
                     BidEndTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ConditionId = table.Column<int>(type: "int", nullable: true),
+                    StatusId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -120,6 +153,16 @@ namespace BidCommerce.Migrations
                         column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "CategoryId");
+                    table.ForeignKey(
+                        name: "FK_Products_ProductsCondition_ConditionId",
+                        column: x => x.ConditionId,
+                        principalTable: "ProductsCondition",
+                        principalColumn: "ConditionId");
+                    table.ForeignKey(
+                        name: "FK_Products_ProductsStatus_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "ProductsStatus",
+                        principalColumn: "StatusId");
                     table.ForeignKey(
                         name: "FK_Products_Users_OwnerId",
                         column: x => x.OwnerId,
@@ -212,6 +255,33 @@ namespace BidCommerce.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "WatchlistItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    AddedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WatchlistItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WatchlistItems_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_WatchlistItems_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "Categories",
                 columns: new[] { "CategoryId", "Description", "Name" },
@@ -239,15 +309,47 @@ namespace BidCommerce.Migrations
                     { 20, "Hand tools and power tools", "Tools" }
                 });
 
+            migrationBuilder.InsertData(
+                table: "ProductsCondition",
+                columns: new[] { "ConditionId", "Name" },
+                values: new object[,]
+                {
+                    { 1, "New" },
+                    { 2, "Used" },
+                    { 3, "Refurbished" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "ProductsStatus",
+                columns: new[] { "StatusId", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Draft" },
+                    { 2, "Active" },
+                    { 3, "Sold" },
+                    { 4, "Cancelled" },
+                    { 5, "Expired" }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Products_ConditionId",
+                table: "Products",
+                column: "ConditionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_OwnerId",
                 table: "Products",
                 column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_StatusId",
+                table: "Products",
+                column: "StatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
@@ -287,14 +389,21 @@ namespace BidCommerce.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WatchlistItems_ProductId",
+                table: "WatchlistItems",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WatchlistItems_UserId",
+                table: "WatchlistItems",
+                column: "UserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Products");
-
             migrationBuilder.DropTable(
                 name: "RoleClaims");
 
@@ -311,10 +420,22 @@ namespace BidCommerce.Migrations
                 name: "UserTokens");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "WatchlistItems");
 
             migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "ProductsCondition");
+
+            migrationBuilder.DropTable(
+                name: "ProductsStatus");
 
             migrationBuilder.DropTable(
                 name: "Users");
