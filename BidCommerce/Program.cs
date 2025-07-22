@@ -20,6 +20,7 @@ namespace BidCommerce
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
             builder.Services.AddSignalR();
+            builder.Services.AddScoped<BidCacheService>();
 
 
             // Identity with roles
