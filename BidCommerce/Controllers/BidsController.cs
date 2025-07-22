@@ -24,47 +24,39 @@ namespace BidCommerce.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> PlaceBid(int productId, decimal amount)
+        public async Task<IActionResult> PlaceBid(int productId, decimal amount, [FromServices] BidCacheService bidCacheService)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User?.Identity?.Name;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId && p.IsBiddable);
-
             if (product == null)
                 return NotFound("Product not found or not biddable");
 
             if (!product.BidEndTime.HasValue || product.BidEndTime < DateTime.UtcNow)
                 return BadRequest("Auction has ended");
 
-            decimal currentBid = product.CurrentBid ?? product.StartingPrice ?? 0;
+            var currentBid = await bidCacheService.GetCurrentBidAsync(productId);
+            decimal highestBid = currentBid?.Amount ?? product.StartingPrice ?? 0;
 
-            if (amount <= currentBid)
+            if (amount <= highestBid)
                 return BadRequest("Bid must be higher than the current bid");
 
-            // Create and save new Bid record
-            var bid = new Bid
-            {
-                Amount = amount,
-                ProductId = productId,
-                BidderId = userId,
-                PlacedAt = DateTime.UtcNow
-            };
+            // Add bid to Redis cache
+            await bidCacheService.AddBidAsync(productId, userId, amount, DateTime.UtcNow);
 
-            _context.Bids.Add(bid);
-
-            // Update product current bid
+            // Optionally update product's CurrentBid in DB (can defer with a background service)
             product.CurrentBid = amount;
-
             await _context.SaveChangesAsync();
 
-            // Notify clients in SignalR group
+            // Notify clients
             await _hubContext.Clients.Group(productId.ToString())
-                .SendAsync("ReceiveBid", User.Identity.Name, amount, bid.PlacedAt);
+                .SendAsync("ReceiveBid", userId, amount, DateTime.UtcNow);
 
             return Ok(new { productId, amount });
         }
+
 
     }
 }
