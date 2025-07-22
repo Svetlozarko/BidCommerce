@@ -300,13 +300,14 @@
 
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
+        const formData = new FormData();
+        formData.append("productId", productId);
+        formData.append("amount", amount);
+        formData.append("__RequestVerificationToken", token);
+
         const response = await fetch('/Bids/PlaceBid', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': token
-            },
-            body: JSON.stringify({ productId, amount })
+            body: formData
         });
 
         if (!response.ok) {
@@ -314,6 +315,7 @@
             alert("Error: " + error);
         }
     }
+
 
     function changeMainImage(imageSrc, thumbnail) {
         document.getElementById('mainProductImage').src = imageSrc;
