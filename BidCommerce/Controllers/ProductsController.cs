@@ -85,10 +85,14 @@ namespace BidCommerce.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Owner)
-                .Include(p => p.Category) // probably useful to include category here too
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (product == null) return NotFound();
+
+            // Increment views count
+            product.Views++;
+            await _context.SaveChangesAsync();
 
             return View(product);
         }
