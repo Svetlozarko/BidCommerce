@@ -145,7 +145,7 @@
                                 @if (item.IsBiddable)
                                 {
                                     <div class="current-bid">
-                                        Current bid: $@((item.StartingPrice ?? 0).ToString("F2"))
+                                        Current bid: $@((item.CurrentBid ?? 0).ToString("F2"))
                                     </div>
                                     @if (item.BuyNowPrice.HasValue)
                                     {
