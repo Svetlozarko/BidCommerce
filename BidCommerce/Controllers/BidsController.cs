@@ -30,9 +30,14 @@ namespace BidCommerce.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId && p.IsBiddable);
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+
             if (product == null)
-                return NotFound("Product not found or not biddable");
+                return NotFound("Product not found");
+
+            if (!product.IsBiddable)
+                return BadRequest("Product is not biddable");
+
 
             if (!product.BidEndTime.HasValue || product.BidEndTime < DateTime.UtcNow)
                 return BadRequest("Auction has ended");
@@ -47,7 +52,7 @@ namespace BidCommerce.Controllers
             await bidCacheService.AddBidAsync(productId, userId, amount, DateTime.UtcNow);
 
             // Optionally update product's CurrentBid in DB (can defer with a background service)
-            product.CurrentBid = amount;
+            product.CurrentBid = amount;    
             await _context.SaveChangesAsync();
 
             // Notify clients
