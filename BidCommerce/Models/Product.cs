@@ -1,4 +1,5 @@
 ﻿using BidCommerce.Data;
+using BidCommerce.Migrations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
@@ -59,7 +60,7 @@ namespace BidCommerce.Models
         public Status? Status { get; set; }
 
         public int Views { get; set; }
-
+        public List<Bid>? Bids { get; set; } = new List<Bid>();
     }
 
 }
