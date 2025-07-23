@@ -1,4 +1,5 @@
-﻿@model BidCommerce.Models.Product
+﻿@using static BidCommerce.Services.BidCacheService
+@model BidCommerce.Models.Product
 @{
     ViewData["Title"] = Model.Title;
 }
@@ -208,40 +209,47 @@
                 </div>
             </div>
 
-            <!-- Recent Bids (for auctions) -->
-            @if (Model.IsBiddable)
-            {
-                <div class="recent-bids">
-                    <h3>Recent Bids</h3>
-                    <div class="bids-list">
-                        @{
-                            var random = new Random(Model.Id);
-                            var currentBid = Model.CurrentBid ?? Model.StartingPrice ?? 0;
-                            var bids = new List<(decimal amount, string time, string bidder)>();
-
-                            for (int i = 0; i < 5; i++)
-                            {
-                                var bidAmount = currentBid - (i * random.Next(50, 200));
-                                var timeAgo = random.Next(1, 48);
-                                var bidderName = $"bidder_{random.Next(100, 999)}";
-                                bids.Add((bidAmount, $"{timeAgo}h ago", bidderName));
-                            }
-                        }
-
-                        @foreach (var bid in bids)
-                        {
-                            <div class="bid-item">
-                                <span class="bid-amount">$@bid.amount.ToString("N0")</span>
-                                <span class="bid-time">@bid.time</span>
-                                <span class="bidder">@bid.bidder</span>
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Live Bid Messages -->
-                    <div id="bidMessages" class="bid-messages"></div>
-                </div>
+            <!-- Recent Bids (from Redis) -->
+            @{
+                var redisBids = ViewBag.RedisBids as List<BidDto>;
             }
+
+            @if (redisBids != null && redisBids.Any())
+            {
+                <h3>Recent Bids</h3>
+                @foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(5))
+                {
+                    <div class="bid-item">
+                        <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
+                        <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
+                        <span class="bidder">@bid.BidderId</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>No  yet.</p>
+            }
+
+            @functions {
+                public string GetTimeAgo(DateTime dateTime)
+                {
+                    var span = DateTime.UtcNow - dateTime;
+
+                    if (span.TotalDays >= 1)
+                        return $"{(int)span.TotalDays}d ago";
+                    if (span.TotalHours >= 1)
+                        return $"{(int)span.TotalHours}h ago";
+                    if (span.TotalMinutes >= 1)
+                        return $"{(int)span.TotalMinutes}m ago";
+                    return "Just now";
+                }
+
+                
+            }
+
+
+
         </div>
     </div>
 
@@ -315,6 +323,8 @@
             alert("Error: " + error);
         }
     }
+
+
 
 
     function changeMainImage(imageSrc, thumbnail) {
