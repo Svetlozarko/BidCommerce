@@ -34,16 +34,37 @@ namespace BidCommerce.Controllers
 
         [Authorize]
         public async Task<IActionResult> Index(
-      int? categoryId,
-      string? category,
-      decimal? minPrice,
-      decimal? maxPrice,
-      string? sortBy,
-      string? listingType)
+    int? categoryId,
+    string? category,
+    decimal? minPrice,
+    decimal? maxPrice,
+    string? sortBy,
+    string? listingType)
         {
+            var expiredProducts = await _context.Products
+                .Include(p => p.Status)
+                .Where(p => p.IsBiddable && p.Status.Name == "Active" && p.BidEndTime <= DateTime.UtcNow)
+                .ToListAsync();
+
+            if (expiredProducts.Any())
+            {
+                var expiredStatus = await _context.ProductsStatus.FirstOrDefaultAsync(s => s.Name == "Expired");
+
+                foreach (var product in expiredProducts)
+                {
+                    product.Status = expiredStatus!;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
             var query = _context.Products
                 .Include(p => p.Category)
                 .AsQueryable();
+
+            query = query
+                .Include(p => p.Owner)
+                .Where(p => p.Status.Name == "Active");
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
@@ -72,7 +93,7 @@ namespace BidCommerce.Controllers
             foreach (var product in products)
             {
                 var key = $"product:{product.Id}:bids";
-                var count = await _redis.SortedSetLengthAsync(key); 
+                var count = await _redis.SortedSetLengthAsync(key);
                 bidCounts[product.Id] = (int)count;
             }
 
@@ -161,9 +182,7 @@ namespace BidCommerce.Controllers
             {
                 product.CurrentBid = vm.Product.StartingPrice.Value;
             }
-            // Assign CategoryId explicitly if present in vm.Product
-            // (Assuming CategoryId is part of your Product model)
-            // product.CategoryId = vm.Product.CategoryId;
+          
 
             if (vm.ImageFile != null && vm.ImageFile.Length > 0)
             {
