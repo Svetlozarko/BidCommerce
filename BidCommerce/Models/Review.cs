@@ -1,5 +1,6 @@
 ﻿using BidCommerce.Data;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BidCommerce.Models
 {
@@ -18,6 +19,9 @@ namespace BidCommerce.Models
 
         [MaxLength(1000)]
         public string Comment { get; set; }
+
+        [NotMapped]
+        public IFormFile? ImageFile { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
