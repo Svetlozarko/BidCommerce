@@ -18,6 +18,8 @@ namespace BidCommerce.Data
         public DbSet<Condition> ProductsCondition { get; set; }
         public DbSet<Status> ProductsStatus { get; set; }
         public DbSet<Bid> Bids { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -51,6 +53,18 @@ namespace BidCommerce.Data
             {
                 entity.ToTable(name: "UserTokens");
             });
+
+            builder.Entity<Message>()
+      .HasOne(m => m.Sender)
+      .WithMany()
+      .HasForeignKey(m => m.SenderId)
+      .OnDelete(DeleteBehavior.Restrict); // No cascade
+
+            builder.Entity<Message>()
+                .HasOne(m => m.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict); // No cascade
 
             builder.Entity<Category>().HasData(
     // 1 - 4
