@@ -163,10 +163,18 @@
                             </div>
 
                             <div class="product-stats">
-                                <span><i class="bi bi-eye"></i> @(new Random().Next(5, 50)) watching</span>
+
+
+
+
+                                <span class="watching-count">
+                                    <i class="bi bi-eye"></i>
+                                    @item.Views views
+                                </span>
+
                                 @if (item.IsBiddable)
                                 {
-                                    <span><i class="bi bi-hammer"></i> @(new Random().Next(1, 20)) bids</span>
+                                    <span><i class="bi bi-hammer"></i> @(ViewBag.BidCounts?[item.Id] ?? 0) bids</span>
                                 }
                                 @if (item.BidEndTime.HasValue)
                                 {
