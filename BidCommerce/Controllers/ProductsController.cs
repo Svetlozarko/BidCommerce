@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using BidCommerce.Data;
 using BidCommerce.Models;
 using BidCommerce.ViewModels;
+using BidCommerce.Services;
 
 namespace BidCommerce.Controllers
 {
@@ -79,23 +80,33 @@ namespace BidCommerce.Controllers
         }
 
         // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int? id, [FromServices] BidCacheService bidCacheService)
         {
             if (id == null) return NotFound();
 
             var product = await _context.Products
                 .Include(p => p.Owner)
                 .Include(p => p.Category)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound();
 
-            // Increment views count
             product.Views++;
             await _context.SaveChangesAsync();
 
+            var redisBids = await bidCacheService.GetRecentBidsAsync(product.Id);
+
+            ViewBag.RedisBids = redisBids.Select(b => new BidCacheService.BidDto
+            {
+                BidderId = b.BidderId,
+                Amount = b.Amount,
+                PlacedAt = b.PlacedAt
+            }).ToList();
+
             return View(product);
         }
+
+
 
         [Authorize]
         public IActionResult Create()
