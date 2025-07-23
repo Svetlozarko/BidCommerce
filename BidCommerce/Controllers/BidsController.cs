@@ -61,22 +61,7 @@ namespace BidCommerce.Controllers
 
             return Ok(new { productId, amount });
         }
-        public async Task<IActionResult> Details(int productId, [FromServices] BidCacheService bidCacheService)
-        {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null)
-                return NotFound();
-
-            var recentBids = await bidCacheService.GetRecentBidsAsync(productId, 5);
-            ViewBag.RedisBids = recentBids.Select(b => new BidCacheService.BidDto
-            {
-                BidderId = b.BidderId,
-                Amount = b.Amount,
-                PlacedAt = b.PlacedAt
-            }).ToList();
-
-            return View(product);
-        }
+        
 
 
     }

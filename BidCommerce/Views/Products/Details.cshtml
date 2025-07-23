@@ -214,22 +214,24 @@
                 var redisBids = ViewBag.RedisBids as List<BidDto>;
             }
 
-            @if (redisBids != null && redisBids.Any())
-            {
-                <h3>Recent Bids</h3>
-                @foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(5))
+            <h3>Recent Bids</h3>
+            <div id="recent-bids-container">
+                @if (redisBids != null && redisBids.Any())
                 {
-                    <div class="bid-item">
-                        <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
-                        <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
-                        <span class="bidder">@bid.BidderId</span>
-                    </div>
+                    foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(5))
+                    {
+                        <div class="bid-item">
+                            <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
+                            <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
+                            <span class="bidder">@bid.BidderId</span>
+                        </div>
+                    }
                 }
-            }
-            else
-            {
-                <p>No  yet.</p>
-            }
+                else
+                {
+                    <p>No bids yet.</p>
+                }
+            </div>
 
             @functions {
                 public string GetTimeAgo(DateTime dateTime)
@@ -244,12 +246,7 @@
                         return $"{(int)span.TotalMinutes}m ago";
                     return "Just now";
                 }
-
-                
             }
-
-
-
         </div>
     </div>
 
@@ -270,6 +267,13 @@
                 <h3>Specifications</h3>
                 <table>
                     <tbody>
+                        <!-- Fill specification rows here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="shipping" class="tab-pane">
+                <h3>Shipping & Returns</h3>
+                <p>Shipping and return policies here...</p>
             </div>
         </div>
     </div>
@@ -294,7 +298,7 @@
             messagesContainer.innerHTML = `<div>${message}</div>` + messagesContainer.innerHTML;
         }
 
-        // Optionally: you can update the recent bids list here if needed
+        addBidToRecentBidsUI(user, amount, time);
     });
 
     connection.start().catch(err => console.error(err.toString()));
@@ -324,14 +328,31 @@
         }
     }
 
+    function addBidToRecentBidsUI(user, amount, placedAt) {
+        const container = document.getElementById("recent-bids-container");
+        if (!container) return;
 
+        function timeAgo(date) {
+            const now = new Date();
+            const diff = (now - date) / 1000;
+            if (diff < 60) return `${Math.floor(diff)} seconds ago`;
+            else if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+            else if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+            else return `${Math.floor(diff / 86400)} days ago`;
+        }
 
+        const bidDiv = document.createElement("div");
+        bidDiv.classList.add("bid-item");
+        bidDiv.innerHTML = `<span class="bid-amount">$${amount.toLocaleString()}</span>
+                                <span class="bid-time">${timeAgo(new Date(placedAt))}</span>
+                                <span class="bidder">${user}</span>`;
 
-    function changeMainImage(imageSrc, thumbnail) {
-        document.getElementById('mainProductImage').src = imageSrc;
+        container.insertBefore(bidDiv, container.firstChild);
 
-        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-        thumbnail.classList.add('active');
+        // Optional: Limit to 5 recent bids
+        while (container.children.length > 5) {
+            container.removeChild(container.lastChild);
+        }
     }
 
     function showTab(tabName) {
@@ -339,13 +360,30 @@
         document.querySelectorAll('.tab-header').forEach(header => header.classList.remove('active'));
 
         document.getElementById(tabName).classList.add('active');
-        event.target.classList.add('active');
+        // Set active tab header
+        document.querySelector(`.tab-header[onclick="showTab('${tabName}')"]`)?.classList.add('active');
+    }
+
+    function changeMainImage(url, element) {
+        document.getElementById('mainProductImage').src = url;
+        document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+        element.classList.add('active');
     }
 
     function buyNow(productId) {
-        if (confirm('Are you sure you want to buy this item now?')) {
-            window.location.href = `/Products/BuyNow/${productId}`;
-        }
+        alert('Buy Now clicked for product ' + productId);
+        // Implement buy now logic or redirect to checkout
     }
 </script>
-    
+
+<!-- Messages container for bid updates -->
+<div id="bidMessages" class="bid-messages"></div>
+
+<style>
+    /* Add your CSS styles or keep your existing details-products.css */
+    .bid-messages div {
+        margin: 4px 0;
+        font-size: 0.9rem;
+        color: #333;
+    }
+</style>
