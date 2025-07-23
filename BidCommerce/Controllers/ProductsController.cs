@@ -13,6 +13,7 @@ using BidCommerce.Data;
 using BidCommerce.Models;
 using BidCommerce.ViewModels;
 using BidCommerce.Services;
+using StackExchange.Redis;
 
 namespace BidCommerce.Controllers
 {
@@ -20,22 +21,25 @@ namespace BidCommerce.Controllers
     {
         private readonly BidDb _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IDatabase _redis;
 
-        // Inject UserManager in constructor
-        public ProductsController(BidDb context, UserManager<ApplicationUser> userManager)
+
+        public ProductsController(BidDb context, UserManager<ApplicationUser> userManager, IConnectionMultiplexer redis)
         {
             _context = context;
             _userManager = userManager;
+            _redis = redis.GetDatabase();
+
         }
 
         [Authorize]
         public async Task<IActionResult> Index(
-            int? categoryId,
-            string? category,
-            decimal? minPrice,
-            decimal? maxPrice,
-            string? sortBy,
-            string? listingType)
+      int? categoryId,
+      string? category,
+      decimal? minPrice,
+      decimal? maxPrice,
+      string? sortBy,
+      string? listingType)
         {
             var query = _context.Products
                 .Include(p => p.Category)
@@ -64,6 +68,16 @@ namespace BidCommerce.Controllers
             var products = await query.ToListAsync();
             var categories = await _context.Categories.ToListAsync();
 
+            var bidCounts = new Dictionary<int, int>();
+            foreach (var product in products)
+            {
+                var key = $"product:{product.Id}:bids";
+                var count = await _redis.SortedSetLengthAsync(key); 
+                bidCounts[product.Id] = (int)count;
+            }
+
+            ViewBag.BidCounts = bidCounts;
+
             var viewModel = new ProductIndexViewModel
             {
                 Products = products,
@@ -78,6 +92,7 @@ namespace BidCommerce.Controllers
 
             return View(viewModel);
         }
+
 
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id, [FromServices] BidCacheService bidCacheService)
@@ -229,7 +244,6 @@ namespace BidCommerce.Controllers
                 }
             }
 
-            // Repopulate dropdown lists before returning view
             viewModel.Categories = await _context.Categories.ToListAsync();
             viewModel.Condition = await _context.ProductsCondition.ToListAsync();
 
@@ -274,7 +288,6 @@ namespace BidCommerce.Controllers
 
         public IActionResult IndexWatchlist()
         {
-            // TODO: Fetch the current user's watchlist items and pass them to the view
             return View();
         }
 
