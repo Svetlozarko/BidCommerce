@@ -1,6 +1,6 @@
 # 🛒 BidCommerce
 
-**BidCommerce** is an intelligent online auction and e-commerce platform where users can list, bid, and buy products in real-time. Packed with modern features like AI-assisted listings and live chat between users, BidCommerce makes online selling smarter and faster.
+**BidCommerce** is an intelligent online auction and e-commerce platform where users can list, bid, and buy products in real-time. Packed with modern features like AI-assisted listings and live chat between users, BidCommerce makes online selling smarter and faster
 
 ---
 
