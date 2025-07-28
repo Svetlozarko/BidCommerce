@@ -174,7 +174,7 @@
 
                                 @if (item.IsBiddable)
                                 {
-                                    <span><i class="bi bi-hammer"></i> @(ViewBag.BidCounts?[item.Id] ?? 0) bids</span>
+                                    <span><i class="bi bi-hammer"></i> @(ViewBag.BidCounts?[item.Id] ?? 0) bids</span>  
                                 }
                                 @if (item.BidEndTime.HasValue)
                                 {

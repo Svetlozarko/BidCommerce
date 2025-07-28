@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BidCommerce.Migrations
 {
     /// <inheritdoc />
-    public partial class Inital : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -126,6 +126,35 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    MessageId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SenderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ReceiverId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.MessageId);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_ReceiverId",
+                        column: x => x.ReceiverId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_SenderId",
+                        column: x => x.SenderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
@@ -143,7 +172,8 @@ namespace BidCommerce.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     ConditionId = table.Column<int>(type: "int", nullable: true),
-                    StatusId = table.Column<int>(type: "int", nullable: true)
+                    StatusId = table.Column<int>(type: "int", nullable: true),
+                    Views = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -256,6 +286,69 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Bids",
+                columns: table => new
+                {
+                    BidId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PlacedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    BidderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Bids", x => x.BidId);
+                    table.ForeignKey(
+                        name: "FK_Bids_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Bids_Users_BidderId",
+                        column: x => x.BidderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Bids_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reviews",
+                columns: table => new
+                {
+                    ReviewId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    ReviewerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reviews", x => x.ReviewId);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Users_ReviewerId",
+                        column: x => x.ReviewerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WatchlistItems",
                 columns: table => new
                 {
@@ -332,6 +425,31 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Bids_BidderId",
+                table: "Bids",
+                column: "BidderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Bids_ProductId",
+                table: "Bids",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Bids_UserId",
+                table: "Bids",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_ReceiverId",
+                table: "Messages",
+                column: "ReceiverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_SenderId",
+                table: "Messages",
+                column: "SenderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
@@ -350,6 +468,16 @@ namespace BidCommerce.Migrations
                 name: "IX_Products_StatusId",
                 table: "Products",
                 column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_ProductId",
+                table: "Reviews",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_ReviewerId",
+                table: "Reviews",
+                column: "ReviewerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
@@ -404,6 +532,15 @@ namespace BidCommerce.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Bids");
+
+            migrationBuilder.DropTable(
+                name: "Messages");
+
+            migrationBuilder.DropTable(
+                name: "Reviews");
+
             migrationBuilder.DropTable(
                 name: "RoleClaims");
 

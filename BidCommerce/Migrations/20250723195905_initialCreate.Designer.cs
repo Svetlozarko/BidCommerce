@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    [Migration("20250715145009_Inital")]
-    partial class Inital
+    [Migration("20250723195905_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -129,6 +129,41 @@ namespace BidCommerce.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Bid", b =>
+                {
+                    b.Property<int>("BidId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BidId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BidderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("PlacedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("BidId");
+
+                    b.HasIndex("BidderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Bids");
                 });
 
             modelBuilder.Entity("BidCommerce.Models.Category", b =>
@@ -309,6 +344,41 @@ namespace BidCommerce.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BidCommerce.Models.Message", b =>
+                {
+                    b.Property<int>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("BidCommerce.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -358,6 +428,9 @@ namespace BidCommerce.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Views")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
@@ -369,6 +442,41 @@ namespace BidCommerce.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Review", b =>
+                {
+                    b.Property<int>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ReviewerId");
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("BidCommerce.Models.Status", b =>
@@ -575,6 +683,50 @@ namespace BidCommerce.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BidCommerce.Models.Bid", b =>
+                {
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "Bidder")
+                        .WithMany()
+                        .HasForeignKey("BidderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BidCommerce.Models.Product", "Product")
+                        .WithMany("Bids")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Bidder");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Message", b =>
+                {
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("BidCommerce.Models.Product", b =>
                 {
                     b.HasOne("BidCommerce.Models.Category", "Category")
@@ -600,6 +752,25 @@ namespace BidCommerce.Migrations
                     b.Navigation("Owner");
 
                     b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Review", b =>
+                {
+                    b.HasOne("BidCommerce.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Reviewer");
                 });
 
             modelBuilder.Entity("BidCommerce.Models.WatchlistItem", b =>
@@ -680,6 +851,11 @@ namespace BidCommerce.Migrations
             modelBuilder.Entity("BidCommerce.Models.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.Product", b =>
+                {
+                    b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
         }
