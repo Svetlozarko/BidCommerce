@@ -5,7 +5,8 @@ using BidCommerce.Models;
 using BidCommerce.ViewModels;
 using System.Linq;
 using System.Threading.Tasks;
-using System; // Added for DateTime
+using System;
+using System.Security.Claims; // Added for DateTime
 
 namespace BidCommerce.Controllers
 {
@@ -23,34 +24,45 @@ namespace BidCommerce.Controllers
             if (string.IsNullOrEmpty(id))
                 return NotFound();
 
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             var seller = await _context.Users
-                .Include(u => u.Products) // Include products to calculate sales/listings
-                    .ThenInclude(p => p.Category) // Include category for product display
+                .Include(u => u.Products) // For listings and sales
+                    .ThenInclude(p => p.Category)
+                .Include(u => u.Followers) // To get follower count
+                .Include(u => u.Following) // Optional, if you want to show following count
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (seller == null)
                 return NotFound();
 
-            // Filter for current/active listings
             var currentListings = seller.Products?
                 .Where(p => p.BidEndTime == null || p.BidEndTime > DateTime.Now)
                 .ToList() ?? new List<Product>();
 
-            // Calculate total sales count and value from *all* products listed by the seller
-            // In a real app, you'd filter for 'sold' products, which requires a 'status' field
-            var allSellerProducts = seller.Products ?? new List<Product>();
-            int totalSalesCount = allSellerProducts.Count(); // Counting all listed products for simplicity
-            decimal totalSalesValue = allSellerProducts
-                .Sum(p => p.BuyNowPrice ?? p.CurrentBid ?? p.StartingPrice ?? 0); // Summing up prices
+            int totalSalesCount = seller.Products?.Count() ?? 0;
+
+            // Determine if current logged-in user follows this seller
+            bool isFollowing = false;
+            if (!string.IsNullOrEmpty(currentUserId))
+            {
+                isFollowing = await _context.Followers
+                    .AnyAsync(f => f.FollowerId == currentUserId && f.FollowedId == id);
+            }
 
             var viewModel = new SellerProfileViewModel
             {
                 Seller = seller,
                 CurrentListings = currentListings,
                 TotalSalesCount = totalSalesCount,
+                IsFollowing = isFollowing,
+                // Optionally add these if you want to show follower counts in the ViewModel separately:
+                FollowersCount = seller.Followers?.Count ?? 0,
+                FollowingCount = seller.Following?.Count ?? 0
             };
 
             return View("~/Views/Profile/Seller.cshtml", viewModel);
         }
+
     }
 }
