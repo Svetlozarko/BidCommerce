@@ -15,13 +15,17 @@ namespace BidCommerce.ViewModels
         public string StatusBadge { get; set; } // e.g., "Top Seller", "Fast Shipper", "Verified"
         public string Description { get; set; }
         public int TotalSalesCount { get; set; }
-        public int FollowersCount { get; set; }
+        public int Followers { get; set; }
         public double PositiveFeedbackPercentage { get; set; }
         public double ResponseRatePercentage { get; set; }
         public string ResponseTime { get; set; } // e.g., "< 1 hour"
-        public int MemberSinceYear { get; set; }
-        public string Location { get; set; }
+        public DateTime RegisteredAt { get; set; }
+        public string Country { get; set; }
         public bool IsVerifiedSeller { get; set; }
         public bool IsActiveDaily { get; set; }
+        public bool IsFollowing { get; set; }
+        public int  FollowersCount { get; set; }   
+        public int FollowingCount { get; set; }
+
     }
 }
