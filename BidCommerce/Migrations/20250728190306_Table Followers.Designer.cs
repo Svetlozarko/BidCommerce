@@ -4,6 +4,7 @@ using BidCommerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    partial class BidDbModelSnapshot : ModelSnapshot
+    [Migration("20250728190306_Table Followers")]
+    partial class TableFollowers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,10 +62,7 @@ namespace BidCommerce.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FollowersCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FollowingCount")
+                    b.Property<int>("Followers")
                         .HasColumnType("int");
 
                     b.Property<string>("LastName")
@@ -732,13 +732,13 @@ namespace BidCommerce.Migrations
             modelBuilder.Entity("BidCommerce.Models.Follower", b =>
                 {
                     b.HasOne("BidCommerce.Data.ApplicationUser", "FollowedUser")
-                        .WithMany("Followers")
+                        .WithMany()
                         .HasForeignKey("FollowedId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BidCommerce.Data.ApplicationUser", "FollowerUser")
-                        .WithMany("Following")
+                        .WithMany()
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -885,10 +885,6 @@ namespace BidCommerce.Migrations
 
             modelBuilder.Entity("BidCommerce.Data.ApplicationUser", b =>
                 {
-                    b.Navigation("Followers");
-
-                    b.Navigation("Following");
-
                     b.Navigation("Products");
                 });
 

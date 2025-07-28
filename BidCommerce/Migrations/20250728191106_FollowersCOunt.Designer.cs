@@ -4,6 +4,7 @@ using BidCommerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    partial class BidDbModelSnapshot : ModelSnapshot
+    [Migration("20250728191106_FollowersCOunt")]
+    partial class FollowersCOunt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,12 +61,6 @@ namespace BidCommerce.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FollowersCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FollowingCount")
-                        .HasColumnType("int");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -355,10 +352,20 @@ namespace BidCommerce.Migrations
                     b.Property<string>("FollowedId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId1")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("FollowedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("FollowerId", "FollowedId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("ApplicationUserId1");
 
                     b.HasIndex("FollowedId");
 
@@ -731,14 +738,22 @@ namespace BidCommerce.Migrations
 
             modelBuilder.Entity("BidCommerce.Models.Follower", b =>
                 {
-                    b.HasOne("BidCommerce.Data.ApplicationUser", "FollowedUser")
+                    b.HasOne("BidCommerce.Data.ApplicationUser", null)
                         .WithMany("Followers")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", null)
+                        .WithMany("Following")
+                        .HasForeignKey("ApplicationUserId1");
+
+                    b.HasOne("BidCommerce.Data.ApplicationUser", "FollowedUser")
+                        .WithMany()
                         .HasForeignKey("FollowedId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BidCommerce.Data.ApplicationUser", "FollowerUser")
-                        .WithMany("Following")
+                        .WithMany()
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

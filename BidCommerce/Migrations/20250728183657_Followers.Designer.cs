@@ -4,6 +4,7 @@ using BidCommerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    partial class BidDbModelSnapshot : ModelSnapshot
+    [Migration("20250728183657_Followers")]
+    partial class Followers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,10 +62,7 @@ namespace BidCommerce.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FollowersCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FollowingCount")
+                    b.Property<int>("Followers")
                         .HasColumnType("int");
 
                     b.Property<string>("LastName")
@@ -345,24 +345,6 @@ namespace BidCommerce.Migrations
                             ConditionId = 3,
                             Name = "Refurbished"
                         });
-                });
-
-            modelBuilder.Entity("BidCommerce.Models.Follower", b =>
-                {
-                    b.Property<string>("FollowerId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("FollowedId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("FollowedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("FollowerId", "FollowedId");
-
-                    b.HasIndex("FollowedId");
-
-                    b.ToTable("Followers");
                 });
 
             modelBuilder.Entity("BidCommerce.Models.Message", b =>
@@ -729,25 +711,6 @@ namespace BidCommerce.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BidCommerce.Models.Follower", b =>
-                {
-                    b.HasOne("BidCommerce.Data.ApplicationUser", "FollowedUser")
-                        .WithMany("Followers")
-                        .HasForeignKey("FollowedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("BidCommerce.Data.ApplicationUser", "FollowerUser")
-                        .WithMany("Following")
-                        .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FollowedUser");
-
-                    b.Navigation("FollowerUser");
-                });
-
             modelBuilder.Entity("BidCommerce.Models.Message", b =>
                 {
                     b.HasOne("BidCommerce.Data.ApplicationUser", "Receiver")
@@ -885,10 +848,6 @@ namespace BidCommerce.Migrations
 
             modelBuilder.Entity("BidCommerce.Data.ApplicationUser", b =>
                 {
-                    b.Navigation("Followers");
-
-                    b.Navigation("Following");
-
                     b.Navigation("Products");
                 });
 
