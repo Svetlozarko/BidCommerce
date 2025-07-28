@@ -129,25 +129,39 @@ namespace BidCommerce.Areas.Identity.Pages.Account
 
                     // Automatically add user to Buyer role
 
-                    // Profile photo upload logic
                     if (Input.PhotoFile != null)
                     {
                         var userId = await _userManager.GetUserIdAsync(user);
+
                         string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/profiles");
                         Directory.CreateDirectory(uploadsFolder);
 
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Input.PhotoFile.FileName;
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        // Get user's nickname and email, replace invalid filename chars
+                        string nickname = user.NickName ?? "user";
+                        string email = user.Email ?? "email";
+
+                        string safeNickname = SanitizeFileNamePart(nickname);
+                        string safeEmail = SanitizeFileNamePart(email);
+
+                        // Get file extension
+                        string extension = Path.GetExtension(Input.PhotoFile.FileName);
+
+                        // Compose file name
+                        string fileName = $"{safeNickname}_{safeEmail}{extension}";
+
+                        string filePath = Path.Combine(uploadsFolder, fileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
                             await Input.PhotoFile.CopyToAsync(fileStream);
                         }
 
-                        user.PhotoFileName = uniqueFileName;
+                        user.PhotoFileName = fileName;
                         await _userManager.UpdateAsync(user);
                     }
 
+                    // Helper to remove invalid characters from filename parts
+                    
                     var userId2 = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -179,7 +193,16 @@ namespace BidCommerce.Areas.Identity.Pages.Account
             // If we got this far, something failed, redisplay form
             return Page();
         }
-
+        private string SanitizeFileNamePart(string input)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (var c in invalidChars)
+            {
+                input = input.Replace(c, '_'); // Replace invalid chars with underscore
+            }
+            // Optionally lowercase and trim
+            return input.ToLower().Trim();
+        }
         private ApplicationUser CreateUser()
         {
             try
