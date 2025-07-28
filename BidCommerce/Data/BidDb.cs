@@ -20,6 +20,10 @@ namespace BidCommerce.Data
         public DbSet<Bid> Bids { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Follower> Followers { get; set; }
+
+        
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -54,7 +58,27 @@ namespace BidCommerce.Data
                 entity.ToTable(name: "UserTokens");
             });
 
-            builder.Entity<Message>()
+
+        
+
+            builder.Entity<Follower>()
+                .HasKey(f => new { f.FollowerId, f.FollowedId });
+
+            builder.Entity<Follower>()
+                .HasOne(f => f.FollowerUser)
+                .WithMany(u => u.Following)
+                .HasForeignKey(f => f.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Follower>()
+                .HasOne(f => f.FollowedUser)
+                .WithMany(u => u.Followers)
+                .HasForeignKey(f => f.FollowedId)
+                .OnDelete(DeleteBehavior.Restrict);
+        
+
+
+        builder.Entity<Message>()
       .HasOne(m => m.Sender)
       .WithMany()
       .HasForeignKey(m => m.SenderId)
