@@ -602,3 +602,25 @@
     border: 2px solid #ccc; /* Optional: subtle border */
     display: inline-block;
 }
+
+@keyframes popUp {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.pop-up-bid {
+    animation: popUp 0.5s ease forwards;
+    display: inline-block; /* make sure transform works */
+}
