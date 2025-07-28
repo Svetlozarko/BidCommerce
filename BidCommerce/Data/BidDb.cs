@@ -21,9 +21,9 @@ namespace BidCommerce.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Follower> Followers { get; set; }
-
-        
-
+         
+        public DbSet<Status> Status { get; set; }
+             
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
