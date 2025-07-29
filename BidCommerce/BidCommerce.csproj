@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Views\Shared\_ChatWidget.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\Shared\_ChatWidget.cshtml" />
     <_ContentIncludedByDefault Remove="wwwroot\css\login-account.css" />
   </ItemGroup>
 
@@ -28,6 +33,14 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\images\products\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Shared\_ChatWidget.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Views\Shared\_ChatWidget.cshtml" />
   </ItemGroup>
 
 </Project>

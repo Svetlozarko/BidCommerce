@@ -1,0 +1,51 @@
+﻿<div id="chat-box" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; background:white; border:1px solid #ccc; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:9999;">
+    <div style="background:#007bff; color:white; padding:10px; border-top-left-radius:8px; border-top-right-radius:8px;">
+        <strong>Chat</strong>
+        <button onclick="closeChat()" style="float:right; background:none; border:none; color:white;">×</button>
+    </div>
+    <div id="chat-messages" style="height:200px; overflow-y:auto; padding:10px;"></div>
+    <input type="hidden" id="chat-recipient-id" />
+    <input type="text" id="chat-input" placeholder="Type a message..." style="width:100%; padding:8px; border:none; border-top:1px solid #ccc;" />
+</div>
+
+<script>
+    function openChatWith(userId, userName) {
+        document.getElementById('chat-box').style.display = 'block';
+        document.getElementById('chat-recipient-id').value = userId;
+
+        const chatMessages = document.getElementById("chat-messages");
+        chatMessages.innerHTML += `<div style="font-style: italic; color: #888;">Chatting with ${userName}</div>`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function closeChat() {
+        document.getElementById('chat-box').style.display = 'none';
+        document.getElementById('chat-messages').innerHTML = '';
+        document.getElementById('chat-input').value = '';
+    }
+
+    document.getElementById("chat-input").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+
+    function sendChatMessage() {
+        const recipientId = document.getElementById("chat-recipient-id").value;
+        const message = document.getElementById("chat-input").value.trim();
+
+        if (!message || !recipientId) return;
+
+        // Example: replace with your SignalR send logic
+        connection.invoke("SendMessage", recipientId, message)
+            .then(() => {
+                const chatMessages = document.getElementById("chat-messages");
+                chatMessages.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                document.getElementById("chat-input").value = "";
+            })
+            .catch(console.error);
+    }
+</script>
+

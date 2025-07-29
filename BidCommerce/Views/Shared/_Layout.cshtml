@@ -127,7 +127,58 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .build();
+
+        connection.on("ReceiveMessage", function (senderId, message) {
+            const chatMessages = document.getElementById("chat-messages");
+            chatMessages.innerHTML += `<div><strong>Them:</strong> ${message}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+
+        function openChatWith(userId, userName) {
+            document.getElementById('chat-box').style.display = 'block';
+            document.getElementById('chat-recipient-id').value = userId;
+
+            const chatMessages = document.getElementById("chat-messages");
+            chatMessages.innerHTML += `<div style="font-style: italic; color: #888;">Chatting with ${userName}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function closeChat() {
+            document.getElementById('chat-box').style.display = 'none';
+            document.getElementById('chat-messages').innerHTML = '';
+            document.getElementById('chat-input').value = '';
+        }
+
+        document.getElementById("chat-input").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+
+        function sendChatMessage() {
+            const recipientId = document.getElementById("chat-recipient-id").value;
+            const message = document.getElementById("chat-input").value.trim();
+
+            if (!message || !recipientId) return;
+
+            connection.invoke("SendMessage", recipientId, message)
+                .then(() => {
+                    const chatMessages = document.getElementById("chat-messages");
+                    chatMessages.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    document.getElementById("chat-input").value = "";
+                })
+                .catch(console.error);
+        }
+    </script>
     @RenderSection("Scripts", required: false)
 </body> 
 </html>

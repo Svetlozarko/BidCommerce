@@ -21,7 +21,7 @@ namespace BidCommerce
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
             builder.Services.AddSignalR();
             builder.Services.AddScoped<BidCacheService>();
-
+            builder.Services.AddHostedService<ExpiredProductsCleanupService>();
 
             // Identity with roles
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -67,7 +67,7 @@ namespace BidCommerce
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
-
+            app.MapHub<ChatHub>("/chathub");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
