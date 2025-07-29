@@ -1,4 +1,4 @@
-using BidCommerce.Data;
+﻿using BidCommerce.Data;
 using BidCommerce.Interfaces;
 using BidCommerce.Models;
 using BidCommerce.ViewModels;
@@ -32,11 +32,9 @@ namespace BidCommerce.Controllers
 
             foreach (var category in categories)
             {
-                // Try to get from Redis
                 var count = await _cache.GetCategoryCountAsync(category.Name);
                 if (!count.HasValue)
                 {
-                    // Fallback: count from DB
                     count = await _context.Products.CountAsync(p => p.CategoryId == category.CategoryId);
                     await _cache.SetCategoryCountAsync(category.Name, count.Value, TimeSpan.FromMinutes(1));
                 }
@@ -45,16 +43,19 @@ namespace BidCommerce.Controllers
 
             viewModel.Categories = categories;
 
-            // Get recent products (last 8 products added)
             viewModel.RecentProducts = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Owner)
+                .Where(p =>
+                    p.StatusId == 2 &&
+                    (!p.BidEndTime.HasValue || p.BidEndTime > DateTime.UtcNow))
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(8)
                 .ToListAsync();
 
             return View(viewModel);
         }
+
 
         public IActionResult Privacy()
         {
