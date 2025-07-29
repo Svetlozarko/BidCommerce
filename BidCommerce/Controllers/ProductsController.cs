@@ -59,12 +59,14 @@ namespace BidCommerce.Controllers
             }
 
             var query = _context.Products
-                .Include(p => p.Category)
-                .AsQueryable();
+    .Include(p => p.Category)
+    .Include(p => p.Owner)
+    .Include(p => p.Status)      // <-- Add this!
+    .AsQueryable();
 
-            query = query
-                .Include(p => p.Owner)
-                .Where(p => p.Status.Name == "Active");
+            query = query.Where(p => p.Status.Name == "Active");
+
+
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
@@ -321,11 +323,14 @@ namespace BidCommerce.Controllers
                 .Where(w => w.UserId == userId)
                 .Include(w => w.Product)
                     .ThenInclude(p => p.Category)
+                .Include(w => w.Product)
+                    .ThenInclude(p => p.Condition) 
                 .Select(w => w.Product)
                 .ToListAsync();
 
             return View(products);
         }
+
 
         [HttpPost]
         [Authorize]
