@@ -109,7 +109,10 @@
                     <span id="followText">@((Model.IsFollowing) ? "Following" : "Follow")</span>
                     </button>
 
-                    <button class="btn-contact"><i class="bi bi-chat-dots"></i> Contact</button>
+                    <button class="btn-contact"
+                            onclick="openChatWith('@Model.Seller.Id', '@Model.Seller.FirstName @Model.Seller.LastName')">
+                        <i class="bi bi-chat-dots"></i> Contact
+                    </button>
                 </div>
             }
 
@@ -234,9 +237,17 @@
                                 <div class="product-stats-seller">
                                     @if (item.IsBiddable)
                                     {
-                                        <span class="stat-item"><i class="bi bi-hammer"></i> @(new Random(item.Id).Next(1, 200)) bids</span>
+                                        <span class="stat-item"><i class="bi bi-hammer"></i> 
+                                            @{
+                                                var bids = item.Bids.Count;
+                                            }
+                                            @bids bids</span>
                                     }
-                                    <span class="stat-item"><i class="bi bi-eye"></i> @(new Random(item.Id).Next(50, 500))</span>
+                                    <span class="stat-item"><i class="bi bi-eye"></i> 
+                                       @{
+                                           var views = item.Views;
+                                        }
+                                        @views views</span>
                                     @if (item.BidEndTime.HasValue)
                                     {
                                         var timeLeft = item.BidEndTime.Value - DateTime.Now;
@@ -266,4 +277,5 @@
         </div>
     </div>
 </div>
+
 @Html.AntiForgeryToken()
