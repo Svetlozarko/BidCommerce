@@ -184,25 +184,35 @@ namespace BidCommerce.Controllers
             {
                 product.CurrentBid = vm.Product.StartingPrice.Value;
             }
-          
 
-            if (vm.ImageFile != null && vm.ImageFile.Length > 0)
+
+            if (vm.ImageFiles != null && vm.ImageFiles.Any())
             {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(vm.ImageFile.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
+                foreach (var file in vm.ImageFiles)
+                {
+                    if (file.Length > 0)
+                    {
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        var filePath = Path.Combine(uploadsFolder, fileName);
 
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await vm.ImageFile.CopyToAsync(stream);
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await file.CopyToAsync(stream);
 
-                product.ImageUrl = "/images/products/" + fileName;
+                        // Add each image as a ProductImage entity
+                        product.Images.Add(new ProductImage { ImageUrl = "/images/products/" + fileName });
+                    }
+                }
+
+                // Optionally set product.ImageUrl to the first image's URL for main image
+                product.ImageUrl = product.Images.FirstOrDefault()?.ImageUrl;
             }
             else
             {
-                product.ImageUrl = null; // or set default image path
+                product.ImageUrl = null; // or default image path
             }
 
             // Avoid EF navigation conflicts
