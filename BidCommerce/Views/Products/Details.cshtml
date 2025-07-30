@@ -255,23 +255,36 @@
             @{
                 var redisBids = ViewBag.RedisBids as List<BidDto>;
             }
-            <h3 style="margin-top: 25px;">Recent Bids</h3>
+            @if (Model.IsBiddable)
+            {
+                <h3 style="margin-top: 25px;">Recent Bids</h3>
+            }
             <div id="recent-bids-container">
-                @if (redisBids != null && redisBids.Any())
+                @if (Model.IsBiddable)
                 {
-                    foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(5))
+
+                    @if (redisBids != null && redisBids.Any())
                     {
-                        <div class="bid-item">
-                            <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
-                            <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
-                            <span class="bidder">@bid.BidderId</span>
-                        </div>
+                        foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(3))
+                        {
+                            <div class="bid-item">
+                                <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
+                                <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
+                                <span class="bidder">@bid.BidderId</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No bids yet.</p>
                     }
                 }
                 else
                 {
-                    <p>No bids yet.</p>
+                    <p></p>
                 }
+
+               
             </div>
 
             @functions {
@@ -539,7 +552,7 @@
                             <span class="bid-time">${timeAgo(new Date(placedAt))}</span>
                             <span class="bidder">${user}</span>`;
         container.insertBefore(bidDiv, container.firstChild);
-        while (container.children.length > 5) {
+        while (container.children.length > 3) {
             container.removeChild(container.lastChild);
         }
     }
