@@ -89,6 +89,12 @@ namespace BidCommerce.Services
             return bids;
         }
 
+        public async Task RemoveBidsAsync(int productId)
+        {
+            var key = $"bids:product:{productId}";
+            await _redisDb.KeyDeleteAsync(key);
+        }
+
         public class BidDto
         {
             public string BidderId { get; set; } = "";
