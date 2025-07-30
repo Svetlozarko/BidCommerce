@@ -457,26 +457,76 @@
         font-size: 1.1rem;
     }
 
-/* Seller Section */
+/* Seller Section - Updated to accommodate tabs next to it */
 .seller-section {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr; /* Keep two columns but now for seller + tabs */
     gap: 30px;
     margin-bottom: 30px;
 }
 
-.seller-info,
-.recent-bids {
+.seller-info {
     background: white;
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-    .seller-info h3,
-    .recent-bids h3 {
-        margin: 0 0 20px 0;
-        font-size: 1.2rem;
+/* Product Tabs - Updated to fit next to seller info */
+.product-tabs {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    height: fit-content; /* Allow tabs to size based on content */
+}
+
+.tab-headers {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.tab-header {
+    flex: 1;
+    padding: 12px 16px; /* Slightly smaller padding */
+    background: #f9fafb;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem; /* Slightly smaller font */
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 0; /* Allow shrinking */
+}
+
+    .tab-header.active {
+        background: white;
+        color: #4364f7;
+        border-bottom: 2px solid #4364f7;
+    }
+
+    .tab-header:hover {
+        background: #f3f4f6;
+    }
+
+.tab-content {
+    padding: 20px; /* Reduced padding */
+    max-height: 400px; /* Limit height */
+    overflow-y: auto; /* Add scroll if content is too long */
+}
+
+.tab-pane {
+    display: none;
+}
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .tab-pane h3 {
+        margin: 0 0 15px 0; /* Reduced margin */
+        font-size: 1.1rem; /* Smaller heading */
         font-weight: 600;
         color: #1f2937;
     }
@@ -568,155 +618,6 @@
     color: #4364f7;
     font-weight: 500;
 }
-
-/* Product Tabs */
-.product-tabs {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-.tab-headers {
-    display: flex;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.tab-header {
-    flex: 1;
-    padding: 15px 20px;
-    background: #f9fafb;
-    border: none;
-    font-weight: 600;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-    .tab-header.active {
-        background: white;
-        color: #4364f7;
-        border-bottom: 2px solid #4364f7;
-    }
-
-    .tab-header:hover {
-        background: #f3f4f6;
-    }
-
-.tab-content {
-    padding: 30px;
-}
-
-.tab-pane {
-    display: none;
-}
-
-    .tab-pane.active {
-        display: block;
-    }
-
-    .tab-pane h3 {
-        margin: 0 0 20px 0;
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-.description-content {
-    line-height: 1.6;
-    color: #374151;
-}
-
-.features-list {
-    margin-top: 20px;
-}
-
-    .features-list h4 {
-        margin: 0 0 10px 0;
-        color: #1f2937;
-    }
-
-    .features-list ul {
-        margin: 0 0 20px 20px;
-        padding: 0;
-    }
-
-    .features-list li {
-        margin-bottom: 5px;
-        color: #374151;
-    }
-
-/* Specifications Table */
-.specs-table {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.spec-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-    .spec-row:last-child {
-        border-bottom: none;
-    }
-
-.spec-label {
-    font-weight: 600;
-    color: #6b7280;
-    flex: 1;
-}
-
-.spec-value {
-    color: #1f2937;
-    flex: 1;
-    text-align: right;
-}
-
-/* Shipping Details */
-.shipping-details {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-.shipping-section,
-.returns-section {
-    padding-bottom: 20px;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-    .shipping-section:last-child,
-    .returns-section:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .shipping-section h4,
-    .returns-section h4 {
-        margin: 0 0 15px 0;
-        color: #1f2937;
-        font-weight: 600;
-    }
-
-    .shipping-section ul {
-        margin: 0;
-        padding: 0 0 0 20px;
-    }
-
-    .shipping-section li {
-        margin-bottom: 8px;
-        color: #374151;
-    }
-
-    .returns-section p {
-        margin: 0 0 10px 0;
-        color: #374151;
-        line-height: 1.5;
-    }
 
 /* Modal Styles */
 .modal {
@@ -846,7 +747,7 @@
     display: inline-block;
 }
 
-/* Responsive Design */
+/* Responsive Design - Updated */
 @media (max-width: 768px) {
     .product-main {
         grid-template-columns: 1fr;
@@ -855,7 +756,7 @@
     }
 
     .seller-section {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Stack seller and tabs vertically on mobile */
         gap: 20px;
     }
 
@@ -869,7 +770,8 @@
     }
 
     .tab-content {
-        padding: 20px;
+        padding: 15px;
+        max-height: 300px;
     }
 
     .product-title {
