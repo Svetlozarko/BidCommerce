@@ -51,13 +51,13 @@
             </div>
             <div class="profile-details">
                 <div class="profile-avatar">
-                    @if (!string.IsNullOrEmpty(Model.CurrentUser.PhotoFileName))
+                    @if (!string.IsNullOrEmpty(Model.CurrentUser?.PhotoFileName))
                     {
-                        <img src="@Model.CurrentUser.PhotoFileName" alt="@Model.CurrentUser.UserName" onerror="this.src='/images/placeholder-avatar.png'" />
+                        <img class="seller-photo" src="/images/profiles/@Model.CurrentUser.PhotoFileName" alt="Seller Photo" />
                     }
                     else
                     {
-                        <img src="/images/placeholder-avatar.png" alt="@Model.CurrentUser.UserName" />
+                        <img class="seller-photo" src="/images/default-profile.jpg" alt="Seller Photo" />
                     }
                 </div>
                 <h4 class="profile-name">@Model.CurrentUser.NickName</h4>
