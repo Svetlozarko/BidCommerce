@@ -125,15 +125,19 @@ namespace BidCommerce.Controllers
             var product = await _context.Products
                 .Include(p => p.Owner)
                 .Include(p => p.Category)
+                .Include(p => p.Images) // This is the key addition - loads all ProductImage entities
+                .Include(p => p.Status)
+                .Include(p => p.Condition)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound();
 
+            // Increment view count
             product.Views++;
             await _context.SaveChangesAsync();
 
+            // Get recent bids from Redis
             var redisBids = await bidCacheService.GetRecentBidsAsync(product.Id);
-
             ViewBag.RedisBids = redisBids.Select(b => new BidCacheService.BidDto
             {
                 BidderId = b.BidderId,
@@ -141,8 +145,21 @@ namespace BidCommerce.Controllers
                 PlacedAt = b.PlacedAt
             }).ToList();
 
+            // Optional: Add debugging to see how many images were loaded
+            Console.WriteLine($"Product {id} loaded with {product.Images?.Count ?? 0} images");
+
+            // Optional: Log the image URLs for debugging
+            if (product.Images != null && product.Images.Any())
+            {
+                foreach (var image in product.Images)
+                {
+                    Console.WriteLine($"Image URL: {image.ImageUrl}");
+                }
+            }
+
             return View(product);
         }
+
 
 
 

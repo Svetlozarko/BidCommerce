@@ -12,7 +12,8 @@ namespace BidCommerce.Models
     {
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Title is required.")]
+        [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")] 
         public string Title { get; set; }
 
         public int? CategoryId { get; set; }
@@ -20,15 +21,17 @@ namespace BidCommerce.Models
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
 
-        [Required]
+
+        [Required(ErrorMessage = "Description is required.")]
+        [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
         public string Description { get; set; }
 
-        [Range(0, double.MaxValue)]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Starting price must be greater than 0.")]
         public decimal? StartingPrice { get; set; } 
 
         public bool IsBiddable { get; set; } 
 
-        [Range(0, double.MaxValue)]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Buy Now price must be greater than 0.")]
         public decimal? BuyNowPrice { get; set; }
 
         public decimal? CurrentBid { get; set; } = 0;
