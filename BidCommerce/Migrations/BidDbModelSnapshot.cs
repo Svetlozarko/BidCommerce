@@ -428,7 +428,8 @@ namespace BidCommerce.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -447,7 +448,8 @@ namespace BidCommerce.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("Views")
                         .HasColumnType("int");
@@ -463,6 +465,34 @@ namespace BidCommerce.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("BidCommerce.Models.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "DisplayOrder");
+
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("BidCommerce.Models.Review", b =>
@@ -794,6 +824,17 @@ namespace BidCommerce.Migrations
                     b.Navigation("Status");
                 });
 
+            modelBuilder.Entity("BidCommerce.Models.ProductImage", b =>
+                {
+                    b.HasOne("BidCommerce.Models.Product", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("BidCommerce.Models.Review", b =>
                 {
                     b.HasOne("BidCommerce.Models.Product", "Product")
@@ -900,6 +941,8 @@ namespace BidCommerce.Migrations
             modelBuilder.Entity("BidCommerce.Models.Product", b =>
                 {
                     b.Navigation("Bids");
+
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

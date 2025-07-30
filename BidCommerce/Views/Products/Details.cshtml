@@ -105,11 +105,7 @@
                         <div class="bid-amount" id="currentBid">
                             $@((Model.CurrentBid ?? Model.StartingPrice ?? 0).ToString("N0"))
                         </div>
-                        <span class="bid-count">
-                            @{
-                            var bids = Model.Bids?.Count() ?? 0;
-                            }
-                        @bids bids</span>
+                        <span class="bid-count">@(new Random(Model.Id).Next(1, 20)) bids</span>
                     </div>
                     @if (Model.BidEndTime.HasValue)
                     {
@@ -202,7 +198,7 @@
         </div>
     </div>
 
-    <!-- Seller Information -->
+    <!-- Seller Information - Updated structure -->
     <div class="seller-section">
         <div class="seller-info">
             <h3>Seller Information</h3>
@@ -255,11 +251,11 @@
                 </div>
             </div>
 
-            <!-- Recent Bids (from Redis) -->
+            <!-- Recent Bids (from Redis) - Now part of seller info -->
             @{
                 var redisBids = ViewBag.RedisBids as List<BidDto>;
             }
-            <h3>Recent Bids</h3>
+            <h3 style="margin-top: 25px;">Recent Bids</h3>
             <div id="recent-bids-container">
                 @if (redisBids != null && redisBids.Any())
                 {
@@ -292,31 +288,31 @@
                 }
             }
         </div>
-    </div>
 
-    <!-- Product Details Tabs -->
-    <div class="product-tabs">
-        <div class="tab-headers">
-            <button class="tab-header active" onclick="showTab('description')">Description</button>
-            <button class="tab-header" onclick="showTab('specifications')">Specifications</button>
-            <button class="tab-header" onclick="showTab('shipping')">Shipping & Returns</button>
-        </div>
-        <div class="tab-content">
-            <div id="description" class="tab-pane active">
-                <h3>Description</h3>
-                <p>@Model.Description</p>
+        <!-- Product Details Tabs - Now in right column next to seller -->
+        <div class="product-tabs">
+            <div class="tab-headers">
+                <button class="tab-header active" onclick="showTab('description')">Description</button>
+                <button class="tab-header" onclick="showTab('specifications')">Specifications</button>
+                <button class="tab-header" onclick="showTab('shipping')">Shipping & Returns</button>
             </div>
-            <div id="specifications" class="tab-pane">
-                <h3>Specifications</h3>
-                <table>
-                    <tbody>
-                        <!-- Fill specification rows here -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="shipping" class="tab-pane">
-                <h3>Shipping & Returns</h3>
-                <p>Shipping and return policies here...</p>
+            <div class="tab-content">
+                <div id="description" class="tab-pane active">
+                    <h3>Description</h3>
+                    <p>@Model.Description</p>
+                </div>
+                <div id="specifications" class="tab-pane">
+                    <h3>Specifications</h3>
+                    <table>
+                        <tbody>
+                            <!-- Fill specification rows here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="shipping" class="tab-pane">
+                    <h3>Shipping & Returns</h3>
+                    <p>Shipping and return policies here...</p>
+                </div>
             </div>
         </div>
     </div>

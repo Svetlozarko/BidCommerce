@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BidCommerce.Migrations
 {
     /// <inheritdoc />
-    public partial class initialCreate : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,19 +41,6 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductsStatus",
-                columns: table => new
-                {
-                    StatusId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProductsStatus", x => x.StatusId);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -65,6 +52,19 @@ namespace BidCommerce.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Status",
+                columns: table => new
+                {
+                    StatusId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Status", x => x.StatusId);
                 });
 
             migrationBuilder.CreateTable(
@@ -84,6 +84,8 @@ namespace BidCommerce.Migrations
                     AverageRating = table.Column<double>(type: "float", nullable: false),
                     TotalRatingsCount = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FollowersCount = table.Column<int>(type: "int", nullable: false),
+                    FollowingCount = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -126,6 +128,31 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Followers",
+                columns: table => new
+                {
+                    FollowerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FollowedId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FollowedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Followers", x => new { x.FollowerId, x.FollowedId });
+                    table.ForeignKey(
+                        name: "FK_Followers_Users_FollowedId",
+                        column: x => x.FollowedId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Followers_Users_FollowerId",
+                        column: x => x.FollowerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Messages",
                 columns: table => new
                 {
@@ -160,9 +187,9 @@ namespace BidCommerce.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     StartingPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsBiddable = table.Column<bool>(type: "bit", nullable: false),
                     BuyNowPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
@@ -189,9 +216,9 @@ namespace BidCommerce.Migrations
                         principalTable: "ProductsCondition",
                         principalColumn: "ConditionId");
                     table.ForeignKey(
-                        name: "FK_Products_ProductsStatus_StatusId",
+                        name: "FK_Products_Status_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "ProductsStatus",
+                        principalTable: "Status",
                         principalColumn: "StatusId");
                     table.ForeignKey(
                         name: "FK_Products_Users_OwnerId",
@@ -320,6 +347,28 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProductImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsPrimary = table.Column<bool>(type: "bit", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductImages_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Reviews",
                 columns: table => new
                 {
@@ -413,7 +462,7 @@ namespace BidCommerce.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "ProductsStatus",
+                table: "Status",
                 columns: new[] { "StatusId", "Name" },
                 values: new object[,]
                 {
@@ -440,6 +489,11 @@ namespace BidCommerce.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Followers_FollowedId",
+                table: "Followers",
+                column: "FollowedId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Messages_ReceiverId",
                 table: "Messages",
                 column: "ReceiverId");
@@ -448,6 +502,11 @@ namespace BidCommerce.Migrations
                 name: "IX_Messages_SenderId",
                 table: "Messages",
                 column: "SenderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductImages_ProductId_DisplayOrder",
+                table: "ProductImages",
+                columns: new[] { "ProductId", "DisplayOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_CategoryId",
@@ -536,7 +595,13 @@ namespace BidCommerce.Migrations
                 name: "Bids");
 
             migrationBuilder.DropTable(
+                name: "Followers");
+
+            migrationBuilder.DropTable(
                 name: "Messages");
+
+            migrationBuilder.DropTable(
+                name: "ProductImages");
 
             migrationBuilder.DropTable(
                 name: "Reviews");
@@ -572,7 +637,7 @@ namespace BidCommerce.Migrations
                 name: "ProductsCondition");
 
             migrationBuilder.DropTable(
-                name: "ProductsStatus");
+                name: "Status");
 
             migrationBuilder.DropTable(
                 name: "Users");

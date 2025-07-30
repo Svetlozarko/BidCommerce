@@ -107,7 +107,7 @@
                 {
                     @foreach (var product in Model.RecentProducts)
                     {
-                       @if (product.BidEndTime > DateTime.UtcNow)
+                       @if (product.StatusId == 2) 
                         {
                         <div class="product-slide" onclick="window.location.href='@Url.Action("Details", "Products", new { id = product.Id })'">
                             <div class="product-card-recent">
