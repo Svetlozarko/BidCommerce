@@ -6,37 +6,26 @@ function changeStep(direction) {
 
     if (newStep < 1 || newStep > totalSteps) return;
 
-    // Validate current step before proceeding
     if (direction > 0 && !validateCurrentStep()) {
         return;
     }
 
-    // Hide current step
     document.getElementById(`step${currentStep}`).classList.remove('active');
-
-    // Update step indicators
     updateStepIndicator(currentStep, newStep);
-
-    // Show new step
     currentStep = newStep;
     document.getElementById(`step${currentStep}`).classList.add('active');
-
-    // Update navigation buttons
     updateNavigationButtons();
 }
 
 function updateStepIndicator(oldStep, newStep) {
-    // Mark previous steps as completed
     for (let i = 1; i < newStep; i++) {
         document.getElementById(`step${i}-circle`).className = 'step-circle completed';
         const line = document.getElementById(`step${i}-line`);
         if (line) line.className = 'step-line completed';
     }
 
-    // Mark current step as active
     document.getElementById(`step${newStep}-circle`).className = 'step-circle active';
 
-    // Mark future steps as inactive
     for (let i = newStep + 1; i <= totalSteps; i++) {
         document.getElementById(`step${i}-circle`).className = 'step-circle inactive';
     }
@@ -47,10 +36,8 @@ function updateNavigationButtons() {
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Show/hide previous button
     prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
 
-    // Show/hide next/submit buttons
     if (currentStep === totalSteps) {
         nextBtn.style.display = 'none';
         submitBtn.style.display = 'block';
@@ -87,5 +74,27 @@ function previewImage(input) {
     }
 }
 
-// Initialize navigation buttons
-updateNavigationButtons();
+// ✅ Intercept Enter key only once
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('registerForm');
+
+    form.addEventListener('keydown', function (e) {
+        const tag = e.target.tagName.toLowerCase();
+        const type = e.target.type;
+
+        if (e.key === 'Enter') {
+            if (currentStep < totalSteps) {
+                if (tag === 'input' && type !== 'file' && type !== 'textarea') {
+                    e.preventDefault();
+
+                    if (validateCurrentStep()) {
+                        changeStep(1);
+                    }
+                }
+            }
+        }
+    });
+
+    // Initialize navigation buttons after DOM is ready
+    updateNavigationButtons();
+});
