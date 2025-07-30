@@ -13,6 +13,7 @@ namespace BidCommerce.ViewModels
         public int ActiveListingsCount { get; set; }
         public decimal ThisMonthRevenue { get; set; } = 0;
         public double Rating { get; set; } = 0.0;
+        public string Country { get; set; }
         public int FollowersCount { get; set; } = 0;
     }
 }
