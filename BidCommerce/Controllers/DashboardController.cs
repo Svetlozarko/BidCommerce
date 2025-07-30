@@ -54,7 +54,8 @@ namespace BidCommerce.Controllers
                 ActiveListings = activeListings,
                 PastListings = pastListings,
                 TotalRevenue = totalRevenue,
-                ActiveListingsCount = activeListings.Count
+                ActiveListingsCount = activeListings.Count,
+                Country = currentUser.Country ?? "Unknown"
             };
 
             return View("~/Views/User/Dashboard.cshtml", viewModel);
