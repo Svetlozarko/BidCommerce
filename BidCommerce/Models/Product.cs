@@ -46,8 +46,11 @@ namespace BidCommerce.Models
         [ForeignKey("OwnerId")]
         public ApplicationUser? Owner { get; set; }
 
+        public List<ProductImage> Images { get; set; } = new List<ProductImage>();
+
         [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+        public List<IFormFile>? ImageFiles { get; set; } // Up to 10 images
+
 
         public int? ConditionId { get; set; }
 
