@@ -61,9 +61,11 @@
                     }
                 </div>
                 <h4 class="profile-name">@Model.CurrentUser.NickName</h4>
-                <p class="profile-username">@(@Model.CurrentUser.UserName.ToLower().Replace(" ", "_"))</p>
-
                 <div class="contact-info">
+                    <div class="info-row">
+                        <span class="label">Age:</span>
+                        <span class="value">@Model.CurrentUser.Age</span>
+                    </div>
                     <div class="info-row">
                         <span class="label">Email:</span>
                         <span class="value">@Model.CurrentUser.Email</span>
@@ -74,7 +76,11 @@
                     </div>
                     <div class="info-row">
                         <span class="label">Location:</span>
-                        <span class="value">N/A</span>
+                        <span class="value">@Model.Country</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Member since:</span>
+                        <span class="value">@(Model.CurrentUser.RegisteredAt.ToString("MMMM yyyy") ?? "N/A")</span>
                     </div>
                 </div>
 
@@ -91,6 +97,7 @@
                         <span class="stat-value">@Model.FollowersCount.ToString("N0")</span>
                         <span class="stat-label">Followers</span>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -106,7 +113,7 @@
                     <div class="col product-col">Product</div>
                     <div class="col status-col">Status</div>
                     <div class="col bid-col">Current Bid</div>
-                    <div class="col watchers-col">Watchers</div>
+                    <div class="col watchers-col">Views</div>
                     <div class="col time-col">Time Left</div>
                     <div class="col actions-col">Actions</div>
                 </div>
@@ -162,7 +169,7 @@
                                     $@((item.CurrentBid ?? item.StartingPrice ?? item.BuyNowPrice ?? 0).ToString("N0"))
                                 </div>
                                 <div class="col watchers-col">
-                                    <i class="bi bi-heart"></i> 0
+                                    <i class="bi bi-eye"></i> @item.Views
                                 </div>
                                 <div class="col time-col">
                                     <i class="bi bi-clock"></i> @timeLeftDisplay
