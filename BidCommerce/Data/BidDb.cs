@@ -60,7 +60,15 @@ namespace BidCommerce.Data
             });
 
 
-        
+            builder.Entity<ProductImage>()
+                .HasOne(pi => pi.Product)
+                .WithMany(p => p.Images)
+                .HasForeignKey(pi => pi.ProductId)
+                .OnDelete(DeleteBehavior.Cascade); // When product is deleted, delete all images
+
+            // Optional: Configure display order for images
+            builder.Entity<ProductImage>()
+                .HasIndex(pi => new { pi.ProductId, pi.DisplayOrder });
 
             builder.Entity<Follower>()
                 .HasKey(f => new { f.FollowerId, f.FollowedId });
