@@ -20,31 +20,37 @@ namespace BidCommerce.Services
         private string GetCurrentBidKey(int productId) => $"product:{productId}:currentBid";
 
         // Add a bid to Redis sorted set (score = amount)
+        private string GetRecentBidsKey(int productId) => $"product:{productId}:recentBids";
+
         public async Task AddBidAsync(int productId, string bidderId, decimal amount, DateTime placedAt)
         {
-            var bid = new
+            var bid = new BidDto
             {
                 BidderId = bidderId,
                 Amount = amount,
                 PlacedAt = placedAt
             };
 
-            // Serialize bid to JSON string to store as member
             string bidJson = JsonSerializer.Serialize(bid);
 
-            // Use amount as the score for ordering bids in sorted set
+            // Store in main sorted set by amount
             await _redisDb.SortedSetAddAsync(GetBidsKey(productId), bidJson, (double)amount);
 
-            // Update current bid hash with latest info
+            // Store in recent sorted set by timestamp
+double score = ((DateTimeOffset)placedAt).ToUnixTimeMilliseconds();
+            await _redisDb.SortedSetAddAsync(GetRecentBidsKey(productId), bidJson, score);
+
+            // Update current bid hash
             var hashEntries = new HashEntry[]
             {
-                new HashEntry("BidderId", bidderId),
-                new HashEntry("Amount", amount.ToString()),
-                new HashEntry("PlacedAt", placedAt.ToString("o")) // ISO 8601 format
+        new HashEntry("BidderId", bidderId),
+        new HashEntry("Amount", amount.ToString()),
+        new HashEntry("PlacedAt", placedAt.ToString("o"))
             };
 
             await _redisDb.HashSetAsync(GetCurrentBidKey(productId), hashEntries);
         }
+
 
         // Get latest/current bid info from Redis hash
         public async Task<(string BidderId, decimal Amount, DateTime PlacedAt)?> GetCurrentBidAsync(int productId)
@@ -68,7 +74,7 @@ namespace BidCommerce.Services
         // Get last N bids for a product (descending by amount)
         public async Task<List<(string BidderId, decimal Amount, DateTime PlacedAt)>> GetRecentBidsAsync(int productId, int count = 10)
         {
-            var results = await _redisDb.SortedSetRangeByRankAsync(GetBidsKey(productId), -count, -1, Order.Descending);
+            var results = await _redisDb.SortedSetRangeByRankAsync(GetRecentBidsKey(productId), -count, -1, Order.Descending);
             var bids = new List<(string, decimal, DateTime)>();
 
             foreach (var result in results)
@@ -91,9 +97,11 @@ namespace BidCommerce.Services
 
         public async Task RemoveBidsAsync(int productId)
         {
-            var key = $"bids:product:{productId}";
-            await _redisDb.KeyDeleteAsync(key);
+            await _redisDb.KeyDeleteAsync(GetBidsKey(productId));        // bids sorted by amount
+            await _redisDb.KeyDeleteAsync(GetRecentBidsKey(productId));  // bids sorted by timestamp
+            await _redisDb.KeyDeleteAsync(GetCurrentBidKey(productId));  // current bid hash
         }
+
 
         public class BidDto
         {
