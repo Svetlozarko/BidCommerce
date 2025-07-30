@@ -13,30 +13,78 @@
             <div class="main-image">
                 @{
                     var imageUrl = "/images/placeholder-product.jpg";
-                    var imageUrls = new List<string>();
-
-                    if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    var hasImages = Model.Images != null && Model.Images.Any();
+                    
+                    if (hasImages)
                     {
-                        imageUrls = Model.ImageUrl.Split(',').ToList();
-                        imageUrl = imageUrls.First();
+                        // Order images by DisplayOrder if available, otherwise by Id
+                        var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
+                        imageUrl = orderedImages.First().ImageUrl;
                     }
-                    else
+                    else if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        imageUrls.Add(imageUrl);
+                        // Fallback to old single image field
+                        imageUrl = Model.ImageUrl;
                     }
                 }
-                <img src="@imageUrl" alt="@Model.Title" id="mainProductImage" />
+                <img src="@imageUrl" alt="@Model.Title" id="mainProductImage" class="main-product-image" />
+                
+                <!-- Image counter overlay -->
+                @if (hasImages && Model.Images.Count() > 1)
+                {
+                    <div class="image-counter">
+                        <span id="currentImageIndex">1</span> / @Model.Images.Count()
+                    </div>
+                }
+                
+                <!-- Zoom icon -->
+                <div class="zoom-icon" title="Click to zoom">
+                    <i class="bi bi-zoom-in"></i>
+                </div>
             </div>
-
-            @if (imageUrls.Count > 1)
+            
+            <!-- Thumbnail Images -->
+            @if (hasImages && Model.Images.Count() > 1)
             {
                 <div class="thumbnail-images">
-                    @for (int i = 0; i < imageUrls.Count && i < 4; i++)
+                    <div class="thumbnail-scroll-container">
+                        @{
+                            var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
+                        }
+                        @for (int i = 0; i < orderedImages.Count; i++)
+                        {
+                            var image = orderedImages[i];
+                            <div class="thumbnail @(i == 0 ? "active" : "")" 
+                                 onclick="changeMainImage('@image.ImageUrl', this, @(i + 1))"
+                                 data-index="@(i + 1)">
+                                <img src="@image.ImageUrl" alt="@Model.Title view @(i + 1)" />
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Navigation arrows for thumbnails if there are many -->
+                    @if (Model.Images.Count() > 6)
                     {
-                        <div class="thumbnail @(i == 0 ? "active" : "")" onclick="changeMainImage('@imageUrls[i]', this)">
-                            <img src="@imageUrls[i]" alt="@Model.Title view @(i + 1)" />
-                        </div>
+                        <button class="thumbnail-nav prev" onclick="scrollThumbnails('left')" title="Previous">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="thumbnail-nav next" onclick="scrollThumbnails('right')" title="Next">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
                     }
+                </div>
+            }
+            
+            <!-- Image navigation for main image -->
+            @if (hasImages && Model.Images.Count() > 1)
+            {
+                <div class="main-image-nav">
+                    <button class="nav-btn prev" onclick="previousImage()" title="Previous image">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="nav-btn next" onclick="nextImage()" title="Next image">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
                 </div>
             }
         </div>
@@ -57,9 +105,12 @@
                         <div class="bid-amount" id="currentBid">
                             $@((Model.CurrentBid ?? Model.StartingPrice ?? 0).ToString("N0"))
                         </div>
-                        <span class="bid-count">@(new Random(Model.Id).Next(1, 20)) bids</span>
+                        <span class="bid-count">
+                            @{
+                            var bids = Model.Bids?.Count() ?? 0;
+                            }
+                        @bids bids</span>
                     </div>
-
                     @if (Model.BidEndTime.HasValue)
                     {
                         var timeLeft = Model.BidEndTime.Value - DateTime.Now;
@@ -82,7 +133,6 @@
                             }
                         </div>
                     }
-
                     @if (Model.BuyNowPrice.HasValue)
                     {
                         <div class="buy-now-section">
@@ -116,7 +166,6 @@
                         <button class="btn-place-bid" onclick="placeBid()">Place Bid</button>
                     </div>
                 }
-
                 @if (Model.BuyNowPrice.HasValue)
                 {
                     <button class="btn-buy-now" onclick="buyNow(@Model.Id)">Buy Now</button>
@@ -157,7 +206,6 @@
     <div class="seller-section">
         <div class="seller-info">
             <h3>Seller Information</h3>
-
             <div class="seller-details">
                 @if (!string.IsNullOrEmpty(Model.Owner?.PhotoFileName))
                 {
@@ -167,7 +215,6 @@
                 {
                     <img class="seller-photo" src="/images/default-profile.jpg" alt="Seller Photo" />
                 }
-
                 @if (Model.Owner != null)
                 {
                     <div class="seller-name">
@@ -180,7 +227,6 @@
                 {
                     <div class="seller-name">Anonymous Seller</div>
                 }
-
                 <div class="seller-country">
                     From: @(Model.Owner?.Country ?? "Unknown")
                 </div>
@@ -213,7 +259,6 @@
             @{
                 var redisBids = ViewBag.RedisBids as List<BidDto>;
             }
-
             <h3>Recent Bids</h3>
             <div id="recent-bids-container">
                 @if (redisBids != null && redisBids.Any())
@@ -237,7 +282,6 @@
                 public string GetTimeAgo(DateTime dateTime)
                 {
                     var span = DateTime.UtcNow - dateTime;
-
                     if (span.TotalDays >= 1)
                         return $"{(int)span.TotalDays}d ago";
                     if (span.TotalHours >= 1)
@@ -257,7 +301,6 @@
             <button class="tab-header" onclick="showTab('specifications')">Specifications</button>
             <button class="tab-header" onclick="showTab('shipping')">Shipping & Returns</button>
         </div>
-
         <div class="tab-content">
             <div id="description" class="tab-pane active">
                 <h3>Description</h3>
@@ -277,31 +320,150 @@
             </div>
         </div>
     </div>
+
+    <!-- Fullscreen Modal -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage" />
+        <div class="modal-nav">
+            <button class="modal-nav-btn prev" onclick="modalPreviousImage(event)" title="Previous">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="modal-nav-btn next" onclick="modalNextImage(event)" title="Next">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        <div class="modal-counter">
+            <span id="modalImageIndex">1</span> / <span id="modalImageTotal">@(hasImages ? Model.Images.Count() : 1)</span>
+        </div>
+    </div>
 </div>
-<style>
-@@keyframes popUp {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
 
-.pop-up-bid {
-  animation: popUp 0.5s ease forwards;
-  display: inline-block;
-}
-</style>
 <script>
-    const productId = @Model.Id;
+    // Updated JavaScript with proper image data
+    const productImages = [
+        @if (hasImages)
+        {
+            var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
+            @Html.Raw(string.Join(",", orderedImages.Select(img => $"'{img.ImageUrl}'")))
+        }
+        else if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            @Html.Raw($"'{Model.ImageUrl}'")
+        }
+        else
+        {
+            @Html.Raw("'/images/placeholder-product.jpg'")
+        }
+    ];
+    
+    let currentImageIndex = 0;
 
+    // Main image click to open modal
+    document.getElementById('mainProductImage').addEventListener('click', function () {
+        openModal(currentImageIndex);
+    });
+
+    function openModal(imageIndex = 0) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const modalIndexSpan = document.getElementById('modalImageIndex');
+        
+        currentImageIndex = imageIndex;
+        modal.style.display = "flex";
+        modalImg.src = productImages[imageIndex];
+        modalIndexSpan.textContent = imageIndex + 1;
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = "none";
+    }
+
+    function changeMainImage(url, element, index) {
+        document.getElementById('mainProductImage').src = url;
+        document.getElementById('currentImageIndex').textContent = index;
+        document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+        element.classList.add('active');
+        currentImageIndex = index - 1; // Convert to 0-based index
+    }
+
+    function nextImage() {
+        if (currentImageIndex < productImages.length - 1) {
+            currentImageIndex++;
+            updateMainImage();
+        }
+    }
+
+    function previousImage() {
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            updateMainImage();
+        }
+    }
+
+    function updateMainImage() {
+        const mainImg = document.getElementById('mainProductImage');
+        const indexSpan = document.getElementById('currentImageIndex');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        
+        mainImg.src = productImages[currentImageIndex];
+        if (indexSpan) indexSpan.textContent = currentImageIndex + 1;
+        
+        // Update active thumbnail
+        thumbnails.forEach((thumb, index) => {
+            thumb.classList.toggle('active', index === currentImageIndex);
+        });
+    }
+
+    function modalNextImage(event) {
+        event.stopPropagation();
+        if (currentImageIndex < productImages.length - 1) {
+            currentImageIndex++;
+            const modalImg = document.getElementById('modalImage');
+            const modalIndexSpan = document.getElementById('modalImageIndex');
+            modalImg.src = productImages[currentImageIndex];
+            modalIndexSpan.textContent = currentImageIndex + 1;
+        }
+    }
+
+    function modalPreviousImage(event) {
+        event.stopPropagation();
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            const modalImg = document.getElementById('modalImage');
+            const modalIndexSpan = document.getElementById('modalImageIndex');
+            modalImg.src = productImages[currentImageIndex];
+            modalIndexSpan.textContent = currentImageIndex + 1;
+        }
+    }
+
+    function scrollThumbnails(direction) {
+        const container = document.querySelector('.thumbnail-scroll-container');
+        const scrollAmount = 120; // Adjust based on thumbnail width
+        
+        if (direction === 'left') {
+            container.scrollLeft -= scrollAmount;
+        } else {
+            container.scrollLeft += scrollAmount;
+        }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('imageModal');
+        if (modal.style.display === 'flex') {
+            if (e.key === 'ArrowRight') {
+                modalNextImage(e);
+            } else if (e.key === 'ArrowLeft') {
+                modalPreviousImage(e);
+            } else if (e.key === 'Escape') {
+                closeModal();
+            }
+        }
+    });
+
+    // Rest of your existing JavaScript code...
+    const productId = @Model.Id;
     const connection = new signalR.HubConnectionBuilder()
         .withUrl(`/bidHub?productId=${productId}`)
         .build();
@@ -309,40 +471,28 @@
     connection.on("ReceiveBid", (user, amount, time) => {
         const bidElement = document.getElementById("currentBid");
         const bidInput = document.getElementById("bidAmount");
-
         if (bidElement) {
             bidElement.textContent = `$${amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`;
-
-            // Remove existing animation class in case it's still there
             bidElement.classList.remove('pop-up-bid');
-
-            // Trigger reflow to restart animation
             void bidElement.offsetWidth;
-
-            // Add animation class to trigger pop-up
             bidElement.classList.add('pop-up-bid');
         }
-
-        // Auto-fill next minimum bid (current amount + 1)
         if (bidInput) {
             const nextBid = Math.ceil(amount) + 1;
             bidInput.value = nextBid;
             bidInput.min = nextBid;
             bidInput.placeholder = nextBid;
         }
-
         const message = `${user} placed a bid of $${amount.toFixed(2)} at ${new Date(time).toLocaleTimeString()}`;
         const messagesContainer = document.getElementById("bidMessages");
         if (messagesContainer) {
             messagesContainer.innerHTML = `<div>${message}</div>` + messagesContainer.innerHTML;
         }
-
         addBidToRecentBidsUI(user, amount, time);
     });
 
     connection.start().catch(err => console.error(err.toString()));
 
-    // Initialize bid input on page load to next minimum bid if possible
     window.onload = () => {
         const bidElement = document.getElementById("currentBid");
         const bidInput = document.getElementById("bidAmount");
@@ -361,19 +511,15 @@
             alert('Please enter a valid bid amount.');
             return;
         }
-
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-
         const formData = new FormData();
         formData.append("productId", productId);
         formData.append("amount", amount);
         formData.append("__RequestVerificationToken", token);
-
         const response = await fetch('/Bids/PlaceBid', {
             method: 'POST',
             body: formData
         });
-
         if (!response.ok) {
             const error = await response.text();
             alert("Error: " + error);
@@ -383,7 +529,6 @@
     function addBidToRecentBidsUI(user, amount, placedAt) {
         const container = document.getElementById("recent-bids-container");
         if (!container) return;
-
         function timeAgo(date) {
             const now = new Date();
             const diff = (now - date) / 1000;
@@ -392,16 +537,12 @@
             else if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
             else return `${Math.floor(diff / 86400)} days ago`;
         }
-
         const bidDiv = document.createElement("div");
         bidDiv.classList.add("bid-item");
         bidDiv.innerHTML = `<span class="bid-amount">$${amount.toLocaleString()}</span>
-                                    <span class="bid-time">${timeAgo(new Date(placedAt))}</span>
-                                    <span class="bidder">${user}</span>`;
-
+                            <span class="bid-time">${timeAgo(new Date(placedAt))}</span>
+                            <span class="bidder">${user}</span>`;
         container.insertBefore(bidDiv, container.firstChild);
-
-        // Optional: Limit to 5 recent bids
         while (container.children.length > 5) {
             container.removeChild(container.lastChild);
         }
@@ -410,29 +551,116 @@
     function showTab(tabName) {
         document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
         document.querySelectorAll('.tab-header').forEach(header => header.classList.remove('active'));
-
         document.getElementById(tabName).classList.add('active');
-        // Set active tab header
         document.querySelector(`.tab-header[onclick="showTab('${tabName}')"]`)?.classList.add('active');
-    }
-
-    function changeMainImage(url, element) {
-        document.getElementById('mainProductImage').src = url;
-        document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
-        element.classList.add('active');
     }
 
     function buyNow(productId) {
         alert('Buy Now clicked for product ' + productId);
-        // Implement buy now logic or redirect to checkout
     }
 </script>
 
-
-
-
 <style>
-    /* Add your CSS styles or keep your existing details-products.css */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0,0,0,0.95);
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
+    .modal-content {
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
+        animation: zoom 0.3s;
+        margin: 0;
+        padding: 0;
+        display: block;
+    }
+
+    .modal-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        pointer-events: none;
+    }
+
+    .modal-nav-btn {
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        pointer-events: all;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: background-color 0.3s;
+    }
+
+    .modal-nav-btn:hover {
+        background: rgba(0,0,0,0.8);
+    }
+
+    .modal-counter {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+    }
+
+    .close {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 10000;
+    }
+
+    .close:hover {
+        opacity: 0.7;
+    }
+
+    @@keyframes zoom {
+        from { transform: scale(0.7); }
+        to { transform: scale(1); }
+    }
+
+    @@keyframes popUp {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .pop-up-bid {
+        animation: popUp 0.5s ease forwards;
+        display: inline-block;
+    }
+
     .bid-messages div {
         margin: 4px 0;
         font-size: 0.9rem;
