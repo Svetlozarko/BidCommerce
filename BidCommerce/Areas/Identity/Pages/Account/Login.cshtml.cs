@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using RateLimiterLib;
 
 namespace BidCommerce.Areas.Identity.Pages.Account
 {
@@ -86,7 +87,7 @@ namespace BidCommerce.Areas.Identity.Pages.Account
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
         }
-
+        
         public async Task OnGetAsync(string returnUrl = null)
         {
             if (!string.IsNullOrEmpty(ErrorMessage))
@@ -103,7 +104,8 @@ namespace BidCommerce.Areas.Identity.Pages.Account
 
             ReturnUrl = returnUrl;
         }
-
+        
+        [RateLimit(3, 60)]
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");

@@ -1,7 +1,7 @@
 ﻿@using static BidCommerce.Services.BidCacheService
 @model BidCommerce.Models.Product
 @{
-    ViewData["Title"] = Model.Title;
+ViewData["Title"] = Model.Title;
 }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <link rel="stylesheet" href="~/css/details-products.css" />
@@ -9,83 +9,87 @@
 <div class="product-details-container">
     <div class="product-main">
         <!-- Left Side - Images -->
-        <div class="product-images">
+        @{
+        var hasImages = Model.Images != null && Model.Images.Any();
+        var imageCount = hasImages ? Model.Images.Count() : (string.IsNullOrEmpty(Model.ImageUrl) ? 0 : 1);
+        var singleImageClass = imageCount <= 1 ? "single-image" : "";
+        }
+        <div class="product-images @singleImageClass">
             <div class="main-image">
                 @{
-                    var imageUrl = "/images/placeholder-product.jpg";
-                    var hasImages = Model.Images != null && Model.Images.Any();
-                    
-                    if (hasImages)
-                    {
-                        // Order images by DisplayOrder if available, otherwise by Id
-                        var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
-                        imageUrl = orderedImages.First().ImageUrl;
-                    }
-                    else if (!string.IsNullOrEmpty(Model.ImageUrl))
-                    {
-                        // Fallback to old single image field
-                        imageUrl = Model.ImageUrl;
-                    }
+                var imageUrl = "/images/placeholder-product.jpg";
+
+                if (hasImages)
+                {
+                // Order images by DisplayOrder if available, otherwise by Id
+                var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
+                imageUrl = orderedImages.First().ImageUrl;
+                }
+                else if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                // Fallback to old single image field
+                imageUrl = Model.ImageUrl;
+                }
                 }
                 <img src="@imageUrl" alt="@Model.Title" id="mainProductImage" class="main-product-image" />
-                
+
                 <!-- Image counter overlay -->
                 @if (hasImages && Model.Images.Count() > 1)
                 {
-                    <div class="image-counter">
-                        <span id="currentImageIndex">1</span> / @Model.Images.Count()
-                    </div>
+                <div class="image-counter">
+                    <span id="currentImageIndex">1</span> / @Model.Images.Count()
+                </div>
                 }
-                
+
                 <!-- Zoom icon -->
                 <div class="zoom-icon" title="Click to zoom">
                     <i class="bi bi-zoom-in"></i>
                 </div>
             </div>
-            
-            <!-- Thumbnail Images -->
+
+            <!-- Thumbnail Images - Only show if more than 1 image -->
             @if (hasImages && Model.Images.Count() > 1)
             {
-                <div class="thumbnail-images">
-                    <div class="thumbnail-scroll-container">
-                        @{
-                            var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
-                        }
-                        @for (int i = 0; i < orderedImages.Count; i++)
-                        {
-                            var image = orderedImages[i];
-                            <div class="thumbnail @(i == 0 ? "active" : "")" 
-                                 onclick="changeMainImage('@image.ImageUrl', this, @(i + 1))"
-                                 data-index="@(i + 1)">
-                                <img src="@image.ImageUrl" alt="@Model.Title view @(i + 1)" />
-                            </div>
-                        }
-                    </div>
-                    
-                    <!-- Navigation arrows for thumbnails if there are many -->
-                    @if (Model.Images.Count() > 6)
+            <div class="thumbnail-images">
+                <div class="thumbnail-scroll-container">
+                    @{
+                    var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
+                    }
+                    @for (int i = 0; i < orderedImages.Count; i++)
                     {
-                        <button class="thumbnail-nav prev" onclick="scrollThumbnails('left')" title="Previous">
-                            <i class="bi bi-chevron-left"></i>
-                        </button>
-                        <button class="thumbnail-nav next" onclick="scrollThumbnails('right')" title="Next">
-                            <i class="bi bi-chevron-right"></i>
-                        </button>
+                    var image = orderedImages[i];
+                    <div class="thumbnail @(i == 0 ? "active" : "")"
+                         onclick="changeMainImage('@image.ImageUrl', this, @(i + 1))"
+                         data-index="@(i + 1)">
+                        <img src="@image.ImageUrl" alt="@Model.Title view @(i + 1)" />
+                    </div>
                     }
                 </div>
+
+                <!-- Navigation arrows for thumbnails - Show when more than 4 images -->
+                @if (Model.Images.Count() > 4)
+                {
+                <button class="thumbnail-nav prev" onclick="scrollThumbnails('left')" title="Previous">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="thumbnail-nav next" onclick="scrollThumbnails('right')" title="Next">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                }
+            </div>
             }
-            
+
             <!-- Image navigation for main image -->
             @if (hasImages && Model.Images.Count() > 1)
             {
-                <div class="main-image-nav">
-                    <button class="nav-btn prev" onclick="previousImage()" title="Previous image">
-                        <i class="bi bi-chevron-left"></i>
-                    </button>
-                    <button class="nav-btn next" onclick="nextImage()" title="Next image">
-                        <i class="bi bi-chevron-right"></i>
-                    </button>
-                </div>
+            <div class="main-image-nav">
+                <button class="nav-btn prev" onclick="previousImage()" title="Previous image">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="nav-btn next" onclick="nextImage()" title="Next image">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
             }
         </div>
 
@@ -100,49 +104,49 @@
             <div class="pricing-section">
                 @if (Model.IsBiddable)
                 {
-                    <div class="current-bid">
-                        <span class="bid-label">Current bid</span>
-                        <div class="bid-amount" id="currentBid">
-                            $@((Model.CurrentBid ?? Model.StartingPrice ?? 0).ToString("N0"))
-                        </div>
-                        <span class="bid-count">@(new Random(Model.Id).Next(1, 20)) bids</span>
+                <div class="current-bid">
+                    <span class="bid-label">Current bid</span>
+                    <div class="bid-amount" id="currentBid">
+                        $@((Model.CurrentBid ?? Model.StartingPrice ?? 0).ToString("N0"))
                     </div>
-                    @if (Model.BidEndTime.HasValue)
+                    <span class="bid-count">@(new Random(Model.Id).Next(1, 20)) bids</span>
+                </div>
+                @if (Model.BidEndTime.HasValue)
+                {
+                var timeLeft = Model.BidEndTime.Value - DateTime.Now;
+                <div class="time-left">
+                    @if (timeLeft.TotalHours > 24)
                     {
-                        var timeLeft = Model.BidEndTime.Value - DateTime.Now;
-                        <div class="time-left">
-                            @if (timeLeft.TotalHours > 24)
-                            {
-                                <span class="time-value">@((int)timeLeft.TotalDays)d @((int)timeLeft.Hours)h left</span>
-                            }
-                            else if (timeLeft.TotalHours >= 1)
-                            {
-                                <span class="time-value">@((int)timeLeft.TotalHours)h @((int)timeLeft.Minutes)m left</span>
-                            }
-                            else if (timeLeft.TotalMinutes > 0)
-                            {
-                                <span class="time-value">@((int)timeLeft.TotalMinutes)m left</span>
-                            }
-                            else
-                            {
-                                <span class="time-value ended">Auction Ended</span>
-                            }
-                        </div>
+                    <span class="time-value">@((int)timeLeft.TotalDays)d @((int)timeLeft.Hours)h left</span>
                     }
-                    @if (Model.BuyNowPrice.HasValue)
+                    else if (timeLeft.TotalHours >= 1)
                     {
-                        <div class="buy-now-section">
-                            <span class="buy-now-label">or Buy It Now</span>
-                            <div class="buy-now-price">$@Model.BuyNowPrice.Value.ToString("N0")</div>
-                        </div>
+                    <span class="time-value">@((int)timeLeft.TotalHours)h @((int)timeLeft.Minutes)m left</span>
                     }
+                    else if (timeLeft.TotalMinutes > 0)
+                    {
+                    <span class="time-value">@((int)timeLeft.TotalMinutes)m left</span>
+                    }
+                    else
+                    {
+                    <span class="time-value ended">Auction Ended</span>
+                    }
+                </div>
+                }
+                @if (Model.BuyNowPrice.HasValue)
+                {
+                <div class="buy-now-section">
+                    <span class="buy-now-label">or Buy It Now</span>
+                    <div class="buy-now-price">$@Model.BuyNowPrice.Value.ToString("N0")</div>
+                </div>
+                }
                 }
                 else
                 {
-                    <div class="fixed-price">
-                        <span class="price-label">Price</span>
-                        <div class="price-amount">$@((Model.BuyNowPrice ?? Model.StartingPrice ?? 0).ToString("N0"))</div>
-                    </div>
+                <div class="fixed-price">
+                    <span class="price-label">Price</span>
+                    <div class="price-amount">$@((Model.BuyNowPrice ?? Model.StartingPrice ?? 0).ToString("N0"))</div>
+                </div>
                 }
             </div>
 
@@ -151,20 +155,20 @@
                 @Html.AntiForgeryToken()
                 @if (Model.IsBiddable && Model.BidEndTime.HasValue && Model.BidEndTime.Value > DateTime.Now)
                 {
-                    <div class="bidding-form">
-                        <label for="bidAmount">Enter your maximum bid</label>
-                        <div class="bid-input-group">
-                            <span class="currency">$</span>
-                            <input type="number" id="bidAmount" class="bid-input"
-                                   min="@((Model.CurrentBid ?? Model.StartingPrice ?? 0) + 1)"
-                                   placeholder="@((Model.CurrentBid ?? Model.StartingPrice ?? 0) + 1)" />
-                        </div>
-                        <button class="btn-place-bid" onclick="placeBid()">Place Bid</button>
+                <div class="bidding-form">
+                    <label for="bidAmount">Enter your maximum bid</label>
+                    <div class="bid-input-group">
+                        <span class="currency">$</span>
+                        <input type="number" id="bidAmount" class="bid-input"
+                               min="@((Model.CurrentBid ?? Model.StartingPrice ?? 0) + 1)"
+                               placeholder="@((Model.CurrentBid ?? Model.StartingPrice ?? 0) + 1)" />
                     </div>
+                    <button class="btn-place-bid" onclick="placeBid()">Place Bid</button>
+                </div>
                 }
                 @if (Model.BuyNowPrice.HasValue)
                 {
-                    <button class="btn-buy-now" onclick="buyNow(@Model.Id)">Buy Now</button>
+                <button class="btn-buy-now" onclick="buyNow(@Model.Id)">Buy Now</button>
                 }
             </div>
 
@@ -205,23 +209,23 @@
             <div class="seller-details">
                 @if (!string.IsNullOrEmpty(Model.Owner?.PhotoFileName))
                 {
-                    <img class="seller-photo" src="/images/profiles/@Model.Owner.PhotoFileName" alt="Seller Photo" />
+                <img class="seller-photo" src="/images/profiles/@Model.Owner.PhotoFileName" alt="Seller Photo" />
                 }
                 else
                 {
-                    <img class="seller-photo" src="/images/default-profile.jpg" alt="Seller Photo" />
+                <img class="seller-photo" src="/images/default-profile.jpg" alt="Seller Photo" />
                 }
                 @if (Model.Owner != null)
                 {
-                    <div class="seller-name">
-                        <a href="@Url.Action("Seller", "Profile", new { id = Model.Owner.Id })">
-                            @Model.Owner.FirstName @Model.Owner.LastName
-                        </a>
-                    </div>
+                <div class="seller-name">
+                    <a href="@Url.Action("Seller", "Profile", new { id = Model.Owner.Id })">
+                        @Model.Owner.FirstName @Model.Owner.LastName
+                    </a>
+                </div>
                 }
                 else
                 {
-                    <div class="seller-name">Anonymous Seller</div>
+                <div class="seller-name">Anonymous Seller</div>
                 }
                 <div class="seller-country">
                     From: @(Model.Owner?.Country ?? "Unknown")
@@ -233,14 +237,14 @@
                     <div class="rating-stars">
                         @for (int i = 0; i < 5; i++)
                         {
-                            if (i < Math.Floor(Model.Owner?.AverageRating ?? 0))
-                            {
-                                <i class="bi bi-star-fill"></i>
-                            }
-                            else
-                            {
-                                <i class="bi bi-star"></i>
-                            }
+                        if (i < Math.Floor(Model.Owner?.AverageRating ?? 0))
+                        {
+                        <i class="bi bi-star-fill"></i>
+                        }
+                        else
+                        {
+                        <i class="bi bi-star"></i>
+                        }
                         }
                         <span class="rating-number">@((Model.Owner?.AverageRating ?? 0).ToString("0.0"))</span>
                     </div>
@@ -253,52 +257,50 @@
 
             <!-- Recent Bids (from Redis) - Now part of seller info -->
             @{
-                var redisBids = ViewBag.RedisBids as List<BidDto>;
+            var redisBids = ViewBag.RedisBids as List<BidDto>;
             }
             @if (Model.IsBiddable)
             {
-                <h3 style="margin-top: 25px;">Recent Bids</h3>
+            <h3 style="margin-top: 25px;">Recent Bids</h3>
             }
             <div id="recent-bids-container">
                 @if (Model.IsBiddable)
                 {
-
-                    @if (redisBids != null && redisBids.Any())
-                    {
-                        foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(3))
-                        {
-                            <div class="bid-item">
-                                <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
-                                <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
-                                <span class="bidder">@bid.BidderId</span>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p>No bids yet.</p>
-                    }
+                @if (redisBids != null && redisBids.Any())
+                {
+                foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(3))
+                {
+                <div class="bid-item">
+                    <span class="bid-amount">$@bid.Amount.ToString("N0")</span>
+                    <span class="bid-time">@GetTimeAgo(bid.PlacedAt)</span>
+                    <span class="bidder">@bid.BidderId</span>
+                </div>
+                }
                 }
                 else
                 {
-                    <p></p>
+                <p>No bids yet.</p>
+                }
+                }
+                else
+                {
+                <p></p>
                 }
 
-               
             </div>
 
             @functions {
-                public string GetTimeAgo(DateTime dateTime)
-                {
-                    var span = DateTime.UtcNow - dateTime;
-                    if (span.TotalDays >= 1)
-                        return $"{(int)span.TotalDays}d ago";
-                    if (span.TotalHours >= 1)
-                        return $"{(int)span.TotalHours}h ago";
-                    if (span.TotalMinutes >= 1)
-                        return $"{(int)span.TotalMinutes}m ago";
-                    return "Just now";
-                }
+            public string GetTimeAgo(DateTime dateTime)
+            {
+            var span = DateTime.UtcNow - dateTime;
+            if (span.TotalDays >= 1)
+            return $"{(int)span.TotalDays}d ago";
+            if (span.TotalHours >= 1)
+            return $"{(int)span.TotalHours}h ago";
+            if (span.TotalMinutes >= 1)
+            return $"{(int)span.TotalMinutes}m ago";
+            return "Just now";
+            }
             }
         </div>
 
@@ -318,7 +320,7 @@
                     <h3>Specifications</h3>
                     <table>
                         <tbody>
-                            <!-- Fill specification rows here -->
+                        <!-- Fill specification rows here -->
                         </tbody>
                     </table>
                 </div>
@@ -353,19 +355,19 @@
     const productImages = [
         @if (hasImages)
         {
-            var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
-            @Html.Raw(string.Join(",", orderedImages.Select(img => $"'{img.ImageUrl}'")))
+        var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
+        @Html.Raw(string.Join(",", orderedImages.Select(img => $"'{img.ImageUrl}'")))
         }
         else if (!string.IsNullOrEmpty(Model.ImageUrl))
         {
-            @Html.Raw($"'{Model.ImageUrl}'")
+        @Html.Raw($"'{Model.ImageUrl}'")
         }
         else
         {
-            @Html.Raw("'/images/placeholder-product.jpg'")
+        @Html.Raw("'/images/placeholder-product.jpg'")
         }
     ];
-    
+
     let currentImageIndex = 0;
 
     // Main image click to open modal
@@ -377,7 +379,7 @@
         const modal = document.getElementById('imageModal');
         const modalImg = document.getElementById('modalImage');
         const modalIndexSpan = document.getElementById('modalImageIndex');
-        
+
         currentImageIndex = imageIndex;
         modal.style.display = "flex";
         modalImg.src = productImages[imageIndex];
@@ -414,10 +416,10 @@
         const mainImg = document.getElementById('mainProductImage');
         const indexSpan = document.getElementById('currentImageIndex');
         const thumbnails = document.querySelectorAll('.thumbnail');
-        
+
         mainImg.src = productImages[currentImageIndex];
         if (indexSpan) indexSpan.textContent = currentImageIndex + 1;
-        
+
         // Update active thumbnail
         thumbnails.forEach((thumb, index) => {
             thumb.classList.toggle('active', index === currentImageIndex);
@@ -449,7 +451,7 @@
     function scrollThumbnails(direction) {
         const container = document.querySelector('.thumbnail-scroll-container');
         const scrollAmount = 120; // Adjust based on thumbnail width
-        
+
         if (direction === 'left') {
             container.scrollLeft -= scrollAmount;
         } else {

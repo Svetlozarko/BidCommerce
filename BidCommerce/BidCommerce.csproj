@@ -43,4 +43,10 @@
     <None Include="Views\Shared\_ChatWidget.cshtml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="RateLimiterLib">
+      <HintPath>..\..\..\..\RiderProjects\RateLimiterLib\RateLimiterLib\bin\Debug\net8.0\RateLimiterLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

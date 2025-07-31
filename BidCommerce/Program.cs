@@ -47,7 +47,9 @@ namespace BidCommerce
             builder.Services.AddScoped<ICategoryCountCacheService, CategoryCountCacheService>();
 
             var app = builder.Build();
-
+            
+           
+            
             // Seed roles and admin user (your existing code)
             using (var scope = app.Services.CreateScope())
             {

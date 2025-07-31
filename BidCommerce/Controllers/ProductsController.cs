@@ -14,6 +14,7 @@ using BidCommerce.Models;
 using BidCommerce.ViewModels;
 using BidCommerce.Services;
 using StackExchange.Redis;
+using RateLimiterLib;
 
 namespace BidCommerce.Controllers
 {
@@ -117,7 +118,7 @@ namespace BidCommerce.Controllers
         }
 
 
-        // GET: Products/Details/5
+        [RateLimit(10, 60)]
         public async Task<IActionResult> Details(int? id, [FromServices] BidCacheService bidCacheService)
         {
             if (id == null) return NotFound();
@@ -177,79 +178,87 @@ namespace BidCommerce.Controllers
             return View(vm);
         }
 
-        [HttpPost]
-        [Authorize]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ProductCreateViewModel vm)
+ [HttpPost]
+[Authorize]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDraft = false)
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (userId == null) return Unauthorized();
+
+    // Skip strict validation if saving as draft
+    if (!saveAsDraft && !ModelState.IsValid)
+    {
+        vm.Categories = _context.Categories.ToList();
+        return View(vm);
+    }
+
+    // Minimum check: at least one field must be entered
+    if (saveAsDraft && string.IsNullOrWhiteSpace(vm.Product.Title) &&
+                      string.IsNullOrWhiteSpace(vm.Product.Description) &&
+                      vm.Product.StartingPrice == null &&
+                      vm.ImageFiles.Count == 0)
+    {
+        ModelState.AddModelError("", "Please enter at least one field before saving as draft.");
+        vm.Categories = _context.Categories.ToList();
+        return View(vm);
+    }
+
+    var product = vm.Product;
+    product.OwnerId = userId;
+    product.CreatedAt = DateTime.UtcNow;
+
+    // Assign draft or active status
+    product.Status = await _context.ProductsStatus
+        .FirstOrDefaultAsync(s => s.Name == (saveAsDraft ? "Draft" : "Active"));
+
+    if (product.IsBiddable && product.StartingPrice.HasValue)
+    {
+        product.CurrentBid = product.StartingPrice.Value;
+    }
+
+    // Handle images
+    if (vm.ImageFiles != null && vm.ImageFiles.Any())
+    {
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
+        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+        foreach (var file in vm.ImageFiles)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return Unauthorized();
-
-            if (!ModelState.IsValid)
+            if (file.Length > 0)
             {
-                vm.Categories = _context.Categories.ToList();
-                return View(vm);
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
+
+                product.Images.Add(new ProductImage { ImageUrl = "/images/products/" + fileName });
             }
-
-            var product = vm.Product;
-            product.OwnerId = userId;
-            product.CreatedAt = DateTime.UtcNow;
-            product.Status = await _context.ProductsStatus
-                .FirstOrDefaultAsync(s => s.Name == "Active");
-
-            if (vm.Product.IsBiddable && vm.Product.StartingPrice.HasValue)
-            {
-                product.CurrentBid = vm.Product.StartingPrice.Value;
-            }
-
-
-            if (vm.ImageFiles != null && vm.ImageFiles.Any())
-            {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                foreach (var file in vm.ImageFiles)
-                {
-                    if (file.Length > 0)
-                    {
-                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                        var filePath = Path.Combine(uploadsFolder, fileName);
-
-                        using var stream = new FileStream(filePath, FileMode.Create);
-                        await file.CopyToAsync(stream);
-
-                        // Add each image as a ProductImage entity
-                        product.Images.Add(new ProductImage { ImageUrl = "/images/products/" + fileName });
-                    }
-                }
-
-                // Optionally set product.ImageUrl to the first image's URL for main image
-                product.ImageUrl = product.Images.FirstOrDefault()?.ImageUrl;
-            }
-            else
-            {
-                product.ImageUrl = null; // or default image path
-            }
-
-            // Avoid EF navigation conflicts
-            product.Category = null;
-
-            _context.Products.Add(product);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Error saving product: " + ex.Message);
-                vm.Categories = _context.Categories.ToList();
-                return View(vm);
-            }
-
-            return RedirectToAction(nameof(Index));
         }
+
+        product.ImageUrl = product.Images.FirstOrDefault()?.ImageUrl;
+    }
+
+    // Avoid EF circular binding
+    product.Category = null;
+
+    _context.Products.Add(product);
+
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (Exception ex)
+    {
+        ModelState.AddModelError("", "Error saving product: " + ex.Message);
+        vm.Categories = _context.Categories.ToList();
+        return View(vm);
+    }
+
+    return RedirectToAction(nameof(Index));
+}
+
+
         [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {

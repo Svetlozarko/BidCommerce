@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using RateLimiterLib;
 
 namespace BidCommerce.Controllers
 {
@@ -19,9 +20,11 @@ namespace BidCommerce.Controllers
         {
             return View();
         }
+        
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RateLimit(5, 60)]
         public async Task<IActionResult> ToggleFollow([FromBody] string sellerId)
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
