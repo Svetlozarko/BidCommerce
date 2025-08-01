@@ -40,11 +40,6 @@ ViewData["Title"] = Model.Title;
                     <span id="currentImageIndex">1</span> / @Model.Images.Count()
                 </div>
                 }
-
-                <!-- Zoom icon -->
-                <div class="zoom-icon" title="Click to zoom">
-                    <i class="bi bi-zoom-in"></i>
-                </div>
             </div>
 
             <!-- Thumbnail Images - Only show if more than 1 image -->
@@ -55,7 +50,7 @@ ViewData["Title"] = Model.Title;
                     @{
                     var orderedImages = Model.Images.OrderBy(i => i.DisplayOrder ?? i.Id).ToList();
                     }
-                    @for (int i = 0; i < orderedImages.Count; i++)
+                    @for (int i = 1; i < orderedImages.Count; i++)
                     {
                     var image = orderedImages[i];
                     <div class="thumbnail @(i == 0 ? "active" : "")"
@@ -67,30 +62,12 @@ ViewData["Title"] = Model.Title;
                 </div>
 
                 <!-- Navigation arrows for thumbnails - Show when more than 4 images -->
-                @if (Model.Images.Count() > 4)
-                {
-                <button class="thumbnail-nav prev" onclick="scrollThumbnails('left')" title="Previous">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="thumbnail-nav next" onclick="scrollThumbnails('right')" title="Next">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-                }
+              
             </div>
             }
 
-            <!-- Image navigation for main image -->
-            @if (hasImages && Model.Images.Count() > 1)
-            {
-            <div class="main-image-nav">
-                <button class="nav-btn prev" onclick="previousImage()" title="Previous image">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="nav-btn next" onclick="nextImage()" title="Next image">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-            </div>
-            }
+            
+         
         </div>
 
         <!-- Right Side - Product Info -->
