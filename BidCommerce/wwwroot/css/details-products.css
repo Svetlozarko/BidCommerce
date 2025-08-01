@@ -19,10 +19,10 @@
     margin-bottom: 30px;
 }
 
-/* FIXED: Product Images - Perfect alignment like reference */
+/* CORRECTED: Product Images - Main image on top, thumbnails below */
 .product-images {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* This ensures main image is above thumbnails */
     gap: 16px;
     width: 100%;
 }
@@ -56,6 +56,10 @@
     transform: scale(1.02);
 }
 
+.thumbnail-scroll-container {
+    display: flex;
+    flex-direction: row;
+}
 /* Image counter - Positioned like reference */
 .image-counter {
     position: absolute;
@@ -85,7 +89,7 @@
     opacity: 1;
 }
 
-/* FIXED: Thumbnail Images - Perfect row alignment */
+/* Thumbnail Images - Perfect row alignment */
 .thumbnail-images {
     display: flex;
     gap: 12px;
