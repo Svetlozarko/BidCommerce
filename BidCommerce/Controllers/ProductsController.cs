@@ -15,6 +15,7 @@ using BidCommerce.ViewModels;
 using BidCommerce.Services;
 using StackExchange.Redis;
 using RateLimiterLib;
+using RateLimiterLib.Enums;
 
 namespace BidCommerce.Controllers
 {
@@ -118,7 +119,7 @@ namespace BidCommerce.Controllers
         }
 
 
-        [RateLimit(10, 60)]
+        [RateLimit]
         public async Task<IActionResult> Details(int? id, [FromServices] BidCacheService bidCacheService)
         {
             if (id == null) return NotFound();

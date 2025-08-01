@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using RateLimiterLib;
+using RateLimiterLib.Enums;
 
 namespace BidCommerce.Controllers
 {
@@ -24,7 +25,7 @@ namespace BidCommerce.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RateLimit(5, 60)]
+        [RateLimit]
         public async Task<IActionResult> ToggleFollow([FromBody] string sellerId)
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
