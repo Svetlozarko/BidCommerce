@@ -21,6 +21,7 @@ namespace BidCommerce
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
             builder.Services.AddSignalR();
             builder.Services.AddScoped<BidCacheService>();
+            builder.Services.AddScoped<ISearchableTextRedis, SearchableTextService>();
             builder.Services.AddHostedService<ExpiredProductsCleanupService>();
 
             // Identity with roles
