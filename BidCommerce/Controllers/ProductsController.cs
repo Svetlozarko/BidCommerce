@@ -16,6 +16,7 @@ using BidCommerce.Services;
 using StackExchange.Redis;
 using RateLimiterLib;
 using RateLimiterLib.Enums;
+using BidCommerce.Interfaces;
 
 namespace BidCommerce.Controllers
 {
@@ -24,13 +25,16 @@ namespace BidCommerce.Controllers
         private readonly BidDb _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IDatabase _redis;
+        private readonly ISearchableTextRedis _searchTextRedisService;
 
 
-        public ProductsController(BidDb context, UserManager<ApplicationUser> userManager, IConnectionMultiplexer redis)
+
+        public ProductsController(BidDb context, UserManager<ApplicationUser> userManager, IConnectionMultiplexer redis, ISearchableTextRedis searchableTextRedis)
         {
             _context = context;
             _userManager = userManager;
             _redis = redis.GetDatabase();
+            _searchTextRedisService = searchableTextRedis;
 
         }
 
@@ -244,15 +248,20 @@ public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDr
     product.Category = null;
 
     _context.Products.Add(product);
-
     try
     {
+
         await _context.SaveChangesAsync();
-    }
-    catch (Exception ex)
+                string searchableText = $"{product.Title} {product.Description} {product.CategoryId} {product.Condition}";
+                await _searchTextRedisService.SaveProductAsync(product.Id, searchableText);
+
+
+            }
+            catch (Exception ex)
     {
         ModelState.AddModelError("", "Error saving product: " + ex.Message);
-        vm.Categories = _context.Categories.ToList();
+                ModelState.AddModelError("", "Redis error: " + ex.Message);
+                vm.Categories = _context.Categories.ToList();
         return View(vm);
     }
 
