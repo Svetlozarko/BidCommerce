@@ -338,25 +338,23 @@ public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDr
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(
-     int id,
-     [FromServices] BidCacheService bidCacheService) // Inject your Redis service
+    int id,
+    [FromServices] BidCacheService bidCacheService,
+    [FromServices] ISearchableTextRedis searchableTextRedis) 
         {
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // Delete associated bids from Redis
-                await bidCacheService.RemoveBidsAsync(id); // You’ll implement this method below
-
-                // Delete product from database
+                await bidCacheService.RemoveBidsAsync(id);
+                await searchableTextRedis.DeleteProductAsync(id);
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
             }
-
             return RedirectToAction(nameof(Index));
         }
 
 
-        
+
 
         private bool ProductExists(int id)
         {
