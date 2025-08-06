@@ -8,7 +8,7 @@
     <h1 class="main-title">Create New Listing</h1>
     <p class="main-subtitle">List your item for auction or fixed price sale</p>
 
-    <form asp-action="Create" method="post" enctype="multipart/form-data">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="productForm">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <!-- Listing Type Section -->
@@ -52,8 +52,8 @@
             </div>
             <div class="row">
                 <div class="col-md-12 mb-3">
-                    <label asp-for="Product.CategoryId" class="form-label">Category <span class="required">*</span></label>
-                    <select asp-for="Product.CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "CategoryId", "Name"))" required>
+                    <label asp-for="Product.CategoryId" class="form-label">Category</label>
+                    <select asp-for="Product.CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "CategoryId", "Name"))">
                         <option value="">Select category</option>
                     </select>
                     <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
@@ -61,8 +61,8 @@
             </div>
             <div class="row">
                 <div class="col-md-12 mb-3">
-                    <label asp-for="Product.ConditionId" class="form-label">Condition <span class="required">*</span></label>
-                    <select asp-for="Product.ConditionId" class="form-select" asp-items="@(new SelectList(Model.Condition, "ConditionId", "Name"))" required>
+                    <label asp-for="Product.ConditionId" class="form-label">Condition</label>
+                    <select asp-for="Product.ConditionId" class="form-select" asp-items="@(new SelectList(Model.Condition, "ConditionId", "Name"))">
                         <option value="">Select condition</option>
                     </select>
                     <span asp-validation-for="Product.ConditionId" class="text-danger"></span>
@@ -79,7 +79,7 @@
             <!-- Shared BuyNowPrice Field -->
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label asp-for="Product.BuyNowPrice" class="form-label" id="buyNowLabel">Price <span class="required">*</span></label>
+                    <label asp-for="Product.BuyNowPrice" class="form-label" id="buyNowLabel">Price</label>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
                         <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" id="buyNowPriceInput" />
@@ -91,7 +91,7 @@
             <div class="auction-fields" id="auctionFields">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Product.StartingPrice" class="form-label">Starting Bid <span class="required">*</span></label>
+                        <label asp-for="Product.StartingPrice" class="form-label">Starting Bid</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
                             <input asp-for="Product.StartingPrice" class="form-control" placeholder="0.99" step="0.01" />
@@ -131,8 +131,12 @@
                 <div class="upload-subtitle">Drag and drop your photos here, or click to browse</div>
                 <button type="button" class="btn btn-choose-files">Choose Files</button>
             </div>
-            <!-- Fixed: Proper name attribute for multiple file upload -->
-            <input type="file" name="ImageFiles" id="imageUpload" class="file-input" accept="image/*" multiple />
+
+            <!-- Hidden file input - this will be dynamically managed -->
+            <input type="file" name="ImageFiles" id="imageUpload" class="file-input" accept="image/*" multiple style="display: none;" />
+
+            <!-- Container for dynamic file inputs -->
+            <div id="dynamicFileInputs"></div>
 
             <!-- Image Preview Container -->
             <div id="imagePreviewContainer" class="mt-3">
@@ -145,16 +149,60 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <button type="submit" class="btn btn-secondary" name="saveAsDraft" value="true">
+            <button type="submit" class="btn btn-secondary" name="saveAsDraft" value="true" id="saveDraftBtn">
                 Save as Draft
             </button>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
                 Create Listing
             </button>
         </div>
-
-
     </form>
+</div>
+
+<!-- Draft Save Confirmation Modal -->
+<div class="modal fade" id="draftSaveModal" tabindex="-1" aria-labelledby="draftSaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="draftSaveModalLabel">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Save Your Progress?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">You have unsaved changes to your listing. Would you like to save your progress as a draft before leaving?</p>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Drafts are saved automatically</strong> and you can continue editing them later from your dashboard.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="discardChangesBtn">
+                    <i class="bi bi-trash me-1"></i>
+                    Discard Changes
+                </button>
+                <button type="button" class="btn btn-primary" id="saveDraftAndLeaveBtn">
+                    <i class="bi bi-save me-1"></i>
+                    Save Draft & Leave
+                </button>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                    <i class="bi bi-pencil me-1"></i>
+                    Continue Editing
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Saving your draft...</p>
+    </div>
 </div>
 
 @section Scripts {

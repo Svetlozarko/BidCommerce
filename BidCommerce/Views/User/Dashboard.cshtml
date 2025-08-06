@@ -29,7 +29,20 @@
                 <i class="bi bi-box-seam"></i>
             </div>
             <div class="card-label">Active Listings</div>
-            <div class="card-value">@Model.ActiveListingsCount</div>
+            <div class="card-value">
+                @{
+                    var activeListingsCount = 0;
+                }
+                @foreach(var product in Model.ActiveListings)
+                {
+                    if(product.StatusId == 2)
+                    {
+                        activeListingsCount++;
+
+                    }
+                }
+                @activeListingsCount
+            </div>
         </div>
         <div class="summary-card">
             <div class="card-icon rating">
