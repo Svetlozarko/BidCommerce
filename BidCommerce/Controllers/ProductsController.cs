@@ -121,6 +121,74 @@ namespace BidCommerce.Controllers
 
             return View(viewModel);
         }
+        [HttpGet]
+        public async Task<IActionResult> Search(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return RedirectToAction(nameof(Index));
+
+            // Normalize the query
+            var loweredQuery = query.ToLowerInvariant();
+
+            // Get all Redis keys for searchable text
+            var server = _redis.Multiplexer.GetServer(_redis.Multiplexer.GetEndPoints().First());
+            var keys = server.Keys(pattern: "product:*").ToArray();
+
+            var matchingIds = new List<int>();
+
+            foreach (var key in keys)
+            {
+                // Only look for keys that store searchable text, not bids or other data
+                if (key.ToString().Count(c => c == ':') == 1)
+                {
+                    var text = await _redis.StringGetAsync(key);
+                    if (!text.IsNullOrEmpty && text.ToString().ToLowerInvariant().Contains(loweredQuery))
+                    {
+                        if (int.TryParse(key.ToString().Split(':')[1], out int productId))
+                        {
+                            matchingIds.Add(productId);
+                        }
+                    }
+                }
+            }
+
+            if (!matchingIds.Any())
+            {
+                ViewBag.Message = "No products found matching your search.";
+                return View("Index", new ProductIndexViewModel
+                {
+                    Products = new List<Product>(),
+                    Categories = await _context.Categories.ToListAsync()
+                });
+            }
+
+            // Fetch matching products from DB
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Owner)
+                .Include(p => p.Status)
+                .Where(p => matchingIds.Contains(p.Id) && p.Status.Name == "Active")
+                .ToListAsync();
+
+            var bidCounts = new Dictionary<int, int>();
+            foreach (var product in products)
+            {
+                var bidKey = $"product:{product.Id}:bids";
+                var count = await _redis.SortedSetLengthAsync(bidKey);
+                bidCounts[product.Id] = (int)count;
+            }
+
+            ViewBag.BidCounts = bidCounts;
+
+            var vm = new ProductIndexViewModel
+            {
+                Products = products,
+                Categories = await _context.Categories.ToListAsync(),
+                SortBy = "search",
+            };
+
+            return View("Index", vm);
+        }
 
 
         [RateLimit]
@@ -252,10 +320,11 @@ public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDr
     {
 
         await _context.SaveChangesAsync();
-                string searchableText = $"{product.Title} {product.Description} {product.CategoryId} {product.Condition}";
-                await _searchTextRedisService.SaveProductAsync(product.Id, searchableText);
-
-
+                if (saveAsDraft==false)
+                {
+                    string searchableText = $"{product.Title} {product.Description} {product.CategoryId} {product.Condition}";
+                    await _searchTextRedisService.SaveProductAsync(product.Id, searchableText);
+                }
             }
             catch (Exception ex)
     {
