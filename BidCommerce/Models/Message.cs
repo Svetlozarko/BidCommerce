@@ -14,6 +14,7 @@ namespace BidCommerce.Models
         public virtual ApplicationUser Receiver { get; set; }
 
         [Required]
+        [StringLength(300, ErrorMessage = "Message content cannot exceed 300 characters.")]
         public string Content { get; set; }
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
