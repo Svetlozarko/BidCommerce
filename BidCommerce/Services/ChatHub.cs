@@ -1,5 +1,6 @@
 ﻿using BidCommerce.Data;
 using BidCommerce.Models;
+using BidCommerce.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
@@ -11,13 +12,22 @@ namespace BidCommerce.Services
     {
         private readonly BidDb _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly StackExchange.Redis.IDatabase _redis;
+        private readonly IDatabase _redis;
+        private readonly IRabbitMqPublisher _rabbitMqPublisher;
+        private readonly ILogger<ChatHub> _logger;
 
-        public ChatHub(BidDb context, UserManager<ApplicationUser> userManager, StackExchange.Redis.IDatabase redis)
+        public ChatHub(
+            BidDb context,
+            UserManager<ApplicationUser> userManager,
+            IDatabase redis,
+            IRabbitMqPublisher rabbitMqPublisher,
+            ILogger<ChatHub> logger)
         {
             _context = context;
             _userManager = userManager;
             _redis = redis;
+            _rabbitMqPublisher = rabbitMqPublisher;
+            _logger = logger;
         }
 
         public async Task SendMessage(string receiverId, string message)
@@ -26,24 +36,39 @@ namespace BidCommerce.Services
             if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(receiverId) || string.IsNullOrWhiteSpace(message))
                 return;
 
-            var newMessage = new Message
+            try
             {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Content = message,
-                SentAt = DateTime.UtcNow
-            };
+                // Create message event for RabbitMQ
+                var newMessageEvent = new NewMessageEvent
+                {
+                    SenderId = senderId,
+                    ReceiverId = receiverId,
+                    Content = message,
+                    SentAt = DateTime.UtcNow,
+                    MessageId = Guid.NewGuid().ToString()
+                };
 
-            var messageJson = JsonSerializer.Serialize(newMessage);
+                var messageEvent = new MessageEvent
+                {
+                    EventType = "new_message",
+                    Data = JsonSerializer.Serialize(newMessageEvent)
+                };
 
-            var chatKey = GetChatKey(senderId, receiverId);
-            await _redis.ListRightPushAsync(chatKey, messageJson);
+                // Publish to RabbitMQ for async processing
+                var eventJson = JsonSerializer.Serialize(messageEvent);
+                _rabbitMqPublisher.Publish("message_processing", eventJson);
 
-            _context.Messages.Add(newMessage);
-            await _context.SaveChangesAsync();
+                // Send real-time notifications via SignalR
+                await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message);
+                await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, message);
 
-            await Clients.User(receiverId).SendAsync("ReceiveMessage", senderId, message);
-            await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, message);
+                _logger.LogDebug($"Message sent from {senderId} to {receiverId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send message");
+                await Clients.Caller.SendAsync("MessageError", "Failed to send message");
+            }
         }
 
         public async Task GetMessageHistory(string receiverId)
@@ -52,27 +77,32 @@ namespace BidCommerce.Services
             if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(receiverId))
                 return;
 
-            var messages = await GetRedisMessagesAsync(senderId, receiverId);
-
-            if (messages.Count == 0)
+            try
             {
-                messages = GetSqlMessages(senderId, receiverId);
-                await CacheMessagesToRedisAsync(messages);
-            }
+                var messages = await GetRedisMessagesAsync(senderId, receiverId);
+                if (messages.Count == 0)
+                {
+                    messages = GetSqlMessages(senderId, receiverId);
+                    await CacheMessagesToRedisAsync(messages);
+                }
 
-            messages = messages.OrderBy(m => m.SentAt).ToList();
-            await Clients.Caller.SendAsync("ReceiveMessageHistory", messages);
+                messages = messages.OrderBy(m => m.SentAt).ToList();
+                await Clients.Caller.SendAsync("ReceiveMessageHistory", messages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get message history");
+                await Clients.Caller.SendAsync("MessageError", "Failed to load message history");
+            }
         }
 
         private async Task<List<Message>> GetRedisMessagesAsync(string senderId, string receiverId)
         {
             var key = GetChatKey(senderId, receiverId);
             var messages = new List<Message>();
-
             try
             {
                 var redisMessages = await _redis.ListRangeAsync(key);
-
                 foreach (var msgJson in redisMessages)
                 {
                     try
@@ -83,19 +113,31 @@ namespace BidCommerce.Services
                     catch { /* Ignore bad JSON */ }
                 }
             }
-            catch { /* Redis down */ }
-
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Failed to get messages from Redis for key: {key}");
+            }
             return messages;
         }
 
         private List<Message> GetSqlMessages(string senderId, string receiverId)
         {
-            return _context.Messages
-                .Where(m =>
-                    (m.SenderId == senderId && m.ReceiverId == receiverId) ||
-                    (m.SenderId == receiverId && m.ReceiverId == senderId))
-                .OrderBy(m => m.SentAt)
-                .ToList();
+            try
+            {
+                return _context.Messages
+                    .Where(m =>
+                        (m.SenderId == senderId && m.ReceiverId == receiverId) ||
+                        (m.SenderId == receiverId && m.ReceiverId == senderId))
+                    .OrderByDescending(m => m.SentAt)
+                    .Take(50)
+                    .OrderBy(m => m.SentAt)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get messages from SQL");
+                return new List<Message>();
+            }
         }
 
         private async Task CacheMessagesToRedisAsync(List<Message> messages)
@@ -103,7 +145,6 @@ namespace BidCommerce.Services
             if (messages.Count == 0) return;
 
             var key = GetChatKey(messages[0].SenderId, messages[0].ReceiverId);
-
             foreach (var msg in messages)
             {
                 try
@@ -111,7 +152,10 @@ namespace BidCommerce.Services
                     var json = JsonSerializer.Serialize(msg);
                     await _redis.ListRightPushAsync(key, json);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to cache message to Redis");
+                }
             }
         }
 
@@ -119,22 +163,6 @@ namespace BidCommerce.Services
         {
             var sorted = new[] { userA, userB }.OrderBy(id => id).ToArray();
             return $"chat:{sorted[0]}:{sorted[1]}";
-        }
-
-        public async Task ClearUserRedisMessages(string userId)
-        {
-            var endpoints = _redis.Multiplexer.GetEndPoints();
-            var server = _redis.Multiplexer.GetServer(endpoints.First());
-
-            var allKeys = server.Keys(pattern: "chat:*").ToList();
-            var userKeys = allKeys
-                .Where(key => key.ToString().Contains(userId))
-                .ToList();
-
-            foreach (var key in userKeys)
-            {
-                await _redis.KeyDeleteAsync(key);
-            }
         }
     }
 }
