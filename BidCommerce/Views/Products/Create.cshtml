@@ -2,164 +2,371 @@
 @{
     ViewData["Title"] = "Create New Listing";
 }
+
 <link rel="stylesheet" href="~/css/create-products.css" />
+<style>
+.content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 40px;
+    padding: 20px;
+}
 
-<div class="main-container">
-    <h1 class="main-title">Create New Listing</h1>
-    <p class="main-subtitle">List your item for auction or fixed price sale</p>
+.form-column {
+    /* Keep existing form styling */
+}
 
-    <form asp-action="Create" method="post" enctype="multipart/form-data" id="productForm">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+.preview-column {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
 
-        <!-- Listing Type Section -->
-        <div class="form-section">
-            <h3 class="section-title">
-                <i class="bi bi-tag"></i> Listing Type
-            </h3>
-            <p class="section-subtitle">Choose how you want to sell your item</p>
-            <div class="listing-type-cards">
-                <div class="listing-card" id="auctionCard">
-                    <div class="listing-icon">
-                        <i class="bi bi-clock"></i>
-                    </div>
-                    <div class="listing-title">Auction</div>
-                    <div class="listing-description">Let buyers bid on your item</div>
-                </div>
-                <div class="listing-card" id="fixedPriceCard">
-                    <div class="listing-icon">
-                        <i class="bi bi-currency-dollar"></i>
-                    </div>
-                    <div class="listing-title">Fixed Price</div>
-                    <div class="listing-description">Sell at a set price</div>
-                </div>
-            </div>
-            <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" />
-        </div>
+.main-title {
+    text-align: center;
+    margin-bottom: 8px;
+}
 
-        <!-- Item Details Section -->
-        <div class="form-section">
-            <h3 class="section-title">Item Details</h3>
-            <p class="section-subtitle">Provide information about your item</p>
-            <div class="mb-3">
-                <label asp-for="Product.Title" class="form-label">Title <span class="required">*</span></label>
-                <input asp-for="Product.Title" class="form-control" placeholder="Enter item title" />
-                <span asp-validation-for="Product.Title" class="text-danger"></span>
-            </div>
-            <div class="mb-4">
-                <label asp-for="Product.Description" class="form-label">Description</label>
-                <textarea asp-for="Product.Description" class="form-control" rows="4" placeholder="Describe your item in detail"></textarea>
-                <span asp-validation-for="Product.Description" class="text-danger"></span>
-            </div>
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label asp-for="Product.CategoryId" class="form-label">Category</label>
-                    <select asp-for="Product.CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "CategoryId", "Name"))">
-                        <option value="">Select category</option>
-                    </select>
-                    <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label asp-for="Product.ConditionId" class="form-label">Condition</label>
-                    <select asp-for="Product.ConditionId" class="form-select" asp-items="@(new SelectList(Model.Condition, "ConditionId", "Name"))">
-                        <option value="">Select condition</option>
-                    </select>
-                    <span asp-validation-for="Product.ConditionId" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
+.main-subtitle {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #6b7280;
+}
 
-        <!-- Pricing Section -->
-        <div class="form-section">
-            <h3 class="section-title">
-                <i class="bi bi-currency-dollar"></i> Pricing
-            </h3>
-            <p class="section-subtitle" id="pricingSubtitle">Please select a listing type above to see pricing options</p>
-            <!-- Shared BuyNowPrice Field -->
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Product.BuyNowPrice" class="form-label" id="buyNowLabel">Price</label>
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" id="buyNowPriceInput" />
-                    </div>
-                    <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
-                </div>
-            </div>
-            <!-- Auction Fields -->
-            <div class="auction-fields" id="auctionFields">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Product.StartingPrice" class="form-label">Starting Bid</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input asp-for="Product.StartingPrice" class="form-control" placeholder="0.99" step="0.01" />
+.preview-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.preview-header {
+    background: #f8fafc;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.preview-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.preview-header p {
+    margin: 4px 0 0 0;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.preview-image {
+    width: 100%;
+    height: 180px;
+    background: #f3f4f6;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-heart {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.preview-content {
+    padding: 16px;
+}
+
+.preview-category {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+}
+
+.preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.preview-description {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.preview-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #059669;
+    margin-bottom: 12px;
+}
+
+.preview-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.preview-button {
+    width: 100%;
+    padding: 10px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.preview-button:hover {
+    background: #2563eb;
+}
+
+@@media (max-width: 1200px) {
+    .content-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .preview-column {
+        position: relative;
+        order: -1;
+        max-width: 350px;
+        margin: 0 auto;
+    }
+}
+
+@@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 15px;
+    }
+    
+    .preview-column {
+        max-width: 300px;
+    }
+}
+</style>
+
+<div class="content-wrapper">
+    <div class="form-column">
+        <div class="main-container">
+            <h1 class="main-title">Create New Listing</h1>
+            <p class="main-subtitle">List your item for auction or fixed price sale</p>
+            
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="productForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-tag"></i> Listing Type
+                    </h3>
+                    <p class="section-subtitle">Choose how you want to sell your item</p>
+                    <div class="listing-type-cards">
+                        <div class="listing-card" id="auctionCard">
+                            <div class="listing-icon">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                            <div class="listing-title">Auction</div>
+                            <div class="listing-description">Let buyers bid on your item</div>
                         </div>
-                        <span asp-validation-for="Product.StartingPrice" class="text-danger"></span>
+                        <div class="listing-card" id="fixedPriceCard">
+                            <div class="listing-icon">
+                                <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <div class="listing-title">Fixed Price</div>
+                            <div class="listing-description">Sell at a set price</div>
+                        </div>
+                    </div>
+                    <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" />
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Item Details</h3>
+                    <p class="section-subtitle">Provide information about your item</p>
+                    <div class="mb-3">
+                        <label asp-for="Product.Title" class="form-label">Title <span class="required">*</span></label>
+                        <input asp-for="Product.Title" class="form-control" placeholder="Enter item title" oninput="updatePreview()" />
+                        <span asp-validation-for="Product.Title" class="text-danger"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Product.Description" class="form-label">Description</label>
+                        <textarea asp-for="Product.Description" class="form-control" rows="4" placeholder="Describe your item in detail" oninput="updatePreview()"></textarea>
+                        <span asp-validation-for="Product.Description" class="text-danger"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label asp-for="Product.CategoryId" class="form-label">Category</label>
+                            <select asp-for="Product.CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "CategoryId", "Name"))" onchange="updatePreview()">
+                                <option value="">Select category</option>
+                            </select>
+                            <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label asp-for="Product.ConditionId" class="form-label">Condition</label>
+                            <select asp-for="Product.ConditionId" class="form-select" asp-items="@(new SelectList(Model.Condition, "ConditionId", "Name"))" onchange="updatePreview()">
+                                <option value="">Select condition</option>
+                            </select>
+                            <span asp-validation-for="Product.ConditionId" class="text-danger"></span>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Auction Duration</label>
-                        <select class="form-select" name="AuctionDuration" id="auctionDurationSelect">
-                            <option value="7">7 Days</option>
-                            <option value="5">5 Days</option>
-                            <option value="3">3 Days</option>
-                            <option value="1">1 Day</option>
-                        </select>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-currency-dollar"></i> Pricing
+                    </h3>
+                    <p class="section-subtitle" id="pricingSubtitle">Please select a listing type above to see pricing options</p>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.BuyNowPrice" class="form-label" id="buyNowLabel">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Product.BuyNowPrice" class="form-control" placeholder="199.99" step="0.01" id="buyNowPriceInput" oninput="updatePreview()" />
+                            </div>
+                            <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Product.BidEndTime" class="form-label">Auction End Date & Time</label>
-                        <input asp-for="Product.BidEndTime" type="datetime-local" class="form-control" id="bidEndTimeInput" readonly />
-                        <span asp-validation-for="Product.BidEndTime" class="text-danger"></span>
-                        <small class="text-muted">Automatically calculated from duration</small>
+                    <div class="auction-fields" id="auctionFields">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Product.StartingPrice" class="form-label">Starting Bid</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="Product.StartingPrice" class="form-control" placeholder="0.99" step="0.01" oninput="updatePreview()" />
+                                </div>
+                                <span asp-validation-for="Product.StartingPrice" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Auction Duration</label>
+                                <select class="form-select" name="AuctionDuration" id="auctionDurationSelect" onchange="updatePreview()">
+                                    <option value="7">7 Days</option>
+                                    <option value="5">5 Days</option>
+                                    <option value="3">3 Days</option>
+                                    <option value="1">1 Day</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Product.BidEndTime" class="form-label">Auction End Date & Time</label>
+                                <input asp-for="Product.BidEndTime" type="datetime-local" class="form-control" id="bidEndTimeInput" readonly />
+                                <span asp-validation-for="Product.BidEndTime" class="text-danger"></span>
+                                <small class="text-muted">Automatically calculated from duration</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Photos Section -->
-        <div class="form-section">
-            <h3 class="section-title">Photos</h3>
-            <p class="section-subtitle">Add photos of your item (up to 12 photos)</p>
-            <div class="upload-area" onclick="document.getElementById('imageUpload').click()">
-                <div class="upload-icon">
-                    <i class="bi bi-cloud-upload"></i>
+                <div class="form-section">
+                    <h3 class="section-title">Photos</h3>
+                    <p class="section-subtitle">Add photos of your item (up to 12 photos)</p>
+                    <div class="upload-area" onclick="document.getElementById('imageUpload').click()">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <div class="upload-title">Upload Photos</div>
+                        <div class="upload-subtitle">Drag and drop your photos here, or click to browse</div>
+                        <button type="button" class="btn btn-choose-files">Choose Files</button>
+                    </div>
+                    <input type="file" name="ImageFiles" id="imageUpload" class="file-input" accept="image/*" multiple style="display: none;" onchange="updatePreviewImage(this)" />
+                    <div id="dynamicFileInputs"></div>
+                    <div id="imagePreviewContainer" class="mt-3">
+                        <div class="selected-images-info" id="selectedImagesInfo" style="display: none;">
+                            <p class="mb-2"><strong>Selected Images:</strong> <span id="imageCount">0</span>/12</p>
+                        </div>
+                        <div class="row" id="imagePreviewRow"></div>
+                    </div>
                 </div>
-                <div class="upload-title">Upload Photos</div>
-                <div class="upload-subtitle">Drag and drop your photos here, or click to browse</div>
-                <button type="button" class="btn btn-choose-files">Choose Files</button>
-            </div>
 
-            <!-- Hidden file input - this will be dynamically managed -->
-            <input type="file" name="ImageFiles" id="imageUpload" class="file-input" accept="image/*" multiple style="display: none;" />
-
-            <!-- Container for dynamic file inputs -->
-            <div id="dynamicFileInputs"></div>
-
-            <!-- Image Preview Container -->
-            <div id="imagePreviewContainer" class="mt-3">
-                <div class="selected-images-info" id="selectedImagesInfo" style="display: none;">
-                    <p class="mb-2"><strong>Selected Images:</strong> <span id="imageCount">0</span>/12</p>
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-secondary" name="saveAsDraft" value="true" id="saveDraftBtn">
+                        Save as Draft
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        Create Listing
+                    </button>
                 </div>
-                <div class="row" id="imagePreviewRow"></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="preview-column">
+        <div class="preview-container">
+            <div class="preview-header">
+                <h3>Preview</h3>
+                <p>How your listing will appear to buyers</p>
+            </div>
+            
+            <div class="preview-image" id="previewImage">
+                <i class="bi bi-image" style="font-size: 40px;"></i>
+            </div>
+            
+            <div class="preview-content">
+                <div class="preview-category" id="previewCategory">Select category</div>
+                <div class="preview-title" id="previewTitle">Enter product title</div>
+                <div class="preview-description" id="previewDescription">Add a description for your product</div>
+                <div class="preview-price" id="previewPrice">Price: $0.00</div>
+                
+                <div class="preview-stats">
+                    <span><i class="bi bi-eye"></i> 0 views</span>
+                    <span id="previewTimeLeft"><i class="bi bi-clock"></i> Available</span>
+                </div>
+                
+                <button class="preview-button" id="previewButton">
+                    <i class="bi bi-cart-plus"></i>
+                    <span id="previewButtonText">Buy Now</span>
+                </button>
+            </div>
+            
+            <div class="preview-heart">
+                <i class="bi bi-heart"></i>
             </div>
         </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button type="submit" class="btn btn-secondary" name="saveAsDraft" value="true" id="saveDraftBtn">
-                Save as Draft
-            </button>
-            <button type="submit" class="btn btn-primary" id="submitBtn">
-                Create Listing
-            </button>
-        </div>
-    </form>
+    </div>
 </div>
 
-<!-- Draft Save Confirmation Modal -->
 <div class="modal fade" id="draftSaveModal" tabindex="-1" aria-labelledby="draftSaveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -195,7 +402,6 @@
     </div>
 </div>
 
-<!-- Loading Overlay -->
 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
     <div class="loading-content">
         <div class="spinner-border text-primary" role="status">
@@ -204,6 +410,81 @@
         <p class="mt-3">Saving your draft...</p>
     </div>
 </div>
+
+<script>
+function updatePreview() {
+    const title = document.querySelector('input[name="Product.Title"]').value || 'Enter product title';
+    const description = document.querySelector('textarea[name="Product.Description"]').value || 'Add a description for your product';
+    const buyNowPrice = document.querySelector('input[name="Product.BuyNowPrice"]').value || '0.00';
+    const startingPrice = document.querySelector('input[name="Product.StartingPrice"]').value || '0.99';
+    const categorySelect = document.querySelector('select[name="Product.CategoryId"]');
+    const category = categorySelect.options[categorySelect.selectedIndex].text || 'Select category';
+    const isBiddable = document.getElementById('isBiddableInput').value === 'True';
+    const auctionDuration = document.getElementById('auctionDurationSelect').value || '7';
+    
+    document.getElementById('previewTitle').textContent = title;
+    document.getElementById('previewDescription').textContent = description;
+    document.getElementById('previewCategory').textContent = category;
+    
+    let displayPrice = '0.00';
+    if (isBiddable) {
+        displayPrice = startingPrice;
+        document.getElementById('previewPrice').textContent = `Starting bid: $${parseFloat(displayPrice).toFixed(2)}`;
+    } else {
+        displayPrice = buyNowPrice;
+        document.getElementById('previewPrice').textContent = `Price: $${parseFloat(displayPrice).toFixed(2)}`;
+    }
+    
+    const buttonText = isBiddable ? 'Place Bid' : 'Buy Now';
+    const buttonIcon = isBiddable ? 'bi-hammer' : 'bi-cart-plus';
+    
+    document.getElementById('previewButtonText').textContent = buttonText;
+    document.querySelector('#previewButton i').className = buttonIcon;
+    
+    const timeLeft = isBiddable ? `${auctionDuration}d left` : 'Available';
+    document.getElementById('previewTimeLeft').innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}`;
+}
+
+function updatePreviewImage(input) {
+    const previewContainer = document.getElementById('previewImage');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewContainer.innerHTML = `<img src="${e.target.result}" alt="Product Image">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        previewContainer.innerHTML = '<i class="bi bi-image" style="font-size: 40px;"></i>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updatePreview();
+    
+    document.getElementById('auctionCard').addEventListener('click', function() {
+        document.getElementById('isBiddableInput').value = 'True';
+        updatePreview();
+    });
+    
+    document.getElementById('fixedPriceCard').addEventListener('click', function() {
+        document.getElementById('isBiddableInput').value = 'False';
+        updatePreview();
+    });
+});
+
+document.addEventListener('input', function(e) {
+    if (e.target.matches('input, textarea, select')) {
+        updatePreview();
+    }
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.matches('select')) {
+        updatePreview();
+    }
+});
+</script>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
