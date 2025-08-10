@@ -4,6 +4,7 @@
 }
 
 <link rel="stylesheet" href="~/css/create-products.css" />
+
 <style>
 .content-wrapper {
     max-width: 1400px;
@@ -33,6 +34,36 @@
     text-align: center;
     margin-bottom: 40px;
     color: #6b7280;
+}
+
+/* Just the essential listing type styles */
+.listing-card {
+    border: 2px solid #e5e7eb;
+    padding: 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    background: white;
+}
+
+.listing-card:hover {
+    border-color: #93c5fd;
+    background-color: #f0f9ff;
+}
+
+.listing-card.active {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.auction-fields {
+    display: none;
+}
+
+.auction-fields.show {
+    display: block;
 }
 
 .preview-container {
@@ -293,7 +324,6 @@
     border-radius: 8px;
 }
 
-/* Smooth animations */
 .image-thumbnail {
     animation: fadeInUp 0.4s ease-out;
 }
@@ -307,22 +337,6 @@
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-/* Drop indicator */
-.drop-indicator {
-    position: absolute;
-    width: 3px;
-    height: 100%;
-    background: #3b82f6;
-    border-radius: 2px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    z-index: 10;
-}
-
-.drop-indicator.show {
-    opacity: 1;
 }
 
 @@media (max-width: 1200px) {
@@ -364,10 +378,10 @@
         <div class="main-container">
             <h1 class="main-title">Create New Listing</h1>
             <p class="main-subtitle">List your item for auction or fixed price sale</p>
-            
+
             <form asp-action="Create" method="post" enctype="multipart/form-data" id="productForm">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                
+
                 <div class="form-section">
                     <h3 class="section-title">
                         <i class="bi bi-tag"></i> Listing Type
@@ -381,7 +395,7 @@
                             <div class="listing-title">Auction</div>
                             <div class="listing-description">Let buyers bid on your item</div>
                         </div>
-                        <div class="listing-card" id="fixedPriceCard">
+                        <div class="listing-card active" id="fixedPriceCard">
                             <div class="listing-icon">
                                 <i class="bi bi-currency-dollar"></i>
                             </div>
@@ -389,7 +403,7 @@
                             <div class="listing-description">Sell at a set price</div>
                         </div>
                     </div>
-                    <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" />
+                    <input asp-for="Product.IsBiddable" type="hidden" id="isBiddableInput" value="False" />
                 </div>
 
                 <div class="form-section">
@@ -429,7 +443,7 @@
                     <h3 class="section-title">
                         <i class="bi bi-currency-dollar"></i> Pricing
                     </h3>
-                    <p class="section-subtitle" id="pricingSubtitle">Please select a listing type above to see pricing options</p>
+                    <p class="section-subtitle" id="pricingSubtitle">Set your fixed price for this item</p>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Product.BuyNowPrice" class="form-label" id="buyNowLabel">Price</label>
@@ -440,6 +454,7 @@
                             <span asp-validation-for="Product.BuyNowPrice" class="text-danger"></span>
                         </div>
                     </div>
+                       
                     <div class="auction-fields" id="auctionFields">
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -602,11 +617,11 @@ function updatePreview() {
     const category = categorySelect.options[categorySelect.selectedIndex].text || 'Select category';
     const isBiddable = document.getElementById('isBiddableInput').value === 'True';
     const auctionDuration = document.getElementById('auctionDurationSelect').value || '7';
-    
+
     document.getElementById('previewTitle').textContent = title;
     document.getElementById('previewDescription').textContent = description;
     document.getElementById('previewCategory').textContent = category;
-    
+
     let displayPrice = '0.00';
     if (isBiddable) {
         displayPrice = startingPrice;
@@ -615,20 +630,18 @@ function updatePreview() {
         displayPrice = buyNowPrice;
         document.getElementById('previewPrice').textContent = `Price: $${parseFloat(displayPrice).toFixed(2)}`;
     }
-    
+
     const buttonText = isBiddable ? 'Place Bid' : 'Buy Now';
     const buttonIcon = isBiddable ? 'bi-hammer' : 'bi-cart-plus';
-    
     document.getElementById('previewButtonText').textContent = buttonText;
     document.querySelector('#previewButton i').className = buttonIcon;
-    
+
     const timeLeft = isBiddable ? `${auctionDuration}d left` : 'Available';
     document.getElementById('previewTimeLeft').innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}`;
 }
 
 function updatePreviewImage() {
     const previewContainer = document.getElementById('previewImage');
-    
     if (uploadedImages.length > 0) {
         previewContainer.innerHTML = `<img src="${uploadedImages[0].dataUrl}" alt="Product Image">`;
     } else {
@@ -638,7 +651,6 @@ function updatePreviewImage() {
 
 function handleImageUpload(input) {
     const files = Array.from(input.files);
-    
     files.forEach((file, index) => {
         if (uploadedImages.length < 12) {
             const reader = new FileReader();
@@ -650,7 +662,6 @@ function handleImageUpload(input) {
                     size: file.size,
                     id: Date.now() + index
                 };
-                
                 uploadedImages.push(imageData);
                 renderImages();
                 updateImageCount();
@@ -659,14 +670,12 @@ function handleImageUpload(input) {
             reader.readAsDataURL(file);
         }
     });
-    
     input.value = '';
 }
 
 function renderImages() {
     const grid = document.getElementById('imagesGrid');
     const instructions = document.getElementById('dragInstructions');
-    
     grid.innerHTML = '';
     
     uploadedImages.forEach((image, index) => {
@@ -684,7 +693,6 @@ function renderImages() {
             </button>
         `;
         
-        // Add drag event listeners
         imageDiv.addEventListener('dragstart', handleDragStart);
         imageDiv.addEventListener('dragover', handleDragOver);
         imageDiv.addEventListener('drop', handleDrop);
@@ -708,12 +716,8 @@ function handleDragStart(e) {
     draggedElement = this;
     draggedIndex = parseInt(this.dataset.index);
     this.classList.add('dragging');
-    
-    // Set drag effect
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', '');
-    
-    // Add class to container
     document.getElementById('dragDropZone').classList.add('drag-active');
 }
 
@@ -741,33 +745,23 @@ function handleDrop(e) {
     
     if (this !== draggedElement && this.classList.contains('image-thumbnail')) {
         const targetIndex = parseInt(this.dataset.index);
-        
         if (draggedIndex !== targetIndex) {
-            // Reorder the images array
             const draggedImage = uploadedImages[draggedIndex];
             uploadedImages.splice(draggedIndex, 1);
             uploadedImages.splice(targetIndex, 0, draggedImage);
-            
-            // Re-render with smooth transition
             renderImages();
             updatePreviewImage();
         }
     }
-    
     this.classList.remove('drag-over');
 }
 
 function handleDragEnd(e) {
     this.classList.remove('dragging');
-    
-    // Remove drag-over class from all elements
     document.querySelectorAll('.image-thumbnail').forEach(el => {
         el.classList.remove('drag-over');
     });
-    
-    // Remove drag-active class from container
     document.getElementById('dragDropZone').classList.remove('drag-active');
-    
     draggedElement = null;
     draggedIndex = -1;
 }
@@ -782,7 +776,6 @@ function removeImage(imageId) {
 function updateImageCount() {
     const countElement = document.getElementById('imageCount');
     const infoElement = document.getElementById('selectedImagesInfo');
-    
     if (uploadedImages.length > 0) {
         countElement.textContent = uploadedImages.length;
         infoElement.style.display = 'block';
@@ -794,7 +787,6 @@ function updateImageCount() {
 function updateFileInputs() {
     const container = document.getElementById('dynamicFileInputs');
     container.innerHTML = '';
-    
     uploadedImages.forEach((image, index) => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -812,17 +804,58 @@ function createFileList(files) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const auctionCard = document.getElementById('auctionCard');
+    const fixedPriceCard = document.getElementById('fixedPriceCard');
+    const isBiddableInput = document.getElementById('isBiddableInput');
+    const auctionFields = document.getElementById('auctionFields');
+    const buyNowLabel = document.getElementById('buyNowLabel');
+    const pricingSubtitle = document.getElementById('pricingSubtitle');
+
+    function selectListingType(isAuction) {
+        if (isAuction) {
+            isBiddableInput.value = 'True';
+            auctionCard.classList.add('active');
+            fixedPriceCard.classList.remove('active');
+            auctionFields.classList.add('show');
+            buyNowLabel.textContent = 'Buy Now Price (Optional)';
+            pricingSubtitle.textContent = 'Set your starting bid and auction duration';
+            updateAuctionEndTime();
+        } else {
+            isBiddableInput.value = 'False';
+            fixedPriceCard.classList.add('active');
+            auctionCard.classList.remove('active');
+            auctionFields.classList.remove('show');
+            buyNowLabel.textContent = 'Price';
+            pricingSubtitle.textContent = 'Set your fixed price for this item';
+        }
+        updatePreview();
+    }
+
+    function updateAuctionEndTime() {
+        const durationSelect = document.getElementById('auctionDurationSelect');
+        const endTimeInput = document.getElementById('bidEndTimeInput');
+        
+        if (durationSelect && endTimeInput) {
+            const duration = parseInt(durationSelect.value);
+            const now = new Date();
+            const endTime = new Date(now.getTime() + (duration * 24 * 60 * 60 * 1000));
+            
+            const year = endTime.getFullYear();
+            const month = String(endTime.getMonth() + 1).padStart(2, '0');
+            const day = String(endTime.getDate()).padStart(2, '0');
+            const hours = String(endTime.getHours()).padStart(2, '0');
+            const minutes = String(endTime.getMinutes()).padStart(2, '0');
+            
+            endTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    }
+
+    auctionCard.addEventListener('click', () => selectListingType(true));
+    fixedPriceCard.addEventListener('click', () => selectListingType(false));
+    document.getElementById('auctionDurationSelect').addEventListener('change', updateAuctionEndTime);
+
+    selectListingType(false);
     updatePreview();
-    
-    document.getElementById('auctionCard').addEventListener('click', function() {
-        document.getElementById('isBiddableInput').value = 'True';
-        updatePreview();
-    });
-    
-    document.getElementById('fixedPriceCard').addEventListener('click', function() {
-        document.getElementById('isBiddableInput').value = 'False';
-        updatePreview();
-    });
 });
 
 document.addEventListener('input', function(e) {
