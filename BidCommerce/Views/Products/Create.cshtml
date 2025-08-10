@@ -162,6 +162,169 @@
     background: #2563eb;
 }
 
+/* Improved Drag and Drop Styles */
+.image-thumbnail {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: grab;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.image-thumbnail:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #e5e7eb;
+}
+
+.image-thumbnail:active {
+    cursor: grabbing;
+}
+
+.image-thumbnail.dragging {
+    opacity: 0.6;
+    transform: scale(1.05) rotate(2deg);
+    z-index: 1000;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    cursor: grabbing;
+}
+
+.image-thumbnail.drag-over {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.05);
+    transform: scale(1.02);
+}
+
+.image-thumbnail img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.image-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+.image-thumbnail.dragging img {
+    transform: scale(1.1);
+}
+
+.image-order-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.image-thumbnail:hover .image-order-badge {
+    background: rgba(59, 130, 246, 0.9);
+    transform: scale(1.1);
+}
+
+.delete-image-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(220, 38, 38, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    transform: scale(0.8);
+}
+
+.image-thumbnail:hover .delete-image-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.delete-image-btn:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.1);
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.drag-instructions {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 8px;
+    border: 1px dashed #3b82f6;
+}
+
+.drag-drop-zone {
+    position: relative;
+}
+
+.drag-drop-zone.drag-active {
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 8px;
+}
+
+/* Smooth animations */
+.image-thumbnail {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Drop indicator */
+.drop-indicator {
+    position: absolute;
+    width: 3px;
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.drop-indicator.show {
+    opacity: 1;
+}
+
 @@media (max-width: 1200px) {
     .content-wrapper {
         grid-template-columns: 1fr;
@@ -183,6 +346,15 @@
     
     .preview-column {
         max-width: 300px;
+    }
+    
+    .images-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+    
+    .image-thumbnail img {
+        height: 100px;
     }
 }
 </style>
@@ -310,13 +482,18 @@
                         <div class="upload-subtitle">Drag and drop your photos here, or click to browse</div>
                         <button type="button" class="btn btn-choose-files">Choose Files</button>
                     </div>
-                    <input type="file" name="ImageFiles" id="imageUpload" class="file-input" accept="image/*" multiple style="display: none;" onchange="updatePreviewImage(this)" />
+                    <input type="file" name="ImageFiles" id="imageUpload" class="file-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(this)" />
                     <div id="dynamicFileInputs"></div>
                     <div id="imagePreviewContainer" class="mt-3">
                         <div class="selected-images-info" id="selectedImagesInfo" style="display: none;">
                             <p class="mb-2"><strong>Selected Images:</strong> <span id="imageCount">0</span>/12</p>
                         </div>
-                        <div class="row" id="imagePreviewRow"></div>
+                        <div class="drag-drop-zone" id="dragDropZone">
+                            <div class="images-grid" id="imagesGrid"></div>
+                        </div>
+                        <div class="drag-instructions" id="dragInstructions" style="display: none;">
+                            Drag and drop images to reorder them
+                        </div>
                     </div>
                 </div>
 
@@ -412,6 +589,10 @@
 </div>
 
 <script>
+let uploadedImages = [];
+let draggedElement = null;
+let draggedIndex = -1;
+
 function updatePreview() {
     const title = document.querySelector('input[name="Product.Title"]').value || 'Enter product title';
     const description = document.querySelector('textarea[name="Product.Description"]').value || 'Add a description for your product';
@@ -445,18 +626,189 @@ function updatePreview() {
     document.getElementById('previewTimeLeft').innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}`;
 }
 
-function updatePreviewImage(input) {
+function updatePreviewImage() {
     const previewContainer = document.getElementById('previewImage');
     
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewContainer.innerHTML = `<img src="${e.target.result}" alt="Product Image">`;
-        };
-        reader.readAsDataURL(input.files[0]);
+    if (uploadedImages.length > 0) {
+        previewContainer.innerHTML = `<img src="${uploadedImages[0].dataUrl}" alt="Product Image">`;
     } else {
         previewContainer.innerHTML = '<i class="bi bi-image" style="font-size: 40px;"></i>';
     }
+}
+
+function handleImageUpload(input) {
+    const files = Array.from(input.files);
+    
+    files.forEach((file, index) => {
+        if (uploadedImages.length < 12) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = {
+                    file: file,
+                    dataUrl: e.target.result,
+                    name: file.name,
+                    size: file.size,
+                    id: Date.now() + index
+                };
+                
+                uploadedImages.push(imageData);
+                renderImages();
+                updateImageCount();
+                updatePreviewImage();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    input.value = '';
+}
+
+function renderImages() {
+    const grid = document.getElementById('imagesGrid');
+    const instructions = document.getElementById('dragInstructions');
+    
+    grid.innerHTML = '';
+    
+    uploadedImages.forEach((image, index) => {
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'image-thumbnail';
+        imageDiv.draggable = true;
+        imageDiv.dataset.imageId = image.id;
+        imageDiv.dataset.index = index;
+        
+        imageDiv.innerHTML = `
+            <img src="${image.dataUrl}" alt="${image.name}">
+            <div class="image-order-badge">${index + 1}</div>
+            <button type="button" class="delete-image-btn" onclick="removeImage(${image.id})">
+                ×
+            </button>
+        `;
+        
+        // Add drag event listeners
+        imageDiv.addEventListener('dragstart', handleDragStart);
+        imageDiv.addEventListener('dragover', handleDragOver);
+        imageDiv.addEventListener('drop', handleDrop);
+        imageDiv.addEventListener('dragend', handleDragEnd);
+        imageDiv.addEventListener('dragenter', handleDragEnter);
+        imageDiv.addEventListener('dragleave', handleDragLeave);
+        
+        grid.appendChild(imageDiv);
+    });
+    
+    if (uploadedImages.length > 1) {
+        instructions.style.display = 'block';
+    } else {
+        instructions.style.display = 'none';
+    }
+    
+    updateFileInputs();
+}
+
+function handleDragStart(e) {
+    draggedElement = this;
+    draggedIndex = parseInt(this.dataset.index);
+    this.classList.add('dragging');
+    
+    // Set drag effect
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', '');
+    
+    // Add class to container
+    document.getElementById('dragDropZone').classList.add('drag-active');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedElement && this.classList.contains('image-thumbnail')) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    if (this.classList.contains('image-thumbnail')) {
+        this.classList.remove('drag-over');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (this !== draggedElement && this.classList.contains('image-thumbnail')) {
+        const targetIndex = parseInt(this.dataset.index);
+        
+        if (draggedIndex !== targetIndex) {
+            // Reorder the images array
+            const draggedImage = uploadedImages[draggedIndex];
+            uploadedImages.splice(draggedIndex, 1);
+            uploadedImages.splice(targetIndex, 0, draggedImage);
+            
+            // Re-render with smooth transition
+            renderImages();
+            updatePreviewImage();
+        }
+    }
+    
+    this.classList.remove('drag-over');
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    
+    // Remove drag-over class from all elements
+    document.querySelectorAll('.image-thumbnail').forEach(el => {
+        el.classList.remove('drag-over');
+    });
+    
+    // Remove drag-active class from container
+    document.getElementById('dragDropZone').classList.remove('drag-active');
+    
+    draggedElement = null;
+    draggedIndex = -1;
+}
+
+function removeImage(imageId) {
+    uploadedImages = uploadedImages.filter(img => img.id !== imageId);
+    renderImages();
+    updateImageCount();
+    updatePreviewImage();
+}
+
+function updateImageCount() {
+    const countElement = document.getElementById('imageCount');
+    const infoElement = document.getElementById('selectedImagesInfo');
+    
+    if (uploadedImages.length > 0) {
+        countElement.textContent = uploadedImages.length;
+        infoElement.style.display = 'block';
+    } else {
+        infoElement.style.display = 'none';
+    }
+}
+
+function updateFileInputs() {
+    const container = document.getElementById('dynamicFileInputs');
+    container.innerHTML = '';
+    
+    uploadedImages.forEach((image, index) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.name = 'ImageFiles';
+        input.style.display = 'none';
+        input.files = createFileList([image.file]);
+        container.appendChild(input);
+    });
+}
+
+function createFileList(files) {
+    const dt = new DataTransfer();
+    files.forEach(file => dt.items.add(file));
+    return dt.files;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
