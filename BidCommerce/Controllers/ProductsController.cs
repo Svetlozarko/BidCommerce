@@ -121,6 +121,8 @@ namespace BidCommerce.Controllers
 
             return View(viewModel);
         }
+
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> Search(string query)
         {
@@ -190,7 +192,7 @@ namespace BidCommerce.Controllers
             return View("Index", vm);
         }
 
-
+        [Authorize]
         [RateLimit]
         public async Task<IActionResult> Details(int? id, [FromServices] BidCacheService bidCacheService)
         {

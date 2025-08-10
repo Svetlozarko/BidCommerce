@@ -245,7 +245,7 @@ ViewData["Title"] = Model.Title;
                 {
                 @if (redisBids != null && redisBids.Any())
                 {
-                foreach (var bid in redisBids.OrderByDescending(b => b.PlacedAt).Take(3))
+                foreach (var bid in redisBids.Take(3))
                 {
                 <div class="bid-item">
                     <span class="bid-amount">$@bid.Amount.ToString("N0")</span>

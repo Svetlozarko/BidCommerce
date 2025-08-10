@@ -24,6 +24,7 @@ namespace BidCommerce.Controllers
             _userManager = userManager;
         }
 
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -76,6 +77,35 @@ namespace BidCommerce.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index)); // or wherever your listings live
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProfile(string NickName, string Email, string PhoneNumber, string Location, string Description, string Website, IFormFile ProfilePhoto)
+        {
+            // Handle profile update logic here
+            // Update user information in database
+            // Handle file upload for profile photo
+
+            TempData["Success"] = "Profile updated successfully!";
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateNotifications(bool EmailNotifications, bool BidAlerts, bool MessageAlerts, bool MarketingEmails)
+        {
+            // Handle notification preferences update
+
+            TempData["Success"] = "Notification preferences updated!";
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdatePrivacy(bool ShowEmail, bool ShowPhone, bool ShowLocation, bool PublicProfile)
+        {
+            // Handle privacy settings update
+
+            TempData["Success"] = "Privacy settings updated!";
+            return RedirectToAction("Index");
         }
     }
 }

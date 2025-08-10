@@ -22,6 +22,7 @@ namespace BidCommerce.Controllers
             _hubContext = hubContext;
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceBid(int productId, decimal amount, [FromServices] BidCacheService bidCacheService)
@@ -58,7 +59,7 @@ namespace BidCommerce.Controllers
             // Notify clients
             await _hubContext.Clients.Group(productId.ToString())
                 .SendAsync("ReceiveBid", userId, amount, DateTime.UtcNow);
-
+            Console.WriteLine($"Bid placed by {userId} for product {productId}: {amount}");
             return Ok(new { productId, amount });
         }
         
