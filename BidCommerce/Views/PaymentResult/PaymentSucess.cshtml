@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - BidCommerce</title>
+    <link rel="stylesheet" href="payment-success.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1 class="success-title">Payment Successful!</h1>
+            <p class="success-message">
+                Thank you for your purchase. Your order has been confirmed and is being processed.
+            </p>
+        </div>
+
+        <div class="order-confirmation-card">
+            <div class="card-header">
+                <h2>Order Confirmation</h2>
+                <button class="print-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                    Print
+                </button>
+            </div>
+
+            <div class="order-details">
+                <div class="order-number">
+                    <span class="label">Order Number</span>
+                    <div class="number-container">
+                        <span class="number" id="orderNumber">ORD-2024-001234</span>
+                        <button class="copy-btn" onclick="copyOrderNumber()">
+                            <i class="fas fa-copy"></i>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="item-details">
+                    <div class="item-info">
+                        <i class="fas fa-camera item-icon"></i>
+                        <div class="item-text">
+                            <span class="item-name">Vintage Camera - Canon AE-1</span>
+                        </div>
+                    </div>
+                    <div class="price-info">
+                        <span class="total-label">Total Amount</span>
+                        <span class="total-amount">$249.99</span>
+                    </div>
+                </div>
+
+                <div class="transaction-details">
+                    <div class="detail-row">
+                        <span class="detail-label">
+                            <i class="fas fa-user"></i>
+                            Seller ID
+                        </span>
+                        <span class="detail-value">seller_67890</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">
+                            <i class="fas fa-credit-card"></i>
+                            Payment Method
+                        </span>
+                        <span class="detail-value">Credit Card ****1234</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">
+                            <i class="fas fa-shopping-cart"></i>
+                            Buyer ID
+                        </span>
+                        <span class="detail-value">buyer_12345</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">
+                            <i class="fas fa-receipt"></i>
+                            Transaction ID
+                        </span>
+                        <span class="detail-value">txn_abc123def</span>
+                    </div>
+                </div>
+
+                <div class="order-date">
+                    <span class="date-label">Order Date</span>
+                    <span class="date-value">August 11, 2025 at 10:55 PM</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="whats-next-card">
+            <h2>What's Next?</h2>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Order Processing</h3>
+                        <p>Your seller will prepare your item for shipment</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Shipment</h3>
+                        <p>You'll receive tracking information via email</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Delivery</h3>
+                        <p>Enjoy your new purchase!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="continueShopping()">
+                <i class="fas fa-arrow-left"></i>
+                Continue Shopping
+            </button>
+            <button class="btn btn-primary" onclick="downloadReceipt()">
+                <i class="fas fa-download"></i>
+                Download Receipt
+            </button>
+        </div>
+
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="successToast">
+        <i class="fas fa-check-circle"></i>
+        <span>Order number copied to clipboard!</span>
+    </div>
+
+    <script src="payment-success.js"></script>
+</body>
+</html>
