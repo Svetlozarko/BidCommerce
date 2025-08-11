@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout - BidCommerce</title>
+    <link rel="stylesheet" href="~/css/checkout.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="bg-shape shape-1"></div>
+        <div class="bg-shape shape-2"></div>
+        <div class="bg-shape shape-3"></div>
+        <div class="bg-shape shape-4"></div>
+    </div>
+
+    <!-- Header -->
+   
+    <!-- Main Content -->
+    <main class="checkout-main">
+        <div class="container">
+            <div class="checkout-grid">
+                <!-- Left Column - Order Summary -->
+                <div class="order-summary">
+                    <div class="summary-card">
+                        <h2>Order Summary</h2>
+
+                        <div class="product-item">
+                            <div class="product-image">
+                                <img src="/placeholder.svg?height=80&width=80" alt="Product">
+                            </div>
+                            <div class="product-details">
+                                <h3>Vintage Camera Collection</h3>
+                                <p class="seller">Sold by <strong>Ivan</strong></p>
+                                <div class="product-meta">
+                                    <span class="condition">Excellent Condition</span>
+                                    <span class="shipping">Free Shipping</span>
+                                </div>
+                            </div>
+                            <div class="product-price">
+                                <span class="price">$1,250.00</span>
+                            </div>
+                        </div>
+
+                        <div class="summary-breakdown">
+                            <div class="breakdown-row">
+                                <span>Subtotal</span>
+                                <span>$1,250.00</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span>Shipping</span>
+                                <span class="free">Free</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span>Service Fee</span>
+                                <span>$62.50</span>
+                            </div>
+                            <div class="breakdown-row total">
+                                <span>Total</span>
+                                <span>$1,312.50</span>
+                            </div>
+                        </div>
+
+                        <div class="trust-badges">
+                            <div class="badge">
+                                <i class="fas fa-lock"></i>
+                                <span>SSL Encrypted</span>
+                            </div>
+                            <div class="badge">
+                                <i class="fas fa-undo"></i>
+                                <span>30-Day Returns</span>
+                            </div>
+                            <div class="badge">
+                                <i class="fas fa-headset"></i>
+                                <span>24/7 Support</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Payment Form -->
+                <div class="payment-section">
+                    <div class="payment-card">
+                        <div class="payment-header">
+                            <h2>Complete Your Purchase</h2>
+                            <p>You're just one step away from owning this amazing item!</p>
+                        </div>
+
+                        <form class="payment-form" id="checkoutForm">
+                            <!-- Payment Method Selection -->
+                            <div class="payment-methods">
+                                <h3>Payment Method</h3>
+                                <div class="method-options">
+                                    <label class="method-option active">
+                                        <input type="radio" name="payment" value="card" checked>
+                                        <div class="option-content">
+                                            <i class="fas fa-credit-card"></i>
+                                            <span>Credit/Debit Card</span>
+                                        </div>
+                                    </label>
+                                    <label class="method-option">
+                                        <input type="radio" name="payment" value="paypal">
+                                        <div class="option-content">
+                                            <i class="fab fa-paypal"></i>
+                                            <span>PayPal</span>
+                                        </div>
+                                    </label>
+                                    <label class="method-option">
+                                        <input type="radio" name="payment" value="apple">
+                                        <div class="option-content">
+                                            <i class="fab fa-apple-pay"></i>
+                                            <span>Apple Pay</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Card Details -->
+                            <div class="card-details" id="cardDetails">
+                                <div class="form-group">
+                                    <label>Card Number</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+                                        <div class="card-icons">
+                                            <i class="fab fa-cc-visa"></i>
+                                            <i class="fab fa-cc-mastercard"></i>
+                                            <i class="fab fa-cc-amex"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Expiry Date</label>
+                                        <input type="text" placeholder="MM/YY" maxlength="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>CVV</label>
+                                        <input type="text" placeholder="123" maxlength="4">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Cardholder Name</label>
+                                    <input type="text" placeholder="John Doe">
+                                </div>
+                            </div>
+
+                            <!-- Billing Address -->
+                            <div class="billing-section">
+                                <h3>Billing Address</h3>
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" placeholder="john@example.com">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Full Address</label>
+                                    <input type="text" placeholder="123 Main Street, City, State 12345">
+                                </div>
+                            </div>
+
+                            <!-- Purchase Button -->
+                            <button type="submit" class="purchase-btn">
+                                <span class="btn-text">Complete Purchase</span>
+                                <span class="btn-amount">$1,312.50</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+
+                            <div class="security-note">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Your payment information is encrypted and secure</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Processing Your Payment</h3>
+            <p>Please don't close this window...</p>
+        </div>
+    </div>
+
+    <script src="~/js/checkout.js"></script>
+</body>
+</html>

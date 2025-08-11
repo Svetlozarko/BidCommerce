@@ -145,7 +145,9 @@ ViewData["Title"] = Model.Title;
                 }
                 @if (Model.BuyNowPrice.HasValue)
                 {
-                <button class="btn-buy-now" onclick="buyNow(@Model.Id)">Buy Now</button>
+                    <a class="btn-buy-now" asp-controller="Checkout" asp-action="Index" asp-route-productId="@Model.Id">
+                        Buy Now
+                    </a>
                 }
             </div>
 
@@ -309,7 +311,7 @@ ViewData["Title"] = Model.Title;
         </div>
     </div>
 
-    <!-- Fullscreen Modal -->
+    <!-- Fullscreen Modal -->   
     <div id="imageModal" class="modal" onclick="closeModal()">
         <span class="close" onclick="closeModal()">&times;</span>
         <img class="modal-content" id="modalImage" />
