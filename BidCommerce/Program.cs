@@ -1,9 +1,10 @@
 ﻿using BidCommerce.Data;
 using BidCommerce.Interfaces;
 using BidCommerce.Services;
+using BidCommerce.Services.RabbitMQ;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;  // Redis namespace
+using StackExchange.Redis;
 
 namespace BidCommerce
 {
@@ -35,22 +36,27 @@ namespace BidCommerce
 
             builder.Services.AddControllersWithViews();
 
-            // *** Updated Redis connection registration ***
+            // Redis connection registration
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
                 var configurationString = builder.Configuration.GetValue<string>("Redis:ConnectionString") ?? "localhost:6379,abortConnect=false";
                 var options = ConfigurationOptions.Parse(configurationString);
-                options.AbortOnConnectFail = false;  // critical to avoid app crash on startup
+                options.AbortOnConnectFail = false; // critical to avoid app crash on startup
                 return ConnectionMultiplexer.Connect(options);
             });
 
-            // Register your Redis caching service
+            // Register Redis caching service
             builder.Services.AddScoped<ICategoryCountCacheService, CategoryCountCacheService>();
 
+            // === RabbitMQ Services Registration ===
+            builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+            builder.Services.AddHostedService<MessageConsumerService>();
+            // =====================================
+         //   builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+          //  StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
             var app = builder.Build();
-            
-           
-            
+
             // Seed roles and admin user (your existing code)
             using (var scope = app.Services.CreateScope())
             {
@@ -78,6 +84,7 @@ namespace BidCommerce
 
             app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapHub<BidHub>("/bidHub");
 
             app.MapControllerRoute(

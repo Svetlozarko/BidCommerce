@@ -74,7 +74,7 @@ double score = ((DateTimeOffset)placedAt).ToUnixTimeMilliseconds();
         // Get last N bids for a product (descending by amount)
         public async Task<List<(string BidderId, decimal Amount, DateTime PlacedAt)>> GetRecentBidsAsync(int productId, int count = 10)
         {
-            var results = await _redisDb.SortedSetRangeByRankAsync(GetRecentBidsKey(productId), -count, -1, Order.Descending);
+            var results = await _redisDb.SortedSetRangeByRankAsync(GetRecentBidsKey(productId), -count, -1, StackExchange.Redis.Order.Descending);
             var bids = new List<(string, decimal, DateTime)>();
 
             foreach (var result in results)

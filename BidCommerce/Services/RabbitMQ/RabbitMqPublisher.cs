@@ -1,86 +1,86 @@
-﻿using BidCommerce.Interfaces;
-using RabbitMQ.Client;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿    using BidCommerce.Interfaces;
+    using RabbitMQ.Client;
+    using System.Text;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
 
-namespace BidCommerce.Services.RabbitMQ
-{
-    public class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
+    namespace BidCommerce.Services.RabbitMQ
     {
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
-        private readonly ILogger<RabbitMqPublisher> _logger;
-
-        public RabbitMqPublisher(IConfiguration configuration, ILogger<RabbitMqPublisher> logger)
+        public class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
         {
-            _logger = logger;
+            private readonly IConnection _connection;
+            private readonly IModel _channel;
+            private readonly ILogger<RabbitMqPublisher> _logger;
 
-            try
+            public RabbitMqPublisher(IConfiguration configuration, ILogger<RabbitMqPublisher> logger)
             {
-                var factory = new ConnectionFactory()
+                _logger = logger;
+
+                try
                 {
-                    HostName = configuration.GetConnectionString("RabbitMQ:HostName") ?? "localhost",
-                    Port = int.Parse(configuration.GetConnectionString("RabbitMQ:Port") ?? "5672"),
-                    UserName = configuration.GetConnectionString("RabbitMQ:UserName") ?? "guest",
-                    Password = configuration.GetConnectionString("RabbitMQ:Password") ?? "guest"
-                };
+                    var factory = new ConnectionFactory()
+                    {
+                        HostName = configuration.GetConnectionString("RabbitMQ:HostName") ?? "localhost",
+                        Port = int.Parse(configuration.GetConnectionString("RabbitMQ:Port") ?? "5672"),
+                        UserName = configuration.GetConnectionString("RabbitMQ:UserName") ?? "guest",
+                        Password = configuration.GetConnectionString("RabbitMQ:Password") ?? "guest"
+                    };
 
-                _connection = factory.CreateConnection();
-                _channel = _connection.CreateModel();
+                    _connection = factory.CreateConnection();
+                    _channel = _connection.CreateModel();
 
-                _logger.LogInformation("RabbitMqPublisher initialized successfully");
+                    _logger.LogInformation("RabbitMqPublisher initialized successfully");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to initialize RabbitMqPublisher");
+                    throw;
+                }
             }
-            catch (Exception ex)
+
+            public void Publish(string queueName, string message)
             {
-                _logger.LogError(ex, "Failed to initialize RabbitMqPublisher");
-                throw;
+                try
+                {
+                    _channel.QueueDeclare(
+                        queue: queueName,
+                        durable: true,
+                        exclusive: false,
+                        autoDelete: false,
+                        arguments: null);
+
+                    var body = Encoding.UTF8.GetBytes(message);
+                    var properties = _channel.CreateBasicProperties();
+                    properties.Persistent = true;
+
+                    _channel.BasicPublish(
+                        exchange: "",
+                        routingKey: queueName,
+                        basicProperties: properties,
+                        body: body);
+
+                    _logger.LogDebug($"Published message to queue: {queueName}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Failed to publish message to queue: {queueName}");
+                    throw;
+                }
             }
-        }
 
-        public void Publish(string queueName, string message)
-        {
-            try
+            public void Dispose()
             {
-                _channel.QueueDeclare(
-                    queue: queueName,
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
-
-                var body = Encoding.UTF8.GetBytes(message);
-                var properties = _channel.CreateBasicProperties();
-                properties.Persistent = true;
-
-                _channel.BasicPublish(
-                    exchange: "",
-                    routingKey: queueName,
-                    basicProperties: properties,
-                    body: body);
-
-                _logger.LogDebug($"Published message to queue: {queueName}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to publish message to queue: {queueName}");
-                throw;
-            }
-        }
-
-        public void Dispose()
-        {
-            try
-            {
-                _channel?.Close();
-                _connection?.Close();
-                _channel?.Dispose();
-                _connection?.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error disposing RabbitMqPublisher");
+                try
+                {
+                    _channel?.Close();
+                    _connection?.Close();
+                    _channel?.Dispose();
+                    _connection?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error disposing RabbitMqPublisher");
+                }
             }
         }
     }
-}

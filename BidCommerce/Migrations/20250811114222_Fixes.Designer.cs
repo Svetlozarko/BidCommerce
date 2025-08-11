@@ -4,6 +4,7 @@ using BidCommerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BidCommerce.Migrations
 {
     [DbContext(typeof(BidDb))]
-    partial class BidDbModelSnapshot : ModelSnapshot
+    [Migration("20250811114222_Fixes")]
+    partial class Fixes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -414,7 +417,7 @@ namespace BidCommerce.Migrations
 
                     b.Property<string>("BuyerId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -435,13 +438,9 @@ namespace BidCommerce.Migrations
 
                     b.Property<string>("SellerId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BuyerId");
-
-                    b.HasIndex("SellerId");
 
                     b.ToTable("Orders");
                 });
@@ -869,25 +868,6 @@ namespace BidCommerce.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("BidCommerce.Models.Order", b =>
-                {
-                    b.HasOne("BidCommerce.Data.ApplicationUser", "Buyer")
-                        .WithMany("OrdersBought")
-                        .HasForeignKey("BuyerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("BidCommerce.Data.ApplicationUser", "Seller")
-                        .WithMany("OrdersSold")
-                        .HasForeignKey("SellerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Buyer");
-
-                    b.Navigation("Seller");
-                });
-
             modelBuilder.Entity("BidCommerce.Models.OrderDetail", b =>
                 {
                     b.HasOne("BidCommerce.Models.Order", "Order")
@@ -1031,10 +1011,6 @@ namespace BidCommerce.Migrations
                     b.Navigation("Followers");
 
                     b.Navigation("Following");
-
-                    b.Navigation("OrdersBought");
-
-                    b.Navigation("OrdersSold");
 
                     b.Navigation("Products");
                 });

@@ -18,6 +18,8 @@ using BidCommerce.Models;
             public int TotalRatingsCount { get; set; } = 0;
         public ICollection<Product> Products { get; set; }
         public string Description { get; set; } = string.Empty;
+        public ICollection<Order> OrdersBought { get; set; }
+        public ICollection<Order> OrdersSold { get; set; }
         public ICollection<Follower> Followers { get; set; } = new List<Follower>();
 
         // Users that this user follows

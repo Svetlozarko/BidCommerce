@@ -492,7 +492,7 @@ input:checked + .slider:before {
                         <span class="stat-label">Total Sales</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">@Model.FollowersCount.ToString("N0")</span>
+                        <span class="stat-value">@Model.CurrentUser.FollowersCount.ToString("N0")</span>
                         <span class="stat-label">Followers</span>
                     </div>
                 </div>
@@ -601,7 +601,6 @@ input:checked + .slider:before {
     </div>
 </div>
 
- Profile Settings Modal 
 <div id="profileModal" class="modal-overlay" style="display: none;">
     <div class="modal-container">
         <div class="modal-header">
@@ -692,7 +691,7 @@ input:checked + .slider:before {
                             <span class="stat-label">Total Sales</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value">@Model.FollowersCount.ToString("N0")</span>
+                            <span class="stat-value">@Model.CurrentUser.FollowersCount.ToString("N0")</span>
                             <span class="stat-label">Followers</span>
                         </div>
                         <div class="stat-item">
@@ -709,7 +708,6 @@ input:checked + .slider:before {
                 </form>
             </div>
             
-             Notifications Tab 
             <div id="notifications-tab" class="tab-content">
                 <div class="tab-header">
                     <h3>Notification Preferences</h3>
@@ -769,7 +767,6 @@ input:checked + .slider:before {
                 </form>
             </div>
             
-             Privacy Tab 
             <div id="privacy-tab" class="tab-content">
                 <div class="tab-header">
                     <h3>Privacy Settings</h3>
@@ -812,7 +809,7 @@ input:checked + .slider:before {
                     
                     <div class="setting-item">
                         <div class="setting-info">
-                            <h4>Public Profile</h4>
+                            <h4>Public Profile</h4> 
                             <p>Make your profile visible to all marketplace users</p>
                         </div>
                         <label class="toggle-switch">

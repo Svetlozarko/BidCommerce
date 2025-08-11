@@ -1,89 +1,447 @@
-﻿<!-- Chat Box HTML -->
+﻿ Chat Box HTML
 <div id="chat-box" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; background:white; border:1px solid #ccc; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:9999;">
     <div style="background:#007bff; color:white; padding:10px; border-top-left-radius:8px; border-top-right-radius:8px;">
         <strong>Chat</strong>
-        <button onclick="closeChat()" style="float:right; background:none; border:none; color:white;">×</button>
+        <button onclick="closeChat()" style="float:right; background:none; border:none; color:white; font-size:18px;">×</button>
     </div>
-    <div id="chat-messages" style="height:200px; overflow-y:auto; padding:10px;"></div>
+    <div id="connectionStatus" style="padding:5px; font-size:12px; text-align:center; background:#f8d7da; color:#721c24;">
+        Connecting...
+    </div>
+    <div id="chat-messages" style="height:200px; overflow-y:auto; padding:10px; background:#f8f9fa;"></div>
     <input type="hidden" id="chat-recipient-id" />
-    <input type="text" id="chat-input" placeholder="Type a message..." style="width:100%; padding:8px; border:none; border-top:1px solid #ccc;" />
+    <div style="display:flex; border-top:1px solid #ccc;">
+        <input type="text" id="chat-input" placeholder="Connecting..." style="flex:1; padding:8px; border:none; outline:none;" disabled />
+        <button id="send-btn" onclick="sendMessage()" style="padding:8px 12px; background:#007bff; color:white; border:none; cursor:pointer;" disabled>Send</button>
+    </div>
 </div>
 
-<!-- SignalR Script -->
+ SignalR Script
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-
 <script>
-    window.onload = function () {
-        document.addEventListener("DOMContentLoaded", function () {
-            // Initialize SignalR connection
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl("/chathub")
-                .build();
+    // Global variables
+    let connection = null;
+    let isConnected = false;
+    let messageQueue = [];
+    let currentRecipientId = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
 
-            connection.on("ReceiveMessage", (senderId, message) => {
-                const chatMessages = document.getElementById("chat-messages");
-                if (!chatMessages) return;
+    // Initialize connection
+    function initializeSignalR() {
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .withAutomaticReconnect([0, 2000, 10000, 30000])
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
 
-                chatMessages.innerHTML += `<div><strong>${senderId}:</strong> ${message}</div>`;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
+        setupConnectionEvents();
+        setupMessageHandlers();
+        startConnection();
+    }
 
-            connection.start().catch(err => console.error("SignalR connection failed:", err));
+    // Setup connection events
+    function setupConnectionEvents() {
+        connection.onclose(async (error) => {
+            isConnected = false;
+            updateConnectionStatus('Disconnected', false);
+            updateInputState();
+            console.log('SignalR connection closed:', error);
 
-            // Open chat with user
-            window.openChatWith = function (userId, userName) {
-                const chatBox = document.getElementById('chat-box');
-                const chatMessages = document.getElementById("chat-messages");
-
-                if (!chatBox || !chatMessages) {
-                    console.error("Chat UI elements missing");
-                    return;
-                }
-
-                chatBox.style.display = 'block';
-                document.getElementById('chat-recipient-id').value = userId;
-
-                chatMessages.innerHTML += `<div style="font-style: italic; color: #888;">Chatting with ${userName}</div>`;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            };
-
-            // Close chat
-            window.closeChat = function () {
-                const chatBox = document.getElementById('chat-box');
-                if (!chatBox) return;
-
-                chatBox.style.display = 'none';
-                document.getElementById('chat-messages').innerHTML = '';
-                document.getElementById('chat-input').value = '';
-            };
-
-            // Handle message send on Enter
-            const chatInput = document.getElementById("chat-input");
-            if (chatInput) {
-                chatInput.addEventListener("keypress", function (e) {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        sendChatMessage();
-                    }
-                });
+            // Try to reconnect if not too many attempts
+            if (reconnectAttempts < maxReconnectAttempts) {
+                setTimeout(() => {
+                    reconnectAttempts++;
+                    startConnection();
+                }, 5000);
             }
+        });
 
-            // Send message
-            function sendChatMessage() {
-                const recipientId = document.getElementById("chat-recipient-id").value;
-                const message = document.getElementById("chat-input").value.trim();
+        connection.onreconnecting((error) => {
+            isConnected = false;
+            updateConnectionStatus('Reconnecting...', false);
+            updateInputState();
+            console.log('SignalR reconnecting:', error);
+        });
 
-                if (!message || !recipientId) return;
+        connection.onreconnected((connectionId) => {
+            isConnected = true;
+            reconnectAttempts = 0;
+            updateConnectionStatus('Connected', true);
+            updateInputState();
+            processMessageQueue();
+            console.log('SignalR reconnected:', connectionId);
+        });
+    }
 
-                connection.invoke("SendMessage", recipientId, message)
-                    .then(() => {
-                        const chatMessages = document.getElementById("chat-messages");
-                        chatMessages.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                        document.getElementById("chat-input").value = "";
-                    })
-                    .catch(console.error);
+    // Setup message handlers
+    function setupMessageHandlers() {
+        connection.on("ReceiveMessage", (senderId, message) => {
+            displayMessage(senderId, message, false);
+        });
+
+        connection.on("MessageError", (error) => {
+            displayError(error);
+        });
+
+        connection.on("ReceiveMessageHistory", (messages) => {
+            displayMessageHistory(messages);
+        });
+    }
+
+    // Start connection with retry logic
+    async function startConnection() {
+        try {
+            updateConnectionStatus('Connecting...', false);
+            await connection.start();
+            isConnected = true;
+            reconnectAttempts = 0;
+            updateConnectionStatus('Connected', true);
+            updateInputState();
+            console.log('SignalR Connected successfully');
+
+            // Process any queued messages
+            processMessageQueue();
+
+        } catch (err) {
+            isConnected = false;
+            updateConnectionStatus('Connection Failed', false);
+            updateInputState();
+            console.error('SignalR Connection Error:', err);
+
+            // Retry connection
+            if (reconnectAttempts < maxReconnectAttempts) {
+                setTimeout(() => {
+                    reconnectAttempts++;
+                    startConnection();
+                }, 5000);
+            } else {
+                updateConnectionStatus('Connection Failed - Please refresh page', false);
             }
         }
+    }
+
+    // Update connection status UI
+    function updateConnectionStatus(status, connected) {
+        const statusElement = document.getElementById('connectionStatus');
+        if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.style.backgroundColor = connected ? '#d4edda' : '#f8d7da';
+            statusElement.style.color = connected ? '#155724' : '#721c24';
+        }
+    }
+
+    // Update input state based on connection
+    function updateInputState() {
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        if (chatInput) {
+            chatInput.disabled = !isConnected;
+            chatInput.placeholder = isConnected ? 'Type a message...' : 'Not connected...';
+        }
+
+        if (sendBtn) {
+            sendBtn.disabled = !isConnected;
+            sendBtn.style.opacity = isConnected ? '1' : '0.5';
+        }
+    }
+
+    // Send message function
+    async function sendMessage() {
+        const recipientId = document.getElementById("chat-recipient-id").value;
+        const messageInput = document.getElementById("chat-input");
+        const message = messageInput.value.trim();
+
+        console.log('Attempting to send message:', message, 'to:', recipientId);
+
+        if (!message) {
+            displayError('Please enter a message');
+            return;
+        }
+
+        if (!recipientId) {
+            displayError('No recipient selected');
+            return;
+        }
+
+        // Check connection state
+        if (!isConnected || !connection || connection.state !== signalR.HubConnectionState.Connected) {
+            console.log('Not connected, queuing message. Connection state:', connection?.state);
+
+            // Queue the message
+            messageQueue.push({ recipientId, message });
+            displayError('Not connected. Message queued for when connection is restored.');
+            messageInput.value = ''; // Clear input
+
+            // Try to reconnect
+            if (connection && connection.state === signalR.HubConnectionState.Disconnected) {
+                startConnection();
+            }
+            return;
+        }
+
+        // Clear input immediately for better UX
+        messageInput.value = '';
+
+        try {
+            console.log('Sending message via SignalR...');
+
+            // Send with timeout
+            await Promise.race([
+                connection.invoke("SendMessage", recipientId, message),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Send timeout after 10 seconds')), 10000)
+                )
+            ]);
+
+            // Display sent message
+            displayMessage('You', message, true);
+            console.log('Message sent successfully');
+
+        } catch (err) {
+            console.error('Failed to send message:', err);
+
+            // Queue message for retry
+            messageQueue.push({ recipientId, message });
+
+            if (err.message.includes('timeout')) {
+                displayError('Message send timeout. Message queued for retry.');
+            } else if (err.message.includes('not in the \'Connected\' State')) {
+                displayError('Connection lost. Message queued. Attempting to reconnect...');
+                startConnection();
+            } else {
+                displayError('Failed to send message: ' + err.message);
+            }
+
+            // Put message back in input if user wants to retry manually
+            messageInput.value = message;
+        }
+    }
+
+    // Process queued messages
+    async function processMessageQueue() {
+        if (messageQueue.length === 0) return;
+
+        console.log(`Processing ${messageQueue.length} queued messages`);
+
+        while (messageQueue.length > 0 && isConnected &&
+            connection && connection.state === signalR.HubConnectionState.Connected) {
+
+            const { recipientId, message } = messageQueue.shift();
+
+            try {
+                await connection.invoke("SendMessage", recipientId, message);
+                displayMessage('You', message, true);
+                console.log('Queued message sent successfully');
+
+                // Small delay between messages
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+            } catch (err) {
+                console.error('Failed to send queued message:', err);
+                // Put message back at front of queue
+                messageQueue.unshift({ recipientId, message });
+                break;
+            }
+        }
+
+        if (messageQueue.length > 0) {
+            displayError(`${messageQueue.length} messages still queued`);
+        }
+    }
+
+    // Display message in chat
+    function displayMessage(sender, message, isSent) {
+        const chatMessages = document.getElementById("chat-messages");
+        if (!chatMessages) return;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.style.marginBottom = '8px';
+        messageDiv.style.padding = '5px';
+        messageDiv.style.borderRadius = '4px';
+
+        if (isSent) {
+            messageDiv.style.backgroundColor = '#e3f2fd';
+            messageDiv.style.textAlign = 'right';
+        } else {
+            messageDiv.style.backgroundColor = '#f5f5f5';
+        }
+
+        messageDiv.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(message)}`;
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Display error message
+    function displayError(error) {
+        const chatMessages = document.getElementById("chat-messages");
+        if (!chatMessages) return;
+
+        const errorDiv = document.createElement('div');
+        errorDiv.style.color = '#dc3545';
+        errorDiv.style.fontStyle = 'italic';
+        errorDiv.style.marginBottom = '8px';
+        errorDiv.style.padding = '5px';
+        errorDiv.style.backgroundColor = '#f8d7da';
+        errorDiv.style.borderRadius = '4px';
+        errorDiv.textContent = `⚠ ${error}`;
+
+        chatMessages.appendChild(errorDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Display message history
+    function displayMessageHistory(messages) {
+        const chatMessages = document.getElementById("chat-messages");
+        if (!chatMessages) return;
+
+        // Clear existing messages except the "Chatting with" message
+        const children = Array.from(chatMessages.children);
+        children.forEach(child => {
+            if (!child.textContent.includes('Chatting with')) {
+                child.remove();
+            }
+        });
+
+        if (messages && messages.length > 0) {
+            messages.forEach(msg => {
+                const isCurrentUser = msg.senderId === getCurrentUserId();
+                const senderName = isCurrentUser ? 'You' : (msg.senderName || msg.senderId);
+                displayMessage(senderName, msg.content, isCurrentUser);
+            });
+        }
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Get current user ID (implement based on your auth system)
+    function getCurrentUserId() {
+        // You'll need to implement this based on how you store current user info
+        return window.currentUserId || document.querySelector('[data-user-id]')?.getAttribute('data-user-id') || 'current-user';
+    }
+
+    // Open chat with user
+    function openChatWith(userId, userName) {
+        const chatBox = document.getElementById('chat-box');
+        const chatMessages = document.getElementById("chat-messages");
+
+        if (!chatBox || !chatMessages) {
+            console.error("Chat UI elements missing");
+            return;
+        }
+
+        chatBox.style.display = 'block';
+        document.getElementById('chat-recipient-id').value = userId;
+        currentRecipientId = userId;
+
+        // Clear previous messages and show chat started message
+        chatMessages.innerHTML = '';
+        const startDiv = document.createElement('div');
+        startDiv.style.fontStyle = 'italic';
+        startDiv.style.color = '#888';
+        startDiv.style.textAlign = 'center';
+        startDiv.style.marginBottom = '10px';
+        startDiv.style.padding = '10px';
+        startDiv.style.backgroundColor = '#e9ecef';
+        startDiv.style.borderRadius = '4px';
+        startDiv.textContent = `💬 Chatting with ${userName}`;
+        chatMessages.appendChild(startDiv);
+
+        // Load message history if connected
+        if (isConnected && connection && connection.state === signalR.HubConnectionState.Connected) {
+            connection.invoke('GetMessageHistory', userId).catch(console.error);
+        }
+
+        // Focus on input if enabled
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput && !chatInput.disabled) {
+            setTimeout(() => chatInput.focus(), 100);
+        }
+    }
+
+    // Close chat
+    function closeChat() {
+        const chatBox = document.getElementById('chat-box');
+        if (!chatBox) return;
+
+        chatBox.style.display = 'none';
+        document.getElementById('chat-messages').innerHTML = '';
+        document.getElementById('chat-input').value = '';
+        document.getElementById('chat-recipient-id').value = '';
+        currentRecipientId = null;
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log('Initializing SignalR chat...');
+        initializeSignalR();
+
+        // Handle Enter key in chat input
+        const chatInput = document.getElementById("chat-input");
+        if (chatInput) {
+            chatInput.addEventListener("keypress", function (e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
     });
+
+    // Make functions globally available
+    window.openChatWith = openChatWith;
+    window.closeChat = closeChat;
+    window.sendMessage = sendMessage;
 </script>
+
+<style>
+    #chat-box {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #connectionStatus {
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    #chat-input:disabled {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+    }
+
+    #send-btn:disabled {
+        cursor: not-allowed;
+    }
+
+    #chat-messages {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+        #chat-messages div {
+            word-wrap: break-word;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+            #chat-messages::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+</style>
