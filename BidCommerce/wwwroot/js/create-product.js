@@ -1,541 +1,575 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
-    const imageUpload = document.getElementById("imageUpload");
-    const imagePreviewContainer = document.getElementById("imagePreviewContainer");
-    const imagePreviewRow = document.getElementById("imagePreviewRow");
-    const selectedImagesInfo = document.getElementById("selectedImagesInfo");
-    const imageCount = document.getElementById("imageCount");
-    const uploadArea = document.querySelector(".upload-area");
-    const dynamicFileInputs = document.getElementById("dynamicFileInputs");
-    const productForm = document.getElementById("productForm");
-    const saveDraftBtn = document.getElementById("saveDraftBtn");
-    const draftSaveModal = document.getElementById("draftSaveModal");
-    const loadingOverlay = document.getElementById("loadingOverlay");
+﻿// Global variables
+let uploadedImages = []
+let draggedElement = null
+let draggedIndex = -1
+const bootstrap = window.bootstrap // Declare the bootstrap variable
 
-    const selectedFiles = [];
-    const maxFiles = 12;
+// Ensure all functions are available globally
+window.updatePreview = updatePreview
+window.updatePreviewImage = updatePreviewImage
+window.handleImageUpload = handleImageUpload
+window.removeImage = removeImage
 
-    // Get a reference to the description field
-    const descriptionInput = document.querySelector('textarea[name="Product.Description"]');
+function updatePreview() {
+  const titleInput = document.querySelector('input[name="Product.Title"]')
+  const descriptionInput = document.querySelector('textarea[name="Product.Description"]')
+  const buyNowPriceInput = document.querySelector('input[name="Product.BuyNowPrice"]')
+  const startingPriceInput = document.querySelector('input[name="Product.StartingPrice"]')
+  const categorySelect = document.querySelector('select[name="Product.CategoryId"]')
+  const isBiddableInput = document.getElementById("isBiddableInput")
+  const auctionDurationSelect = document.getElementById("auctionDurationSelect")
 
-    // Form state tracking
-    let formIsDirty = false;
-    let isSubmitting = false;
-    let pendingNavigation = null;
+  // Check if elements exist before accessing their values
+  const title = titleInput ? titleInput.value || "Enter product title" : "Enter product title"
+  const description = descriptionInput
+    ? descriptionInput.value || "Add a description for your product"
+    : "Add a description for your product"
+  const buyNowPrice = buyNowPriceInput ? buyNowPriceInput.value || "0.00" : "0.00"
+  const startingPrice = startingPriceInput ? startingPriceInput.value || "0.99" : "0.99"
+  const category =
+    categorySelect && categorySelect.selectedIndex >= 0
+      ? categorySelect.options[categorySelect.selectedIndex].text || "Select category"
+      : "Select category"
+  const isBiddable = isBiddableInput ? isBiddableInput.value === "True" : false
+  const auctionDuration = auctionDurationSelect ? auctionDurationSelect.value || "7" : "7"
 
-    // Track form changes to determine if form is "dirty"
-    function trackFormChanges() {
-        const formElements = productForm.querySelectorAll("input, textarea, select");
+  // Update preview elements
+  const previewTitle = document.getElementById("previewTitle")
+  const previewDescription = document.getElementById("previewDescription")
+  const previewCategory = document.getElementById("previewCategory")
+  const previewPrice = document.getElementById("previewPrice")
+  const previewButtonText = document.getElementById("previewButtonText")
+  const previewButtonIcon = document.querySelector("#previewButton i")
+  const previewTimeLeft = document.getElementById("previewTimeLeft")
 
-        formElements.forEach((element) => {
-            element.addEventListener("input", () => {
-                formIsDirty = true;
-            });
+  if (previewTitle) previewTitle.textContent = title
+  if (previewDescription) previewDescription.textContent = description
+  if (previewCategory) previewCategory.textContent = category
 
-            element.addEventListener("change", () => {
-                formIsDirty = true;
-            });
-        });
+  let displayPrice = "0.00"
+  if (isBiddable) {
+    displayPrice = startingPrice
+    if (previewPrice) previewPrice.textContent = `Starting bid: $${Number.parseFloat(displayPrice).toFixed(2)}`
+  } else {
+    displayPrice = buyNowPrice
+    if (previewPrice) previewPrice.textContent = `Price: $${Number.parseFloat(displayPrice).toFixed(2)}`
+  }
 
-        // Track listing type card selections
-        document.getElementById("auctionCard")?.addEventListener("click", () => {
-            formIsDirty = true;
-        });
+  const buttonText = isBiddable ? "Place Bid" : "Buy Now"
+  const buttonIcon = isBiddable ? "bi-hammer" : "bi-cart-plus"
+  if (previewButtonText) previewButtonText.textContent = buttonText
+  if (previewButtonIcon) previewButtonIcon.className = buttonIcon
 
-        document.getElementById("fixedPriceCard")?.addEventListener("click", () => {
-            formIsDirty = true;
-        });
+  const timeLeft = isBiddable ? `${auctionDuration}d left` : "Available"
+  if (previewTimeLeft) previewTimeLeft.innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}`
+}
+
+function updatePreviewImage() {
+  const previewContainer = document.getElementById("previewImage")
+  if (previewContainer) {
+    if (uploadedImages.length > 0) {
+      previewContainer.innerHTML = `<img src="${uploadedImages[0].dataUrl}" alt="Product Image">`
+    } else {
+      previewContainer.innerHTML = '<i class="bi bi-image" style="font-size: 40px;"></i>'
     }
+  }
+}
 
-    // Initialize form change tracking
-    trackFormChanges();
+function handleImageUpload(input) {
+  if (!input.files) return
 
-    // Handle beforeunload event to catch navigation attempts
-    window.addEventListener("beforeunload", (e) => {
-        if (formIsDirty && !isSubmitting) {
-            e.preventDefault();
-            e.returnValue = ""; // Required for Chrome
-            return ""; // Required for some browsers
+  const files = Array.from(input.files)
+  files.forEach((file, index) => {
+    if (uploadedImages.length < 12) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const imageData = {
+          file: file,
+          dataUrl: e.target.result,
+          name: file.name,
+          size: file.size,
+          id: Date.now() + index,
         }
-    });
-
-    // Handle page navigation attempts (for SPA-style navigation)
-    window.addEventListener("pagehide", (e) => {
-        if (formIsDirty && !isSubmitting) {
-            console.log("Page is hiding with unsaved changes.");
-        }
-    });
-
-    // Override link clicks and form submissions to show modal
-    document.addEventListener("click", (e) => {
-        const link = e.target.closest("a");
-        if (link && formIsDirty && !isSubmitting) {
-            const href = link.getAttribute("href");
-            if (href && !href.startsWith("#") && !href.startsWith("javascript:")) {
-                e.preventDefault();
-                pendingNavigation = href;
-                const modalInstance = bootstrap.Modal.getInstance(draftSaveModal) || new bootstrap.Modal(draftSaveModal);
-                modalInstance.show();
-            }
-        }
-    });
-
-    // Handle draft save modal actions
-    document.getElementById("saveDraftAndLeaveBtn")?.addEventListener("click", async () => {
-        await saveDraft();
-        if (pendingNavigation) {
-            window.location.href = pendingNavigation;
-        } else {
-            window.history.back();
-        }
-    });
-
-    document.getElementById("discardChangesBtn")?.addEventListener("click", () => {
-        formIsDirty = false;
-        const modalInstance = bootstrap.Modal.getInstance(draftSaveModal);
-        if (modalInstance) modalInstance.hide();
-        if (pendingNavigation) {
-            window.location.href = pendingNavigation;
-        } else {
-            window.history.back();
-        }
-    });
-
-    // Handle manual draft save button
-    saveDraftBtn?.addEventListener("click", async (e) => {
-        e.preventDefault(); // Prevent default form submission for this button
-        await saveDraft();
-    });
-
-    // Save draft function
-    async function saveDraft() {
-        // Validate description for drafts
-        if (!descriptionInput || descriptionInput.value.trim() === "") {
-            showErrorMessage("Description cannot be blank when saving as a draft.");
-            return; // Stop execution immediately
-        }
-
-        try {
-            showLoadingOverlay();
-
-            const formData = new FormData();
-
-            // Collect form data
-            const formElements = productForm.querySelectorAll("input, textarea, select");
-            formElements.forEach((element) => {
-                if (element.name && element.value) {
-                    if (element.type === "checkbox" || element.type === "radio") {
-                        if (element.checked) {
-                            formData.append(element.name, element.value);
-                        }
-                    } else {
-                        formData.append(element.name, element.value);
-                    }
-                }
-            });
-
-            // Add selected files
-            selectedFiles.forEach((file, index) => {
-                formData.append("ImageFiles", file);
-            });
-
-            // Add draft flag
-            formData.append("IsDraft", "true");
-
-            // Add anti-forgery token
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-            if (token) {
-                formData.append("__RequestVerificationToken", token);
-            }
-
-            const response = await fetch("/Products/SaveDraft", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                formIsDirty = false;
-                showSuccessMessage("Draft saved successfully!");
-
-                // Update the form with the draft ID if it's a new draft
-                if (result.draftId) {
-                    let draftIdInput = document.querySelector('input[name="DraftId"]');
-                    if (!draftIdInput) {
-                        draftIdInput = document.createElement("input");
-                        draftIdInput.type = "hidden";
-                        draftIdInput.name = "DraftId";
-                        productForm.appendChild(draftIdInput);
-                    }
-                    draftIdInput.value = result.draftId;
-                }
-            } else {
-                const errorText = await response.text();
-                showErrorMessage("Failed to save draft: " + errorText);
-            }
-        } catch (error) {
-            console.error("Error saving draft:", error);
-            showErrorMessage("Failed to save draft. Please try again.");
-        } finally {
-            hideLoadingOverlay();
-            const modalInstance = bootstrap.Modal.getInstance(draftSaveModal);
-            if (modalInstance) modalInstance.hide();
-        }
+        uploadedImages.push(imageData)
+        renderImages()
+        updateImageCount()
+        updatePreviewImage()
+      }
+      reader.readAsDataURL(file)
     }
+  })
+  input.value = ""
+}
 
-    function showLoadingOverlay() {
-        loadingOverlay.style.display = "flex";
+function renderImages() {
+  const grid = document.getElementById("imagesGrid")
+  const instructions = document.getElementById("dragInstructions")
+
+  if (!grid) return
+
+  grid.innerHTML = ""
+
+  uploadedImages.forEach((image, index) => {
+    const imageDiv = document.createElement("div")
+    imageDiv.className = "image-thumbnail"
+    imageDiv.draggable = true
+    imageDiv.dataset.imageId = image.id
+    imageDiv.dataset.index = index
+
+    imageDiv.innerHTML = `
+            <img src="${image.dataUrl}" alt="${image.name}">
+            <div class="image-order-badge">${index + 1}</div>
+            <button type="button" class="delete-image-btn" onclick="removeImage(${image.id})">
+                ×
+            </button>
+        `
+
+    imageDiv.addEventListener("dragstart", handleDragStart)
+    imageDiv.addEventListener("dragover", handleDragOver)
+    imageDiv.addEventListener("drop", handleDrop)
+    imageDiv.addEventListener("dragend", handleDragEnd)
+    imageDiv.addEventListener("dragenter", handleDragEnter)
+    imageDiv.addEventListener("dragleave", handleDragLeave)
+
+    grid.appendChild(imageDiv)
+  })
+
+  if (instructions) {
+    if (uploadedImages.length > 1) {
+      instructions.style.display = "block"
+    } else {
+      instructions.style.display = "none"
     }
+  }
 
-    function hideLoadingOverlay() {
-        loadingOverlay.style.display = "none";
+  updateFileInputs()
+}
+
+function handleDragStart(e) {
+  draggedElement = this
+  draggedIndex = Number.parseInt(this.dataset.index)
+  this.classList.add("dragging")
+  e.dataTransfer.effectAllowed = "move"
+  e.dataTransfer.setData("text/html", "")
+
+  const dragDropZone = document.getElementById("dragDropZone")
+  if (dragDropZone) {
+    dragDropZone.classList.add("drag-active")
+  }
+}
+
+function handleDragOver(e) {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = "move"
+}
+
+function handleDragEnter(e) {
+  e.preventDefault()
+  if (this !== draggedElement && this.classList.contains("image-thumbnail")) {
+    this.classList.add("drag-over")
+  }
+}
+
+function handleDragLeave(e) {
+  if (this.classList.contains("image-thumbnail")) {
+    this.classList.remove("drag-over")
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault()
+  e.stopPropagation()
+
+  if (this !== draggedElement && this.classList.contains("image-thumbnail")) {
+    const targetIndex = Number.parseInt(this.dataset.index)
+    if (draggedIndex !== targetIndex) {
+      const draggedImage = uploadedImages[draggedIndex]
+      uploadedImages.splice(draggedIndex, 1)
+      uploadedImages.splice(targetIndex, 0, draggedImage)
+      renderImages()
+      updatePreviewImage()
     }
+  }
+  this.classList.remove("drag-over")
+}
 
-    function showSuccessMessage(message) {
-        const alert = document.createElement("div");
-        alert.className = "alert alert-success alert-dismissible fade show position-fixed";
-        alert.style.cssText = "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
-        alert.innerHTML = `
-      <i class="bi bi-check-circle me-2"></i>
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-        document.body.appendChild(alert);
+function handleDragEnd(e) {
+  this.classList.remove("dragging")
+  document.querySelectorAll(".image-thumbnail").forEach((el) => {
+    el.classList.remove("drag-over")
+  })
 
-        setTimeout(() => {
-            if (alert.parentNode) {
-                alert.remove();
-            }
-        }, 5000);
+  const dragDropZone = document.getElementById("dragDropZone")
+  if (dragDropZone) {
+    dragDropZone.classList.remove("drag-active")
+  }
+
+  draggedElement = null
+  draggedIndex = -1
+}
+
+function removeImage(imageId) {
+  uploadedImages = uploadedImages.filter((img) => img.id !== imageId)
+  renderImages()
+  updateImageCount()
+  updatePreviewImage()
+}
+
+function updateImageCount() {
+  const countElement = document.getElementById("imageCount")
+  const infoElement = document.getElementById("selectedImagesInfo")
+
+  if (countElement && infoElement) {
+    if (uploadedImages.length > 0) {
+      countElement.textContent = uploadedImages.length
+      infoElement.style.display = "block"
+    } else {
+      infoElement.style.display = "none"
     }
+  }
+}
 
-    function showErrorMessage(message) {
-        const alert = document.createElement("div");
-        alert.className = "alert alert-danger alert-dismissible fade show position-fixed";
-        alert.style.cssText = "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
-        alert.innerHTML = `
-      <i class="bi bi-exclamation-triangle me-2"></i>
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-        document.body.appendChild(alert);
+function updateFileInputs() {
+  const container = document.getElementById("dynamicFileInputs")
+  if (!container) return
 
-        setTimeout(() => {
-            if (alert.parentNode) {
-                alert.remove();
-            }
-        }, 8000);
+  container.innerHTML = ""
+  uploadedImages.forEach((image, index) => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.name = "ImageFiles"
+    input.style.display = "none"
+    input.files = createFileList([image.file])
+    container.appendChild(input)
+  })
+}
+
+function createFileList(files) {
+  const dt = new DataTransfer()
+  files.forEach((file) => dt.items.add(file))
+  return dt.files
+}
+
+// Initialize when DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Create product script loaded")
+
+  // Initialize listing type functionality
+  initializeListingType()
+
+  // Initialize image upload functionality
+  initializeImageUpload()
+
+  // Initialize form tracking
+  initializeFormTracking()
+
+  // Initialize preview updates
+  initializePreviewUpdates()
+
+  // Set initial preview
+  updatePreview()
+})
+
+function initializeListingType() {
+  const auctionCard = document.getElementById("auctionCard")
+  const fixedPriceCard = document.getElementById("fixedPriceCard")
+  const isBiddableInput = document.getElementById("isBiddableInput")
+  const auctionFields = document.getElementById("auctionFields")
+  const buyNowLabel = document.getElementById("buyNowLabel")
+  const pricingSubtitle = document.getElementById("pricingSubtitle")
+  const auctionDurationSelect = document.getElementById("auctionDurationSelect")
+
+  function selectListingType(isAuction) {
+    if (!isBiddableInput || !auctionFields || !buyNowLabel || !pricingSubtitle) return
+
+    if (isAuction) {
+      isBiddableInput.value = "True"
+      if (auctionCard) auctionCard.classList.add("active")
+      if (fixedPriceCard) fixedPriceCard.classList.remove("active")
+      auctionFields.classList.add("show")
+      buyNowLabel.textContent = "Buy Now Price (Optional)"
+      pricingSubtitle.textContent = "Set your starting bid and auction duration"
+      updateAuctionEndTime()
+    } else {
+      isBiddableInput.value = "False"
+      if (fixedPriceCard) fixedPriceCard.classList.add("active")
+      if (auctionCard) auctionCard.classList.remove("active")
+      auctionFields.classList.remove("show")
+      buyNowLabel.textContent = "Price"
+      pricingSubtitle.textContent = "Set your fixed price for this item"
     }
+    updatePreview()
+  }
 
-    // Handle form submission for "Create Listing"
-    productForm.addEventListener("submit", (e) => {
-        isSubmitting = true;
-        formIsDirty = false;
-        console.log("Form submitting as Create Listing with", selectedFiles.length, "files");
+  function updateAuctionEndTime() {
+    const durationSelect = document.getElementById("auctionDurationSelect")
+    const endTimeInput = document.getElementById("bidEndTimeInput")
 
-        // For "Create Listing", all required fields should be enforced by HTML5 validation
-        // No need to manipulate 'required' attributes here.
+    if (durationSelect && endTimeInput) {
+      const duration = Number.parseInt(durationSelect.value)
+      const now = new Date()
+      const endTime = new Date(now.getTime() + duration * 24 * 60 * 60 * 1000)
 
-        if (selectedFiles.length > 0) {
-            createDynamicFileInputs();
-        }
-    });
+      const year = endTime.getFullYear()
+      const month = String(endTime.getMonth() + 1).padStart(2, "0")
+      const day = String(endTime.getDate()).padStart(2, "0")
+      const hours = String(endTime.getHours()).padStart(2, "0")
+      const minutes = String(endTime.getMinutes()).padStart(2, "0")
 
-    // Handle file selection - UPDATED to accumulate files from multiple selections
-    imageUpload.addEventListener("change", (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            handleFiles(e.target.files);
-            formIsDirty = true; // Mark form as dirty when files are added
-        }
-        e.target.value = "";
-    });
+      endTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`
+    }
+  }
 
+  // Add event listeners
+  if (auctionCard) {
+    auctionCard.addEventListener("click", () => selectListingType(true))
+  }
+  if (fixedPriceCard) {
+    fixedPriceCard.addEventListener("click", () => selectListingType(false))
+  }
+  if (auctionDurationSelect) {
+    auctionDurationSelect.addEventListener("change", updateAuctionEndTime)
+  }
+
+  // Set default state
+  selectListingType(false)
+}
+
+function initializeImageUpload() {
+  const imageUpload = document.getElementById("imageUpload")
+  const uploadArea = document.querySelector(".upload-area")
+
+  if (imageUpload) {
+    imageUpload.addEventListener("change", function (e) {
+      handleImageUpload(this)
+    })
+  }
+
+  if (uploadArea) {
     // Handle drag and drop
     uploadArea.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        uploadArea.classList.add("drag-over");
-    });
+      e.preventDefault()
+      uploadArea.classList.add("drag-over")
+    })
 
     uploadArea.addEventListener("dragleave", (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove("drag-over");
-    });
+      e.preventDefault()
+      uploadArea.classList.remove("drag-over")
+    })
 
     uploadArea.addEventListener("drop", (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove("drag-over");
-        handleFiles(e.dataTransfer.files);
-        formIsDirty = true; // Mark form as dirty when files are dropped
-    });
+      e.preventDefault()
+      uploadArea.classList.remove("drag-over")
+      if (e.dataTransfer.files) {
+        const fakeInput = { files: e.dataTransfer.files }
+        handleImageUpload(fakeInput)
+      }
+    })
+  }
+}
 
-    function handleFiles(files) {
-        const fileArray = Array.from(files);
-        const imageFiles = fileArray.filter((file) => file.type.startsWith("image/"));
+function initializeFormTracking() {
+  const productForm = document.getElementById("productForm")
+  const saveDraftBtn = document.getElementById("saveDraftBtn")
+  const draftSaveModal = document.getElementById("draftSaveModal")
+  const loadingOverlay = document.getElementById("loadingOverlay")
 
-        if (imageFiles.length === 0) {
-            alert("Please select valid image files.");
-            return;
-        }
+  let formIsDirty = false
+  const isSubmitting = false
+  const pendingNavigation = null
 
-        if (selectedFiles.length + imageFiles.length > maxFiles) {
-            alert(
-                `You can only upload up to ${maxFiles} images. Currently selected: ${selectedFiles.length}. You can add ${maxFiles - selectedFiles.length} more.`,
-            );
-            return;
-        }
+  // Track form changes
+  if (productForm) {
+    const formElements = productForm.querySelectorAll("input, textarea, select")
+    formElements.forEach((element) => {
+      element.addEventListener("input", () => {
+        formIsDirty = true
+      })
+      element.addEventListener("change", () => {
+        formIsDirty = true
+      })
+    })
+  }
 
-        imageFiles.forEach((file) => {
-            const isDuplicate = selectedFiles.some(
-                (existingFile) =>
-                    existingFile.name === file.name &&
-                    existingFile.size === file.size &&
-                    existingFile.lastModified === file.lastModified,
-            );
+  // Handle beforeunload
+  window.addEventListener("beforeunload", (e) => {
+    if (formIsDirty && !isSubmitting) {
+      e.preventDefault()
+      e.returnValue = ""
+      return ""
+    }
+  })
 
-            if (!isDuplicate) {
-                selectedFiles.push(file);
+  // Handle draft save
+  if (saveDraftBtn) {
+    saveDraftBtn.addEventListener("click", async (e) => {
+      e.preventDefault()
+      await saveDraft()
+    })
+  }
+
+  // Modal button handlers
+  const saveDraftAndLeaveBtn = document.getElementById("saveDraftAndLeaveBtn")
+  const discardChangesBtn = document.getElementById("discardChangesBtn")
+
+  if (saveDraftAndLeaveBtn) {
+    saveDraftAndLeaveBtn.addEventListener("click", async () => {
+      await saveDraft()
+      if (pendingNavigation) {
+        window.location.href = pendingNavigation
+      }
+    })
+  }
+
+  if (discardChangesBtn) {
+    discardChangesBtn.addEventListener("click", () => {
+      formIsDirty = false
+      if (pendingNavigation) {
+        window.location.href = pendingNavigation
+      }
+    })
+  }
+
+  async function saveDraft() {
+    const descriptionInput = document.querySelector('textarea[name="Product.Description"]')
+
+    if (!descriptionInput || descriptionInput.value.trim() === "") {
+      showErrorMessage("Description cannot be blank when saving as a draft.")
+      return
+    }
+
+    try {
+      showLoadingOverlay()
+
+      const formData = new FormData()
+
+      // Collect form data
+      if (productForm) {
+        const formElements = productForm.querySelectorAll("input, textarea, select")
+        formElements.forEach((element) => {
+          if (element.name && element.value) {
+            if (element.type === "checkbox" || element.type === "radio") {
+              if (element.checked) {
+                formData.append(element.name, element.value)
+              }
             } else {
-                console.log(`File ${file.name} is already selected, skipping...`);
+              formData.append(element.name, element.value)
             }
-        });
+          }
+        })
+      }
 
-        createDynamicFileInputs();
-        updateImagePreview();
-    }
+      // Add images
+      uploadedImages.forEach((imageData) => {
+        formData.append("ImageFiles", imageData.file)
+      })
 
-    function createDynamicFileInputs() {
-        dynamicFileInputs.innerHTML = "";
+      formData.append("IsDraft", "true")
 
-        selectedFiles.forEach((file, index) => {
-            const fileInput = document.createElement("input");
-            fileInput.type = "file";
-            fileInput.name = "ImageFiles";
-            fileInput.style.display = "none";
-            fileInput.setAttribute("data-index", index);
+      // Add anti-forgery token
+      const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+      if (token) {
+        formData.append("__RequestVerificationToken", token)
+      }
 
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            fileInput.files = dt.files;
+      const response = await fetch("/Products/SaveDraft", {
+        method: "POST",
+        body: formData,
+      })
 
-            dynamicFileInputs.appendChild(fileInput);
-        });
-    }
+      if (response.ok) {
+        const result = await response.json()
+        formIsDirty = false
+        showSuccessMessage("Draft saved successfully!")
 
-    function updateImagePreview() {
-        imagePreviewRow.innerHTML = "";
-
-        if (selectedFiles.length === 0) {
-            selectedImagesInfo.style.display = "none";
-            uploadArea.classList.remove("has-images");
-            return;
+        if (result.draftId) {
+          let draftIdInput = document.querySelector('input[name="DraftId"]')
+          if (!draftIdInput && productForm) {
+            draftIdInput = document.createElement("input")
+            draftIdInput.type = "hidden"
+            draftIdInput.name = "DraftId"
+            productForm.appendChild(draftIdInput)
+          }
+          if (draftIdInput) {
+            draftIdInput.value = result.draftId
+          }
         }
-
-        selectedImagesInfo.style.display = "block";
-        imageCount.textContent = selectedFiles.length;
-        uploadArea.classList.add("has-images");
-
-        selectedFiles.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const col = document.createElement("div");
-                col.className = "col-md-3 col-sm-4 col-6 mb-3";
-
-                col.innerHTML = `
-        <div class="image-preview-item position-relative">
-          <img src="${e.target.result}" class="img-fluid rounded" style="width: 100%; height: 150px; object-fit: cover;" alt="Preview ${index + 1}">
-          <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 remove-image" data-index="${index}">
-            <i class="bi bi-x"></i>
-          </button>
-          <div class="image-info mt-1">
-            <small class="text-muted">${file.name}</small>
-            <br>
-            <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
-          </div>
-        </div>
-      `;
-
-                imagePreviewRow.appendChild(col);
-
-                if (index === selectedFiles.length - 1) {
-                    createAddMoreButton();
-                }
-            };
-            reader.readAsDataURL(file);
-        });
+      } else {
+        const errorText = await response.text()
+        showErrorMessage("Failed to save draft: " + errorText)
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error)
+      showErrorMessage("Failed to save draft. Please try again.")
+    } finally {
+      hideLoadingOverlay()
+      if (draftSaveModal && bootstrap) {
+        const modalInstance = bootstrap.Modal.getInstance(draftSaveModal)
+        if (modalInstance) modalInstance.hide()
+      }
     }
+  }
 
-    function createAddMoreButton() {
-        const existingButton = document.getElementById("addMoreButton");
-        if (existingButton) {
-            existingButton.remove();
-        }
-
-        if (selectedFiles.length > 0 && selectedFiles.length < maxFiles) {
-            const addMoreButton = document.createElement("div");
-            addMoreButton.id = "addMoreButton";
-            addMoreButton.className = "col-md-3 col-sm-4 col-6 mb-3";
-            addMoreButton.innerHTML = `
-      <div class="add-more-item d-flex align-items-center justify-content-center" onclick="document.getElementById('imageUpload').click()" role="button" tabindex="0" aria-label="Add more images">
-        <div class="text-center">
-          <i class="bi bi-plus-circle" style="font-size: 2rem; color: #6c757d;"></i>
-          <div class="mt-2 text-muted">Add More</div>
-          <small class="text-muted">${maxFiles - selectedFiles.length} remaining</small>
-        </div>
-      </div>
-    `;
-
-            // Keyboard accessibility: Enter and Space triggers click
-            addMoreButton.querySelector(".add-more-item").addEventListener("keydown", (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    document.getElementById("imageUpload").click();
-                }
-            });
-
-            imagePreviewRow.appendChild(addMoreButton);
-        }
+  function showLoadingOverlay() {
+    if (loadingOverlay) {
+      loadingOverlay.style.display = "flex"
     }
+  }
 
-    // Handle image removal with stable indexing by reassigning indices after removal
-    imagePreviewRow.addEventListener("click", (e) => {
-        if (e.target.classList.contains("remove-image") || e.target.closest(".remove-image")) {
-            const button = e.target.classList.contains("remove-image") ? e.target : e.target.closest(".remove-image");
-            const index = Number.parseInt(button.getAttribute("data-index"));
-
-            if (!isNaN(index)) {
-                selectedFiles.splice(index, 1);
-                createDynamicFileInputs();
-                updateImagePreview();
-                formIsDirty = true;
-            }
-        }
-    });
-
-    // Listing type functionality
-    const auctionCard = document.getElementById("auctionCard");
-    const fixedPriceCard = document.getElementById("fixedPriceCard");
-    const isBiddableInput = document.getElementById("isBiddableInput");
-    const auctionFields = document.getElementById("auctionFields");
-    const pricingSubtitle = document.getElementById("pricingSubtitle");
-    const buyNowLabel = document.getElementById("buyNowLabel");
-    const buyNowPriceInput = document.getElementById("buyNowPriceInput");
-
-    // Check if all required elements exist before adding event listeners
-    if (auctionCard && fixedPriceCard && isBiddableInput && auctionFields && pricingSubtitle && buyNowLabel && buyNowPriceInput) {
-        // Auction card click handler
-        auctionCard.addEventListener("click", () => {
-            console.log("Auction card clicked"); // Debug log
-
-            // Update visual selection
-            auctionCard.classList.add("selected");
-            fixedPriceCard.classList.remove("selected");
-
-            // Set form values
-            isBiddableInput.value = "true";
-
-            // Show auction fields
-            auctionFields.style.display = "block";
-
-            // Update pricing section text
-            pricingSubtitle.textContent = "Set your starting bid and buy now price";
-            buyNowLabel.innerHTML = "Buy Now Price (Optional)";
-
-            // Make BuyNowPrice optional for auctions
-            buyNowPriceInput.removeAttribute("required");
-        });
-
-        // Fixed price card click handler
-        fixedPriceCard.addEventListener("click", () => {
-            console.log("Fixed Price card clicked"); // Debug log
-
-            // Update visual selection
-            fixedPriceCard.classList.add("selected");
-            auctionCard.classList.remove("selected");
-
-            // Set form values
-            isBiddableInput.value = "false";
-
-            // Hide auction fields
-            auctionFields.style.display = "none";
-
-            // Update pricing section text
-            pricingSubtitle.textContent = "Set your fixed selling price";
-            buyNowLabel.innerHTML = 'Price <span class="required">*</span>';
-
-            // Make BuyNowPrice required for fixed price
-            buyNowPriceInput.setAttribute("required", "required");
-        });
-
-        // Set default state (Fixed Price selected by default)
-        fixedPriceCard.click();
-    } else {
-        console.error("Some required elements for listing type functionality are missing");
+  function hideLoadingOverlay() {
+    if (loadingOverlay) {
+      loadingOverlay.style.display = "none"
     }
+  }
 
-    // Auction duration handling
-    const auctionDurationSelect = document.getElementById("auctionDurationSelect");
-    const bidEndTimeInput = document.getElementById("bidEndTimeInput");
+  function showSuccessMessage(message) {
+    const alert = document.createElement("div")
+    alert.className = "alert alert-success alert-dismissible fade show position-fixed"
+    alert.style.cssText = "top: 20px; right: 20px; z-index: 9999; min-width: 300px;"
+    alert.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `
+    document.body.appendChild(alert)
 
-    if (auctionDurationSelect && bidEndTimeInput) {
-        auctionDurationSelect.addEventListener("change", function () {
-            const days = Number.parseInt(this.value);
-            const endDate = new Date();
-            endDate.setDate(endDate.getDate() + days);
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.remove()
+      }
+    }, 5000)
+  }
 
-            const formattedDate = endDate.toISOString().slice(0, 16);
-            bidEndTimeInput.value = formattedDate;
-        });
+  function showErrorMessage(message) {
+    const alert = document.createElement("div")
+    alert.className = "alert alert-danger alert-dismissible fade show position-fixed"
+    alert.style.cssText = "top: 20px; right: 20px; z-index: 9999; min-width: 300px;"
+    alert.innerHTML = `
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `
+    document.body.appendChild(alert)
 
-        // Set default auction end time
-        if (auctionDurationSelect.value) {
-            const days = Number.parseInt(auctionDurationSelect.value);
-            const endDate = new Date();
-            endDate.setDate(endDate.getDate() + days);
-            const formattedDate = endDate.toISOString().slice(0, 16);
-            bidEndTimeInput.value = formattedDate;
-        }
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.remove()
+      }
+    }, 8000)
+  }
+}
+
+function initializePreviewUpdates() {
+  // Add event listeners for real-time preview updates
+  document.addEventListener("input", (e) => {
+    if (e.target.matches("input, textarea, select")) {
+      updatePreview()
     }
+  })
 
-    // Form submission handler (single listener)
-    let isDraft = false;
-
-    const submitBtn = document.getElementById("submitBtn");
-
-    if (saveDraftBtn) {
-        saveDraftBtn.addEventListener("click", () => {
-            isDraft = true;
-        });
+  document.addEventListener("change", (e) => {
+    if (e.target.matches("select")) {
+      updatePreview()
     }
-
-    if (submitBtn) {
-        submitBtn.addEventListener("click", () => {
-            isDraft = false;
-        });
-    }
-
-    if (productForm) {
-        productForm.addEventListener("submit", (e) => {
-            console.log("Submitting as", isDraft ? "Draft" : "Listing");
-
-            if (isDraft) {
-                // Disable client-side required validation for drafts
-                const requiredFields = document.querySelectorAll("#productForm [required]");
-                requiredFields.forEach((field) => {
-                    field.dataset.originalRequired = "true";
-                    field.removeAttribute("required");
-                });
-            } else {
-                // Restore required attributes if needed (optional)
-                const requiredFields = document.querySelectorAll("#productForm [data-original-required='true']");
-                requiredFields.forEach((field) => {
-                    field.setAttribute("required", "required");
-                    field.removeAttribute("data-original-required");
-                });
-            }
-
-            // Ensure files are properly included
-            if (selectedFiles.length > 0) {
-                createDynamicFileInputs();
-            }
-        });
-    }
-});
+  })
+}
