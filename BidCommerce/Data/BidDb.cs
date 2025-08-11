@@ -85,10 +85,21 @@ namespace BidCommerce.Data
                 .WithMany(u => u.Followers)
                 .HasForeignKey(f => f.FollowedId)
                 .OnDelete(DeleteBehavior.Restrict);
-        
+
+            builder.Entity<Order>()
+    .HasOne(o => o.Buyer)
+    .WithMany(u => u.OrdersBought)
+    .HasForeignKey(o => o.BuyerId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Order>()
+                .HasOne(o => o.Seller)
+                .WithMany(u => u.OrdersSold)
+                .HasForeignKey(o => o.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
-        builder.Entity<Message>()
+            builder.Entity<Message>()
       .HasOne(m => m.Sender)
       .WithMany()
       .HasForeignKey(m => m.SenderId)
