@@ -24,6 +24,7 @@ namespace BidCommerce.Data
          
         public DbSet<Status> Status { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Order> Orders { get; set; }    
              
 
         protected override void OnModelCreating(ModelBuilder builder)
