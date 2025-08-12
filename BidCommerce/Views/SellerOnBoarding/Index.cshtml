@@ -1,0 +1,113 @@
+﻿@{
+    ViewData["Title"] = "Start Selling Today";
+}
+
+<link rel="stylesheet" href="~/css/seller-onboarding.css" />
+
+<div class="onboarding-container">
+    <div class="onboarding-content">
+        <div class="main-header">
+            <h1 class="main-title">Start Selling Today</h1>
+            <p class="main-subtitle">Connect your Stripe account to list items and receive payments securely</p>
+        </div>
+
+        <div class="connect-card">
+            <div class="stripe-icon">
+                <svg width="60" height="25" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M59.5 12.5c0-6.9-5.6-12.5-12.5-12.5S34.5 5.6 34.5 12.5 40.1 25 47 25s12.5-5.6 12.5-12.5zM47 22.5c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" fill="#635BFF" />
+                    <path d="M25.5 12.5c0-6.9-5.6-12.5-12.5-12.5S.5 5.6.5 12.5 6.1 25 13 25s12.5-5.6 12.5-12.5zM13 22.5c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" fill="#00D924" />
+                </svg>
+            </div>
+
+            <div class="connect-content">
+                <h2 class="connect-title">Connect with Stripe</h2>
+                <p class="connect-description">
+                    Connect your Stripe account to start selling and receive payments securely.
+                </p>
+
+                <div class="features-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <span>Secure payment processing</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-lightning-charge"></i>
+                        </div>
+                        <span>Fast payouts to your bank account</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <span>Accept all major payment methods</span>
+                    </div>
+                </div>
+
+                <button type="button" class="connect-button" id="connectStripeBtn">
+                    <span class="button-text">Connect with Stripe</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+
+                <p class="terms-text">
+                    By connecting, you agree to Stripe's <a href="https://stripe.com/legal" target="_blank">terms and conditions</a>.
+                </p>
+            </div>
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>Setting up your Stripe account...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const connectBtn = document.getElementById('connectStripeBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        connectBtn.addEventListener('click', async function () {
+            try {
+                // Show loading state
+                connectBtn.disabled = true;
+                connectBtn.innerHTML = '<span class="button-text">Connecting...</span><div class="button-spinner"></div>';
+                loadingOverlay.style.display = 'flex';
+
+                // Create Stripe account and get onboarding link
+                const response = await fetch('@Url.Action("CreateStripeAccount", "SellerOnboarding")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Redirect to Stripe onboarding
+                    window.location.href = result.url;
+                } else {
+                    throw new Error(result.error || 'Failed to create Stripe account');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+
+                // Reset button state
+                connectBtn.disabled = false;
+                connectBtn.innerHTML = '<span class="button-text">Connect with Stripe</span><i class="bi bi-arrow-right"></i>';
+                loadingOverlay.style.display = 'none';
+
+                // Show error message
+                alert('There was an error connecting your Stripe account. Please try again.');
+            }
+        });
+    });
+</script>
+
+@Html.AntiForgeryToken()
