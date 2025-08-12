@@ -145,9 +145,10 @@ ViewData["Title"] = Model.Title;
                 }
                 @if (Model.BuyNowPrice.HasValue)
                 {
-                    <a class="btn-buy-now" asp-controller="Checkout" asp-action="Index" asp-route-productId="@Model.Id">
+                    <a class="btn-buy-now" asp-controller="Payment" asp-action="RedirectToCheckout" asp-route-productId="@Model.Id">
                         Buy Now
                     </a>
+
                 }
             </div>
 
