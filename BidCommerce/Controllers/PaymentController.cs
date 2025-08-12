@@ -1,108 +1,174 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BidCommerce.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
-using BidCommerce.Models;
-using BidCommerce.Data;
-using System;
-using System.Threading.Tasks;
+using Stripe.Checkout;
 
-[ApiController]
-[Route("api/[controller]")]
-public class PaymentController : ControllerBase
+namespace BidCommerce.Controllers
 {
-    private readonly BidDb _dbContext;
-
-    public PaymentController(BidDb dbContext)
+    public class PaymentController : Controller
     {
-        _dbContext = dbContext;
-        StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
-    }
+        private readonly IConfiguration _configuration;
+        private readonly BidDb _context;
 
-    public class PaymentRequest
-    {
-        public long Amount { get; set; }    
-        public string Currency { get; set; } = "usd";
-        public string PaymentMethodId { get; set; }
-        public string Description { get; set; }
-    }
-
-    [HttpPost("pay")]
-    public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequest request)
-    {
-        if (request == null || request.Amount <= 0 || string.IsNullOrEmpty(request.PaymentMethodId))
-            return BadRequest(new { error = "Invalid payment request." });
-
-        // Step 1: Create Order record (status pending)
-        var order = new Order
+        public PaymentController(IConfiguration configuration, BidDb context)
         {
-            BuyerId = User?.Identity?.Name ?? "guest",
-            Amount = request.Amount,
-            Currency = request.Currency,
-            Description = request.Description,
-            PaymentStatus = PaymentStatus.Pending
-        };
+            _context = context;
+            _configuration = configuration;
+            StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+        }
 
-        _dbContext.Orders.Add(order);
-        await _dbContext.SaveChangesAsync();
-
-        var options = new PaymentIntentCreateOptions
+        [HttpPost]
+        public async Task<IActionResult> CreateCheckoutSession(int productId, decimal price, string productName, string productImage)
         {
-            Amount = request.Amount,
-            Currency = request.Currency,
-            PaymentMethod = request.PaymentMethodId,
-            Description = request.Description,
-            Confirm = true,
-            Metadata = new System.Collections.Generic.Dictionary<string, string>
+            try
             {
-                { "order_id", order.Id.ToString() },
-                { "user_id", order.BuyerId }
+                var options = new SessionCreateOptions
+                {
+                    PaymentMethodTypes = new List<string> { "card" },
+                    LineItems = new List<SessionLineItemOptions>
+                    {
+                        new SessionLineItemOptions
+                        {
+                            PriceData = new SessionLineItemPriceDataOptions
+                            {
+                                UnitAmount = (long)(price * 100), // Convert to cents
+                                Currency = "usd",
+                                ProductData = new SessionLineItemPriceDataProductDataOptions
+                                {
+                                    Name = productName,
+                                    Images = new List<string> { productImage },
+                                },
+                            },
+                            Quantity = 1,
+                        },
+                    },
+                    Mode = "payment",
+                    SuccessUrl = Url.Action("Success", "Payment", null, Request.Scheme) + "?session_id={CHECKOUT_SESSION_ID}",
+                    CancelUrl = Url.Action("Cancel", "Payment", null, Request.Scheme),
+                    Metadata = new Dictionary<string, string>
+                    {
+                        {"product_id", productId.ToString()},
+                        {"buyer_id", User.Identity.Name ?? "guest"}
+                    }
+                };
+
+                var service = new SessionService();
+                Session session = await service.CreateAsync(options);
+
+                return Json(new { url = session.Url });
             }
-        };
-
-        var service = new PaymentIntentService();
-
-        try
-        {
-            var paymentIntent = await service.CreateAsync(options);
-
-            // Step 3: Update order with payment info
-            order.PaymentIntentId = paymentIntent.Id;
-            order.PaymentStatus = MapStripeStatus(paymentIntent.Status);
-            _dbContext.Orders.Update(order);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok(new
+            catch (Exception ex)
             {
-                success = true,
-                paymentIntentId = paymentIntent.Id,
-                status = paymentIntent.Status,
-                orderId = order.Id
-            });
+                return Json(new { error = ex.Message });
+            }
         }
-        catch (StripeException e)
-        {
-            order.PaymentStatus = PaymentStatus.Failed;
-            _dbContext.Orders.Update(order);
-            await _dbContext.SaveChangesAsync();
 
-            return BadRequest(new
+        public async Task<IActionResult> Success(string session_id)
+        {
+            var service = new SessionService();
+            var session = await service.GetAsync(session_id);
+
+            if (session.PaymentStatus == "paid")
             {
-                success = false,
-                error = e.StripeError?.Message ?? e.Message
-            });
+                // TODO: Update your database with the successful payment
+                // Mark product as sold, create order record, etc.
+
+                ViewBag.SessionId = session_id;
+                ViewBag.CustomerEmail = session.CustomerDetails?.Email;
+                ViewBag.AmountTotal = session.AmountTotal / 100.0; // Convert from cents
+
+                return View();
+            }
+
+            return RedirectToAction("Cancel");
+        }
+
+        public IActionResult Cancel()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Webhook()
+        {
+            var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+
+            try
+            {
+                var stripeEvent = EventUtility.ConstructEvent(
+                    json,
+                    Request.Headers["Stripe-Signature"],
+                    _configuration["Stripe:WebhookSecret"]
+                );
+
+                if (stripeEvent.Type == "checkout.session.completed")
+                {
+                    var session = stripeEvent.Data.Object as Session;
+                    // Handle successful payment
+                    // Update database, send emails, etc.
+                }
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Webhook error: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RedirectToCheckout(int productId)
+        {
+            // Fetch product from DB
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                return NotFound("Product not found.");
+
+            if (product.BuyNowPrice == null)
+                return BadRequest("This product does not have a 'Buy Now' price.");
+
+            // Ensure we have an image URL
+            if (string.IsNullOrWhiteSpace(product.ImageUrl))
+                return BadRequest("Product does not have an image.");
+
+            // Build absolute HTTPS image URL for Stripe
+            // product.ImageUrl might already be a URL or relative path
+            string productImageRelative = Url.Content($"~/{product.ImageUrl.TrimStart('/')}");
+            string absoluteImageUrl = $"{Request.Scheme}://{Request.Host}{productImageRelative}";
+
+            var options = new SessionCreateOptions
+            {
+                PaymentMethodTypes = new List<string> { "card" },
+                LineItems = new List<SessionLineItemOptions>
+        {
+            new SessionLineItemOptions
+            {
+                PriceData = new SessionLineItemPriceDataOptions
+                {
+                    UnitAmount = (long)(product.BuyNowPrice.Value * 100), // Convert to cents
+                    Currency = "usd",
+                    ProductData = new SessionLineItemPriceDataProductDataOptions
+                    {
+                        Name = product.Title,
+                        Images = new List<string> { absoluteImageUrl },
+                    },
+                },
+                Quantity = 1,
+            },
+        },
+                Mode = "payment",
+                SuccessUrl = Url.Action("Success", "Payment", null, Request.Scheme)
+                            + "?session_id={CHECKOUT_SESSION_ID}",
+                CancelUrl = Url.Action("Cancel", "Payment", null, Request.Scheme),
+            };
+
+            var service = new SessionService();
+            var session = await service.CreateAsync(options);
+
+            return Redirect(session.Url);
         }
     }
-
-    private PaymentStatus MapStripeStatus(string stripeStatus)
-    {
-        return stripeStatus?.ToLower() switch
-        {
-            "succeeded" => PaymentStatus.Succeeded,
-            "requires_action" => PaymentStatus.RequiresAction,
-            "canceled" => PaymentStatus.Canceled,
-            "processing" => PaymentStatus.Pending,
-            _ => PaymentStatus.Failed,
-        };
-    }
-
 }
