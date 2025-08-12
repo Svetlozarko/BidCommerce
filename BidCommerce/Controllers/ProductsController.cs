@@ -242,6 +242,13 @@ namespace BidCommerce.Controllers
         [Authorize]
         public IActionResult Create()
         {
+            var userId = User.Identity.Name;
+            var hasStripeAccount = await CheckUserHasStripeAccount(userId);
+
+            if (!hasStripeAccount)
+            {
+                return RedirectToAction("Index", "SellerOnboarding");
+            }
             var categories = _context.Categories.ToList();
 
             var vm = new ProductCreateViewModel
@@ -252,8 +259,14 @@ namespace BidCommerce.Controllers
 
             return View(vm);
         }
+        private async Task<bool> CheckUserHasStripeAccount(string userId)
+        {
+           
+            return false;
+        }
 
- [HttpPost]
+
+[HttpPost]
 [Authorize]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDraft = false)
