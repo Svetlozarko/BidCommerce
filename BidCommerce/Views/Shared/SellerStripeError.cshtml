@@ -1,0 +1,20 @@
+﻿@{
+    ViewData["Title"] = "Unable to Process Payment";
+}
+
+<div style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div style="max-width: 600px; padding: 30px; border-radius: 10px; background-color: #fff8e1; border: 1px solid #ffe082; text-align: center; font-family: Arial, sans-serif; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <h1 style="color: #ff9800; margin-bottom: 20px;">⚠ Product Unavailable</h1>
+        <p style="font-size: 16px; color: #555; margin-bottom: 15px;">
+            We're sorry, but this product cannot be purchased at the moment because the seller's payment account is not set up to receive funds.
+        </p>
+        <p style="font-size: 16px; color: #555; margin-bottom: 25px;">
+            Please check back later or browse other available products.
+        </p>
+        <div>
+            <a href="@Url.Action("Index", "Home")" style="color: #635BFF; text-decoration: none; font-weight: bold; font-size: 16px;">
+                ← Back to Home
+            </a>
+        </div>
+    </div>
+</div>
