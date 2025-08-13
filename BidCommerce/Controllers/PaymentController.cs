@@ -120,8 +120,8 @@ namespace BidCommerce.Controllers
         [HttpGet]
         public async Task<IActionResult> RedirectToCheckout(int productId)
         {
-            // Fetch product from DB
             var product = await _context.Products
+                .Include(p => p.Owner)
                 .FirstOrDefaultAsync(p => p.Id == productId);
 
             if (product == null)
@@ -130,12 +130,11 @@ namespace BidCommerce.Controllers
             if (product.BuyNowPrice == null)
                 return BadRequest("This product does not have a 'Buy Now' price.");
 
-            // Ensure we have an image URL
             if (string.IsNullOrWhiteSpace(product.ImageUrl))
                 return BadRequest("Product does not have an image.");
 
-            // Build absolute HTTPS image URL for Stripe
-            // product.ImageUrl might already be a URL or relative path
+            if (string.IsNullOrEmpty(product.Owner?.StripeAccountId))
+                return View("SellerStripeError");
             string productImageRelative = Url.Content($"~/{product.ImageUrl.TrimStart('/')}");
             string absoluteImageUrl = $"{Request.Scheme}://{Request.Host}{productImageRelative}";
 
@@ -160,8 +159,15 @@ namespace BidCommerce.Controllers
             },
         },
                 Mode = "payment",
+                PaymentIntentData = new SessionPaymentIntentDataOptions
+                {
+                    TransferData = new SessionPaymentIntentDataTransferDataOptions
+                    {
+                        Destination = product.Owner.StripeAccountId 
+                    }
+                },
                 SuccessUrl = Url.Action("Success", "Payment", null, Request.Scheme)
-                            + "?session_id={CHECKOUT_SESSION_ID}",
+                             + "?session_id={CHECKOUT_SESSION_ID}",
                 CancelUrl = Url.Action("Cancel", "Payment", null, Request.Scheme),
             };
 
@@ -170,5 +176,6 @@ namespace BidCommerce.Controllers
 
             return Redirect(session.Url);
         }
+
     }
 }
