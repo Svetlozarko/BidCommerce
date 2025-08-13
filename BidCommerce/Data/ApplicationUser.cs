@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using BidCommerce.Models;
+using Microsoft.Build.ObjectModelRemoting;
 
-    namespace BidCommerce.Data
+namespace BidCommerce.Data
     {
         public class ApplicationUser : IdentityUser
         {
@@ -16,19 +17,15 @@ using BidCommerce.Models;
             public int TotalProductsSold { get; set; } = 0;
             public double AverageRating { get; set; } = 0.0;
             public int TotalRatingsCount { get; set; } = 0;
-        public ICollection<Product> Products { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public ICollection<Order> OrdersBought { get; set; }
-        public ICollection<Order> OrdersSold { get; set; }
-        public ICollection<Follower> Followers { get; set; } = new List<Follower>();
-
-        // Users that this user follows
-        public ICollection<Follower> Following { get; set; } = new List<Follower>();
-
-        public int FollowersCount { get; set; } = 0;
-        public int FollowingCount { get; set; } = 0;
-
-
+            public ICollection<Product> Products { get; set; }
+            public string Description { get; set; } = string.Empty;
+            public string? StripeAccountId { get; set; } = null;
+            public bool StripeAccountConnected { get; set; } = false;
+            public ICollection<Order> OrdersBought { get; set; }
+            public ICollection<Order> OrdersSold { get; set; }
+            public ICollection<Follower> Followers { get; set; } = new List<Follower>();        
+            public ICollection<Follower> Following { get; set; } = new List<Follower>();
+            public int FollowersCount { get; set; } = 0;
+            public int FollowingCount { get; set; } = 0;
+        }
     }
-
-}
