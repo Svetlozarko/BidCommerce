@@ -11,9 +11,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/layout.css" />
-
 </head>
-<body>
+<!-- Added flexbox classes for sticky footer layout -->
+<body class="d-flex flex-column min-vh-100">
     <!-- Modern Navigation -->
     <nav class="modern-navbar">
         <div class="container d-flex align-items-center">
@@ -39,20 +39,57 @@
             <div class="nav-items">
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <a asp-controller="Products" asp-action="Create" class="nav-btn btn-sell">
-                        <i class="bi bi-plus"></i> Sell
-                    </a>
-                    <a asp-controller="Dashboard" asp-action="Index" class="nav-btn btn-dashboard">
-                        Dashboard
-                    </a>
-                    <a asp-controller="Products" asp-action="Watchlist" class="nav-btn btn-watchlist">
-                        <i class="bi bi-heart"></i> Watchlist
-                    </a>
-                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
-                        <button type="submit" class="nav-btn btn-logout" style="border: 1px solid #fecaca; background: #fef2f2;">
-                            Logout
+                    <!-- Buyers Dropdown -->
+                    <div class="dropdown">
+                        <button class="nav-btn dropdown-toggle" type="button" id="buyersDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-search"></i> Buyers
                         </button>
-                    </form>
+                        <ul class="dropdown-menu" aria-labelledby="buyersDropdown">
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Index"><i class="bi bi-grid"></i> Browse Products</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Watchlist"><i class="bi bi-heart"></i> My Watchlist</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="MyBids"><i class="bi bi-hammer"></i> My Bids</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Help" asp-action="HowToBid"><i class="bi bi-question-circle"></i> How to Bid</a></li>
+                            <li><a class="dropdown-item" asp-controller="Help" asp-action="BuyerProtection"><i class="bi bi-shield-check"></i> Buyer Protection</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Sellers Dropdown -->
+                    <div class="dropdown">
+                        <button class="nav-btn btn-sell dropdown-toggle" type="button" id="sellersDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-plus"></i> Sellers
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sellersDropdown">
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Create"><i class="bi bi-plus-circle"></i> List New Item</a></li>
+                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="MyListings"><i class="bi bi-list-ul"></i> My Listings</a></li>
+                            <li><a class="dropdown-item" asp-controller="Seller" asp-action="Analytics"><i class="bi bi-graph-up"></i> Sales Analytics</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Help" asp-action="FeesAndPricing"><i class="bi bi-currency-dollar"></i> Fees & Pricing</a></li>
+                            <li><a class="dropdown-item" asp-controller="SellerOnboarding" asp-action="Index"><i class="bi bi-credit-card"></i> Payment Setup</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Account Dropdown -->
+                    <div class="dropdown">
+                        <button class="nav-btn dropdown-toggle" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> Account
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="Settings"><i class="bi bi-gear"></i> Settings</a></li>
+                            <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index"><i class="bi bi-box"></i> Order History</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline w-100">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 }
                 else
                 {
@@ -64,17 +101,16 @@
                     </a>
                 }
             </div>
-
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main role="main">
+    <!-- Added flex-grow-1 to push footer to bottom -->
+    <main role="main" class="flex-grow-1">
         @RenderBody()
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer mt-auto">
         <div class="container">
             <div class="row">
                 <!-- Brand Column -->
@@ -127,58 +163,39 @@
         </div>
     </footer>
 
+    <!-- SignalR and global chat connection scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="~/js/chat-connection.js"></script>
     <script>
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chathub")
-            .build();
+        // Initialize global chat connection when DOM is ready
+        let globalChatConnection = null;
 
-        connection.on("ReceiveMessage", function (senderId, message) {
-            const chatMessages = document.getElementById("chat-messages");
-            chatMessages.innerHTML += `<div><strong>Them:</strong> ${message}</div>`;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        });
+        document.addEventListener("DOMContentLoaded", async function () {
+            console.log("Initializing global chat connection...");
 
-        connection.start().catch(err => console.error(err.toString()));
+            if (typeof ChatConnection !== 'undefined') {
+                try {
+                    globalChatConnection = new ChatConnection();
+                    const success = await globalChatConnection.initialize();
 
-        function openChatWith(userId, userName) {
-            document.getElementById('chat-box').style.display = 'block';
-            document.getElementById('chat-recipient-id').value = userId;
-
-            const chatMessages = document.getElementById("chat-messages");
-            chatMessages.innerHTML += `<div style="font-style: italic; color: #888;">Chatting with ${userName}</div>`;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function closeChat() {
-            document.getElementById('chat-box').style.display = 'none';
-            document.getElementById('chat-messages').innerHTML = '';
-            document.getElementById('chat-input').value = '';
-        }
-
-        document.getElementById("chat-input").addEventListener("keypress", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                sendChatMessage();
+                    if (success) {
+                        console.log("Global chat connection initialized successfully");
+                        window.globalChatConnection = globalChatConnection;
+                    } else {
+                        console.error("Failed to initialize global chat connection");
+                    }
+                } catch (error) {
+                    console.error("Error initializing chat connection:", error);
+                }
+            } else {
+                console.error("ChatConnection class not found");
             }
         });
-
-        function sendChatMessage() {
-            const recipientId = document.getElementById("chat-recipient-id").value;
-            const message = document.getElementById("chat-input").value.trim();
-
-            if (!message || !recipientId) return;
-
-            connection.invoke("SendMessage", recipientId, message)
-                .then(() => {
-                    const chatMessages = document.getElementById("chat-messages");
-                    chatMessages.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                    document.getElementById("chat-input").value = "";
-                })
-                .catch(console.error);
-        }
     </script>
-    @RenderSection("Scripts", required: false)
-</body> 
+
+    <!-- Bootstrap JS for dropdown functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
 </html>
