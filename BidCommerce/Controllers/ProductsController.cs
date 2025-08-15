@@ -26,26 +26,25 @@ namespace BidCommerce.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IDatabase _redis;
         private readonly ISearchableTextRedis _searchTextRedisService;
+        private readonly IConfiguration _configuration;
 
-
-
-        public ProductsController(BidDb context, UserManager<ApplicationUser> userManager, IConnectionMultiplexer redis, ISearchableTextRedis searchableTextRedis)
+        public ProductsController(BidDb context, UserManager<ApplicationUser> userManager, IConnectionMultiplexer redis, ISearchableTextRedis searchableTextRedis, IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
             _redis = redis.GetDatabase();
             _searchTextRedisService = searchableTextRedis;
-
+            _configuration = configuration; 
         }
 
         [Authorize]
         public async Task<IActionResult> Index(
-    int? categoryId,
-    string? category,
-    decimal? minPrice,
-    decimal? maxPrice,
-    string? sortBy,
-    string? listingType)
+          int? categoryId,
+          string? category,
+          decimal? minPrice,
+          decimal? maxPrice,
+          string? sortBy,
+          string? listingType)
         {
             var expiredProducts = await _context.Products
                 .Include(p => p.Status)
@@ -65,10 +64,10 @@ namespace BidCommerce.Controllers
             }
 
             var query = _context.Products
-    .Include(p => p.Category)
-    .Include(p => p.Owner)
-    .Include(p => p.Status)      // <-- Add this!
-    .AsQueryable();
+      .Include(p => p.Category)
+      .Include(p => p.Owner)
+      .Include(p => p.Status)     
+      .AsQueryable();
 
             query = query.Where(p => p.Status.Name == "Active");
 
@@ -237,12 +236,51 @@ namespace BidCommerce.Controllers
         }
 
 
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateStripeAccount()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FindAsync(userId);
+
+            // Explicitly create client with your key from config
+            var client = new Stripe.StripeClient(_configuration["Stripe:SecretKey"]);
+            var accountService = new Stripe.AccountService(client);
+            var accountLinkService = new Stripe.AccountLinkService(client);
+
+            if (string.IsNullOrEmpty(user.StripeAccountId))
+            {
+                var accountOptions = new Stripe.AccountCreateOptions
+                {
+                    Type = "express",
+                    Email = user.Email
+                };
+                var account = await accountService.CreateAsync(accountOptions);
+
+                user.StripeAccountId = account.Id;
+                user.StripeAccountConnected = true;
+                await _context.SaveChangesAsync();
+            }
+
+            var accountLinkOptions = new Stripe.AccountLinkCreateOptions
+            {
+                Account = user.StripeAccountId,
+                RefreshUrl = Url.Action("OnboardingRefresh", "SellerOnboarding", null, Request.Scheme),
+                ReturnUrl = Url.Action("OnboardingReturn", "SellerOnboarding", null, Request.Scheme),
+                Type = "account_onboarding"
+            };
+
+            var accountLink = await accountLinkService.CreateAsync(accountLinkOptions);
+
+            return Json(new { success = true, url = accountLink.Url });
+        }
 
 
         [Authorize]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var userId = User.Identity.Name;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var hasStripeAccount = await CheckUserHasStripeAccount(userId);
 
             if (!hasStripeAccount)
@@ -261,12 +299,93 @@ namespace BidCommerce.Controllers
         }
         private async Task<bool> CheckUserHasStripeAccount(string userId)
         {
-           
-            return false;
+            // Assuming Identity is set up and ApplicationUser contains HasStripeAccount
+            var user = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new { u.StripeAccountConnected })
+                .FirstOrDefaultAsync();
+
+            return user?.StripeAccountConnected ?? false;
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDraft(ProductCreateViewModel vm)
+        {
+            // Force save as draft
+            bool saveAsDraft = true;
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            // Minimum check: at least one field must be entered
+            if (string.IsNullOrWhiteSpace(vm.Product.Title) &&
+                string.IsNullOrWhiteSpace(vm.Product.Description) &&
+                vm.Product.StartingPrice == null &&
+                (vm.ImageFiles == null || !vm.ImageFiles.Any()))
+            {
+                ModelState.AddModelError("", "Please enter at least one field before saving as draft.");
+                vm.Categories = _context.Categories.ToList();
+                return View("Create", vm); // Show the create view with errors
+            }
+
+            var product = vm.Product;
+            product.OwnerId = userId;
+            product.CreatedAt = DateTime.UtcNow;
+
+            // Assign draft status
+            product.Status = await _context.ProductsStatus
+                .FirstOrDefaultAsync(s => s.Name == "Draft");
+
+            if (product.IsBiddable && product.StartingPrice.HasValue)
+            {
+                product.CurrentBid = product.StartingPrice.Value;
+            }
+
+            // Handle images
+            if (vm.ImageFiles != null && vm.ImageFiles.Any())
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                foreach (var file in vm.ImageFiles)
+                {
+                    if (file.Length > 0)
+                    {
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        var filePath = Path.Combine(uploadsFolder, fileName);
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await file.CopyToAsync(stream);
+
+                        product.Images.Add(new ProductImage { ImageUrl = "/images/products/" + fileName });
+                    }
+                }
+
+                product.ImageUrl = product.Images.FirstOrDefault()?.ImageUrl;
+            }
+
+            // Avoid EF circular binding
+            product.Category = null;
+
+            _context.Products.Add(product);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error saving draft: " + ex.Message);
+                vm.Categories = _context.Categories.ToList();
+                return View("Create", vm);
+            }
+
+            TempData["SuccessMessage"] = "Draft saved successfully!";
+            return RedirectToAction(nameof(Index));
         }
 
 
-[HttpPost]
+        [HttpPost]
 [Authorize]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDraft = false)
@@ -513,5 +632,7 @@ public async Task<IActionResult> Create(ProductCreateViewModel vm, bool saveAsDr
 
             return Ok();
         }
+
+
     }
 }
