@@ -45,18 +45,18 @@
 ---
 
 ## 🛠️ Technologies Used
+<p align="left">
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg" alt="C#" height="32"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/dot-net/dot-net-original.svg" alt=".NET" height="32"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="JavaScript" height="32"/>
+    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original.svg" alt="HTML5" height="32"/>
+   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original.svg" alt="CSS3" height="32"/>
+    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" alt="MS SQL" height="32"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/redis/redis-original.svg" alt="Redis" height="32"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/rabbitmq/rabbitmq-original.svg" alt="RabbitMQ" height="32"/>
+   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker" height="32"/>
 
-| Layer           | Stack                                  |
-|-----------------|--------------------------------------|
-| **Backend**     | ASP.NET Core MVC (.NET 8)             |
-| **Frontend**    | Razor Pages + Bootstrap 5 + JavaScript (Vanilla & SignalR client) |
-| **Real-Time**   | SignalR (WebSockets, powered by Redis backplane) |
-| **Caching**     | Redis (distributed cache and SignalR backplane) |
-| **Database**    | SQL Server + EF Core                  |
-| **Authentication** | ASP.NET Identity                   |
-| **Storage**     | Local file system for images          |
-| **AI**          | Azure/OpenAI Vision API *(WIP)*       |
-| **Shipping**    | Shipping API (e.g., EasyPost/Shippo) *(Planned)* |
+</p>
 
 
 ## 🧠 Core Concepts
