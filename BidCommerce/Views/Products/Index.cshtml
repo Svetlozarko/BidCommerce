@@ -140,7 +140,18 @@
                         <div class="product-info">
                             <div class="product-category">@item.Category.Name</div>
                             <h3 class="product-title">@item.Title</h3>
-                            <p class="product-description">@(item.Description?.Length > 80 ? item.Description.Substring(0, 80) + "..." : item.Description)</p>
+                            <p class="product-description">
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    var lines = item.Description.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                                    var displayLines = lines.Take(3).ToArray();
+                                    @Html.Raw(string.Join("<br>", displayLines.Select(line => Html.Encode(line.Trim().TrimStart('-').Trim()))))
+                                    @if (lines.Length > 3)
+                                    {
+                                        <span>...</span>
+                                    }
+                                }
+                            </p>
                             <div class="product-pricing">
                                 @if (item.IsBiddable)
                                 {
@@ -163,10 +174,6 @@
                             </div>
 
                             <div class="product-stats">
-
-
-
-
                                 <span class="watching-count">
                                     <i class="bi bi-eye"></i>
                                     @item.Views views
@@ -174,7 +181,7 @@
 
                                 @if (item.IsBiddable)
                                 {
-                                    <span><i class="bi bi-hammer"></i> @(ViewBag.BidCounts?[item.Id] ?? 0) bids</span>  
+                                    <span><i class="bi bi-hammer"></i> @(ViewBag.BidCounts?[item.Id] ?? 0) bids</span>
                                 }
                                 @if (item.BidEndTime.HasValue)
                                 {
@@ -231,7 +238,7 @@
     <script src="~/js/create-product.js"></script>
 
     <script>
-        // All JavaScript functions must go here inside 
+        // All JavaScript functions must go here inside
 
         function toggleFilters() {
             const sidebar = document.getElementById('filtersSidebar');
@@ -313,5 +320,3 @@
         }
     </script>
 }
-
-
