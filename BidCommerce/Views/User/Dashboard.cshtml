@@ -515,35 +515,54 @@ input:checked + .slider:before {
                     <div class="col actions-col">Actions</div>
                 </div>
                 <div class="table-body">
+                    @{
+                        // Define your statuses and associated CSS classes
+                        var statusMap = new Dictionary<int, (string Name, string CssClass)>
+                    {
+                    { 1, ("Draft", "status-draft") },
+                    { 2, ("Active", "status-active") },
+                    { 3, ("Sold", "status-sold") },
+                    { 4, ("Cancelled", "status-cancelled") },
+                    { 5, ("Expired", "status-expired") }
+                    };
+                    }
+
                     @if (Model.ActiveListings.Any() || Model.PastListings.Any())
                     {
-                        @foreach (var item in Model.ActiveListings.Concat(Model.PastListings).OrderByDescending(p => p.CreatedAt))
+                        foreach (var item in Model.ActiveListings.Concat(Model.PastListings).OrderByDescending(p => p.CreatedAt))
                         {
-                            var isEnded = item.BidEndTime.HasValue && item.BidEndTime.Value <= DateTime.Now;
-                            var statusText = isEnded ? "Ended" : "Active";
-                            var statusClass = isEnded ? "status-ended" : "status-active";
-                            var timeLeft = item.BidEndTime.HasValue ? item.BidEndTime.Value - DateTime.Now : TimeSpan.Zero;
-                            var timeLeftDisplay = "";
-                            if (isEnded)
+                            // Safe status lookup
+                            string statusText = "Unknown";
+                            string statusClass = "status-unknown";
+                            if (item.StatusId.HasValue && statusMap.ContainsKey(item.StatusId.Value))
                             {
-                                timeLeftDisplay = "Ended";
+                                statusText = statusMap[item.StatusId.Value].Name;
+                                statusClass = statusMap[item.StatusId.Value].CssClass;
                             }
-                            else if (timeLeft.TotalDays >= 1)
+
+                            // Calculate time left
+                            string timeLeftDisplay = "Ended";
+                            if (item.BidEndTime.HasValue)
                             {
-                                timeLeftDisplay = $"{(int)timeLeft.TotalDays}d {(int)timeLeft.Hours}h";
+                                var timeLeft = item.BidEndTime.Value - DateTime.Now;
+                                if (timeLeft.TotalMinutes <= 0)
+                                {
+                                    timeLeftDisplay = "Ended";
+                                }
+                                else if (timeLeft.TotalDays >= 1)
+                                {
+                                    timeLeftDisplay = $"{(int)timeLeft.TotalDays}d {(int)timeLeft.Hours}h";
+                                }
+                                else if (timeLeft.TotalHours >= 1)
+                                {
+                                    timeLeftDisplay = $"{(int)timeLeft.TotalHours}h {(int)timeLeft.Minutes}m";
+                                }
+                                else
+                                {
+                                    timeLeftDisplay = $"{(int)timeLeft.TotalMinutes}m";
+                                }
                             }
-                            else if (timeLeft.TotalHours >= 1)
-                            {
-                                timeLeftDisplay = $"{(int)timeLeft.TotalHours}h {(int)timeLeft.Minutes}m";
-                            }
-                            else if (timeLeft.TotalMinutes > 0)
-                            {
-                                timeLeftDisplay = $"{(int)timeLeft.TotalMinutes}m";
-                            }
-                            else
-                            {
-                                timeLeftDisplay = "Ended";
-                            }
+
                             <div class="table-row">
                                 <div class="col product-col">
                                     <div class="product-thumb">
@@ -587,6 +606,7 @@ input:checked + .slider:before {
                             </div>
                         }
                     }
+
                     else
                     {
                         <div class="no-listings-message">
