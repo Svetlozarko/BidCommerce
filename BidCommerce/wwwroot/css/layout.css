@@ -252,7 +252,7 @@
     }
 }
 
-@@media (max-width: 576px) {
+@media (max-width: 576px) {
     .modern-navbar .container {
         flex-direction: column;
         gap: 15px;
