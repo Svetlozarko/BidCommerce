@@ -263,22 +263,28 @@
     font-size: 0.85rem;
     margin-bottom: 12px;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 66px !important;
+    min-height: 66px !important;
+    max-height: 66px !important;
+    white-space: normal;
+    word-wrap: break-word;
 }
+
+    .product-description.multi-line {
+        height: 66px !important;
+        max-height: 66px !important;
+        -webkit-line-clamp: 3 !important;
+        -webkit-box-orient: vertical !important;
+    }
 
 .product-pricing {
-    margin-bottom: 4px; /* Reduced from 12px to 4px to bring stats closer to pricing */
-}
-
-.current-bid {
     font-weight: 600;
     color: #059669;
     font-size: 1.1rem;
-    margin-bottom: 2px;
-}
-
-.buy-now-price {
-    color: #6b7280;
-    font-size: 0.9rem;
 }
 
 .product-stats {
@@ -290,76 +296,66 @@
     color: #6b7280;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: auto; /* Push stats and buttons to bottom of card */
 }
 
-    .product-stats span {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+.product-bottom {
+    padding-top: 8px;
+}
+
+    .product-bottom .product-pricing {
+        margin-bottom: 8px;
     }
-
-.watching-count {
-    color: #6b7280;
-}
 
 .product-actions {
     display: flex;
     gap: 8px;
 }
 
-    /* Single button takes full width when alone */
-    .product-actions:has(.btn-bid:only-child) .btn-bid,
-    .product-actions:has(.btn-buy-now:only-child) .btn-buy-now {
-        flex: 1;
-        width: 100%;
+.btn-buy-now {
+    flex: 1;
+    padding: 10px 16px;
+    background: #4364f7;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+    .btn-buy-now:hover {
+        background: #3b5bdb;
+        color: white;
+        text-decoration: none;
     }
 
 .btn-bid {
     flex: 1;
+    padding: 10px 16px;
     background: #4364f7;
     color: white;
-    border: none;
-    padding: 10px 12px; /* Slightly increased padding for better proportion */
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
     text-decoration: none;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.2s ease;
 }
 
-.btn-buy-now {
-    flex: 1;
-    background: transparent;
-    color: #4364f7;
-    border: 1px solid #4364f7;
-    padding: 10px 12px; /* Slightly increased padding for better proportion */
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-}
-
-.btn-bid:hover {
-    background: #3451e6;
-    transform: translateY(-1px);
-}
-
-.btn-buy-now:hover {
-    background: #f0f4ff;
-    transform: translateY(-1px);
-}
+    .btn-bid:hover {
+        background: #3b5bdb;
+        color: white;
+        text-decoration: none;
+    }
 
 .no-products-message {
     text-align: center;
