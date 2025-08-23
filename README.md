@@ -66,7 +66,6 @@
 - **Auction:** Real-time event where users place competitive bids.
 - **Image Upload:** Stored in `wwwroot/images/products`, referenced by URL in DB.
 - **Chat:** Real-time messaging via SignalR between users.
-- **AI Description:** Vision API reads uploaded images and generates a product title + description draft.
 - **Shipping:** Shipping cost dynamically calculated at checkout via API based on destination, weight, and size.
 
 
